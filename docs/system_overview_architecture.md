@@ -77,3 +77,16 @@ Context-Based AI-provider Selection:
 LangChain Usage:
 
 - Enables natural language understanding and summarization pipelines.
+
+## Diagrams
+### Use Case Diagram
+The following diagram illustrates the primary use cases of the ZenAI application, detailing the interactions between the user and the ZenAI application.
+![Use Case Diagram](diagrams/useCaseDiagram.png "Use Case Diagram")
+
+### Component Diagram
+The following component diagram shows the high-level architecture of the ZenAI application, including the main components and their interactions. 
+![Top-Level Design](diagrams/componentDiagram.png "Top-Level Design")
+
+### Class Diagram
+Here we have the preliminary class diagram for the ZenAI application. With adaptability in mind, specifically for the AI agent abstraction, we use the strategy pattern to allow for easy switching between online and offline AI agents based on the requirements stated in the project requirements.
+![Class Diagram](diagrams/classDiagram.png "Class Diagram")
