@@ -1,0 +1,33 @@
+# Use an official OpenJDK runtime as a parent image
+FROM openjdk:17-jdk-slim AS build
+
+# Set the working directory for the build
+WORKDIR /app
+
+# Copy Gradle wrapper and configuration files
+COPY gradlew settings.gradle build.gradle /app/
+COPY gradle /app/gradle
+
+# Download dependencies
+RUN ./gradlew dependencies --no-daemon
+
+# Copy the source code
+COPY src /app/src
+
+# Build the application
+RUN ./gradlew build --no-daemon
+
+# Use a smaller image for the runtime
+FROM openjdk:17-jdk-slim
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the built JAR file from the build stage
+COPY --from=build /app/build/libs/user-microservice-*.jar app.jar
+
+# Expose the port your Spring Boot application runs on
+EXPOSE 8080
+
+# Run the JAR file
+ENTRYPOINT ["java", "-jar", "app.jar"]
