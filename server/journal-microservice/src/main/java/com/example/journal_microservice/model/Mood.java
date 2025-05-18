@@ -1,0 +1,21 @@
+package main.java.com.example.journal_microservice.model;
+public enum Mood {
+  HAPPY,
+  SAD,
+  ANGRY,
+  EXCITED,
+  NERVOUS,
+  CALM,
+  CONFUSED,
+  BORED,
+  ANXIOUS,
+  RELAXED,
+  STRESSED,
+  OVERWHELMED,
+  CONTENT,
+  GRATEFUL,
+  HOPEFUL,
+  DISAPPOINTED,
+  FRUSTRATED,
+  LONELY,
+}
