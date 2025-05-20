@@ -1,5 +1,5 @@
 # Use an official OpenJDK runtime as a parent image
-FROM openjdk:17-jdk-slim AS build
+FROM openjdk:21-jdk-slim AS build
 
 # Set the working directory for the build
 WORKDIR /app
@@ -18,7 +18,7 @@ COPY src /app/src
 RUN ./gradlew build --no-daemon
 
 # Use a smaller image for the runtime
-FROM openjdk:17-jdk-slim
+FROM openjdk:21-jdk-slim
 
 # Set the working directory in the container
 WORKDIR /app
