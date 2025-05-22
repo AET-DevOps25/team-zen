@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  client:
+    build: ./client
+    ports:
+      - '3000:3000'
+    environment:
+      - REACT_APP_API_URL=http://localhost:8085
+    depends_on:
+      - api-gateway
+    networks:
+      - frontend
+      - backend
+
+  api-gateway:
+    build: ./server/api-gateway
+    ports:
+      - '8085:8085'
+    environment:
+      - USER_SERVICE_URL=http://user-microservice:8080
+      - JOURNAL_SERVICE_URL=http://journal-microservice:8081
+      - GENAI_SERVICE_URL=http://genai-microservice:80
+    depends_on:
+      - user-microservice
+      - journal-microservice
+      - genai-microservice
+    networks:
+      - backend
+
+
+  user-microservice:
+    build: ./server/user-microservice
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://user-db:27017/userdb
+    depends_on:
+      - user-db
+    networks:
+      - backend
+      - user-network
+
+  user-db:
+    image: mongo:6
+    container_name: user-db
+    volumes:
+      - user-data:/data/db
+    networks:
+      - user-network
+
+  journal-microservice:
+    build: ./server/journal-microservice
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://journal-db:27017/journaldb
+    depends_on:
+      - journal-db
+    networks:
+      - backend
+      - journal-network
+
+  journal-db:
+    image: mongo:6
+    container_name: journal-db
+    volumes:
+      - journal-data:/data/db
+    networks:
+      - journal-network
+
+  genai-microservice:
+    build: ./genai
+    environment:
+      - WEAVIATE_HOST=http://weaviate:8080
+    depends_on:
+      - weaviate
+    networks:
+      - backend
+      - genai-network
+
+  weaviate:
+    image: semitechnologies/weaviate:latest
+    ports:
+      - '80:80' # Leave this port open for now
+    environment:
+      QUERY_DEFAULTS_LIMIT: '20'
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'none'
+    volumes:
+      - weaviate-data:/var/lib/weaviate
+    networks:
+      - genai-network
+
+volumes:
+  user-data:
+  journal-data:
+  weaviate-data:
+
+networks:
+  frontend:
+  backend:
+  user-network:
+  journal-network:
+  genai-network:

@@ -37,7 +37,7 @@ public class GatewayConfig {
                     //     .setName("user-service-cb")
                     //     .setFallbackUri("forward:/fallback/users"))
                     )
-                .uri("http://localhost:8080"))
+                .uri("http://user-microservice:8080"))
             
             // Product Service Routes
             .route("journal-service", r -> r
@@ -50,7 +50,7 @@ public class GatewayConfig {
                     //     .setName("journal-service-cb")
                     //     .setFallbackUri("forward:/fallback/journal"))
                     )
-                .uri("http://localhost:8081"))
+                .uri("http://journal-microservice:8081"))
                         
             // Authentication Service Routes (no auth filter needed)
             // .route("auth-service", r -> r
