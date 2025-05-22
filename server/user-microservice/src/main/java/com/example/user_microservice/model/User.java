@@ -17,4 +17,6 @@ public class User {
     private String id;
     private String name;
     private String email;
+    private String[] journalEntries; // Array of journal entry IDs
+    private String[] snippets; // Array of snippet IDs
 }
