@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.security.Timestamp;
+import java.util.Date;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -20,7 +21,7 @@ public class Snippet {
     private String id;
     private String title;
     private String content;
-    private Time timestamp;
+    private Date timestamp;
     // The journalEntryID that contains this snippet
-    private string entry;
+    private String entry;
 }

@@ -1,4 +1,4 @@
-package main.java.com.example.journal_microservice.model;
+package com.example.journal_microservice.model;
 public enum Mood {
   HAPPY,
   SAD,
