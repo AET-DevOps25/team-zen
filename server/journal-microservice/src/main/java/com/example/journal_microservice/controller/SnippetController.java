@@ -8,22 +8,23 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequestMapping("/api/snippets")
 public class SnippetController {
     @Autowired
     private SnippetRepository snippetRepository;
 
-    @GetMapping("/snippets")
+    @GetMapping
     public List<Snippet> getAllSnippets() {
-        return SnippetRepository.findAll();
+        return snippetRepository.findAll();
     }
 
-    @PostMapping("/snippets")
+    @PostMapping
     public Snippet createSnippet(@RequestBody Snippet snippet) {
-        return SnippetRepository.save(snippet);
+        return snippetRepository.save(snippet);
     }
 
-    @DeleteMapping("/snippets/{id}")
+    @DeleteMapping("/{id}")
     public void deleteSnippet(@PathVariable String id) {
-        SnippetRepository.deleteById(id);
+        snippetRepository.deleteById(id);
     }
 }

@@ -8,22 +8,29 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequestMapping("/api/journalEntry")
 public class JournalEntryController {
     @Autowired
     private JournalEntryRepository journalEntryRepository;
 
-    @GetMapping("/journalEntry")
+    @GetMapping
     public List<JournalEntry> getAllSnippets() {
-        return JournalEntryRepository.findAll();
+        return journalEntryRepository.findAll();
     }
 
-    @PostMapping("/journalEntry")
-    public JournalEntry createUser(@RequestBody JournalEntry journalEntry) {
-        return JournalEntryRepository.save(journalEntry);
+    @PostMapping
+    public JournalEntry createJournalEntry(@RequestBody JournalEntry journalEntry) {
+        return journalEntryRepository.save(journalEntry);
     }
 
-    @DeleteMapping("/journalEntry/{id}")
-    public void deleteUser(@PathVariable String id) {
-        JournalEntryRepository.deleteById(id);
+    @DeleteMapping("/{id}")
+    public void deleteJournalEntry(@PathVariable("id") String id) {
+        try {
+            journalEntryRepository.findById(id).orElseThrow(() -> new RuntimeException("Journal entry not found"));
+            journalEntryRepository.deleteById(id);
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Journal entry not found or something went wrong");
+        }
+
     }
 }
