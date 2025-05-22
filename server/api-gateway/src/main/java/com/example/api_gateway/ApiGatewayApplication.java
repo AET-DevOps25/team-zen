@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 @SpringBootApplication
 @Controller
 public class ApiGatewayApplication {
-
     
     public static void main(String[] args) {
         SpringApplication.run(ApiGatewayApplication.class, args);
