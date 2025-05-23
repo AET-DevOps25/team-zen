@@ -20,7 +20,7 @@ services:
     environment:
       - USER_SERVICE_URL=http://user-microservice:8080
       - JOURNAL_SERVICE_URL=http://journal-microservice:8081
-      - GENAI_SERVICE_URL=http://genai-microservice:80
+      - GENAI_SERVICE_URL=http://genai-microservice:8082
     depends_on:
       - user-microservice
       - journal-microservice

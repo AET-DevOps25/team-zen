@@ -2,6 +2,7 @@ package com.example.api_gateway.config;
 
 // import com.example.api_gateway.filter.AuthenticationFilter;
 // import com.example.api_gateway.filter.LoggingFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
@@ -18,6 +19,13 @@ public class GatewayConfig {
     //     this.authenticationFilter = authenticationFilter;
     //     this.loggingFilter = loggingFilter;
     // }
+
+    @Value("${user-service-url}")
+    private String userServiceUri;
+
+    @Value("${journal-service-url}")
+    private String journalServiceUri;
+
 
     public GatewayConfig() {
         // Initialize filters here if needed
@@ -37,7 +45,7 @@ public class GatewayConfig {
                     //     .setName("user-service-cb")
                     //     .setFallbackUri("forward:/fallback/users"))
                     )
-                .uri("http://user-microservice:8080"))
+                .uri(userServiceUri))
             
             // Product Service Routes
             .route("journal-service", r -> r
@@ -50,7 +58,19 @@ public class GatewayConfig {
                     //     .setName("journal-service-cb")
                     //     .setFallbackUri("forward:/fallback/journal"))
                     )
-                .uri("http://journal-microservice:8081"))
+                .uri(journalServiceUri))
+
+                .route("genai-service", r -> r
+                .path("/api/genai/**")
+                .filters(f -> f
+                                // .filter(loggingFilter)
+                                // .filter(authenticationFilter)
+                                .stripPrefix(0)
+                        // .circuitBreaker(config -> config
+                        //     .setName("journal-service-cb")
+                        //     .setFallbackUri("forward:/fallback/journal"))
+                )
+                .uri("http://genai-microservice:8082"))
                         
             // Authentication Service Routes (no auth filter needed)
             // .route("auth-service", r -> r
