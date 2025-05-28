@@ -7,14 +7,15 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-# Production image, copy only necessary files
-FROM node:23-alpine AS production
+# Production image using nginx to serve static files
+FROM nginx:alpine AS production
 
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
+# Copy built static files from builder
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-COPY --from=builder /app/dist ./dist
+# Copy custom nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 3000
-CMD ["npx", "vite", "preview", "--port", "3000", "--host"]
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

@@ -4,7 +4,7 @@ services:
   client:
     build: ./client
     ports:
-      - '3000:3000'
+      - '3000:80'
     environment:
       - REACT_APP_API_URL=http://localhost:8085
     depends_on:
