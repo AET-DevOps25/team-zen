@@ -1,15 +1,15 @@
 from typing import Union
+from fastapi import FastAPI, APIRouter
 
-from fastapi import FastAPI
+router = APIRouter(prefix="/api/genai")
 
-app = FastAPI()
-
-
-@app.get("/")
+@router.get("/")
 async def read_root():
     return {"Hello": "World"}
 
-
-@app.get("/items/{item_id}")
+@router.get("/items/{item_id}")
 async def read_item(item_id: int, q: Union[str, None] = None):
     return {"item_id": item_id, "q": q}
+
+app = FastAPI()
+app.include_router(router)

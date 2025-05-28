@@ -26,6 +26,9 @@ public class GatewayConfig {
     @Value("${journal-service-url}")
     private String journalServiceUri;
 
+    @Value("${genai-service-url}")
+    private String genaiServiceUri;
+
 
     public GatewayConfig() {
         // Initialize filters here if needed
@@ -70,7 +73,7 @@ public class GatewayConfig {
                         //     .setName("journal-service-cb")
                         //     .setFallbackUri("forward:/fallback/journal"))
                 )
-                .uri("http://genai-microservice:8082"))
+                .uri(genaiServiceUri))
                         
             // Authentication Service Routes (no auth filter needed)
             // .route("auth-service", r -> r
