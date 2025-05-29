@@ -8,22 +8,31 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequestMapping("/api/users")
 public class UserController {
     @Autowired
     private UserRepository userRepository;
 
-    @GetMapping("/users")
+    @GetMapping()
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
-    @PostMapping("/users")
+    @PostMapping()
     public User createUser(@RequestBody User user) {
         return userRepository.save(user);
     }
 
-    @DeleteMapping("/users/{id}")
+    @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable String id) {
         userRepository.deleteById(id);
+    }
+
+    public UserRepository getUserRepository() {
+        return userRepository;
+    }
+
+    public void setUserRepository(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 }
