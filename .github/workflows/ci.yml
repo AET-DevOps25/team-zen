@@ -191,7 +191,13 @@ jobs:
           pip install ruff
           ruff check
 
-      - name: Run FastAPI server (check)
+      - name: Start FastAPI server in background
         run: |
-          fastapi run app/main.py
-        continue-on-error: false
+          fastapi run --host 0.0.0.0 --port 8000 &
+          # wait a few seconds for server to be ready
+          sleep 5
+
+      - name: Health check FastAPI server
+        run: |
+          # Use curl or httpx for HTTP check
+          curl --fail http://localhost:8000/api/health
