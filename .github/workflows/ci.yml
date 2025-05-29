@@ -2,6 +2,11 @@ name: CI
 
 on:
   push:
+    paths:
+      - "**/*.tf"
+      - "client/**"
+      - "server/**"
+      - "genai/**"
   pull_request:
     paths:
       - "**/*.tf"
@@ -199,5 +204,4 @@ jobs:
 
       - name: Health check FastAPI server
         run: |
-          # Use curl or httpx for HTTP check
           curl --fail http://localhost:8000/api/health
