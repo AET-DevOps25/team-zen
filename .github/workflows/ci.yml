@@ -9,6 +9,7 @@ on:
       - "**/*.tf"
       - "client/**"
       - "server/**"
+      - "genai/**"
 
 permissions:
   contents: read
@@ -166,3 +167,33 @@ jobs:
 
       - name: Run tests
         run: ./gradlew test
+
+  genai:
+    name: Genai server
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: genai
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Lint with Ruff
+        run: |
+          pip install ruff
+          ruff check
+
+      - name: Run FastAPI server (check)
+        run: |
+          fastapi run app/main.py
+        continue-on-error: false
