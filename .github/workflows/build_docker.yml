@@ -1,0 +1,64 @@
+name: Build & Push Docker Images
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build & Push Docker Images
+    if: ${{ github.event.workflow_run.conclusion == 'success' }} # Only run if CI succeeded
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - client
+          - api-gateway
+          - journal-microservice
+          - user-microservice
+          - genai
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/setup-qemu-action@v3
+
+      - uses: docker/setup-buildx-action@v3
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/${{ matrix.service }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=branch
+            type=ref,event=pr
+
+      - name: Build & push Docker image
+        if: |
+          (matrix.service == 'client' && contains(github.event.head_commit.modified, 'client/')) ||
+          (matrix.service == 'genai' && contains(github.event.head_commit.modified, 'genai/')) ||
+          (contains(github.event.head_commit.modified, format('server/{0}/', matrix.service)))
+        uses: docker/build-push-action@v5
+        with:
+          platforms: linux/amd64,linux/arm64
+          context: ${{ matrix.service == 'client' && './client'
+            || matrix.service == 'genai' && './genai'
+            || format('./server/{0}', matrix.service) }}
+          file: ${{ matrix.service == 'client' && './client/Dockerfile'
+            || matrix.service == 'genai' && './genai/Dockerfile'
+            || format('./server/{0}/Dockerfile', matrix.service) }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
