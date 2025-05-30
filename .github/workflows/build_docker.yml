@@ -3,7 +3,7 @@ name: Build & Push Docker Images
 on:
   push:
     branches:
-      - 7-set-up-terraform-and-ansible-script
+      - 7-set-up-terraform-and-ansible-scripts
 
   # workflow_run:
   #   workflows: ["CI"]
