@@ -6,7 +6,9 @@ on:
     types:
       - completed
   push:
-    branches: [main]
+    branches:
+      - main
+      - 7-set-up-terraform-and-ansible-scripts
 
 jobs:
   build:
@@ -46,19 +48,12 @@ jobs:
             type=ref,event=pr
 
       - name: Build & push Docker image
-        if: |
-          (matrix.service == 'client' && contains(github.event.head_commit.modified, 'client/')) ||
-          (matrix.service == 'genai' && contains(github.event.head_commit.modified, 'genai/')) ||
-          (contains(github.event.head_commit.modified, format('server/{0}/', matrix.service)))
+        if: contains(github.event.head_commit.modified, matrix.service == 'client' && 'client/' || matrix.service == 'genai' && 'genai/' || format('server/{0}/', matrix.service))
         uses: docker/build-push-action@v5
         with:
           platforms: linux/amd64,linux/arm64
-          context: ${{ matrix.service == 'client' && './client'
-            || matrix.service == 'genai' && './genai'
-            || format('./server/{0}', matrix.service) }}
-          file: ${{ matrix.service == 'client' && './client/Dockerfile'
-            || matrix.service == 'genai' && './genai/Dockerfile'
-            || format('./server/{0}/Dockerfile', matrix.service) }}
+          context: ${{ matrix.service == 'client' && './client' || matrix.service == 'genai' && './genai' || format('./server/{0}', matrix.service) }}
+          file: ${{ matrix.service == 'client' && './client/Dockerfile' || matrix.service == 'genai' && './genai/Dockerfile' || format('./server/{0}/Dockerfile', matrix.service) }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
