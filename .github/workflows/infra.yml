@@ -56,7 +56,7 @@ jobs:
 
       - name: Create Ansible inventory
         run: |
-          echo "[ec2]" > ansible/inventory.ini
+          echo "[docker_server]" > ansible/inventory.ini
           echo "${{ steps.ip.outputs.ip }}" >> ansible/inventory.ini
 
       - name: Install Ansible
