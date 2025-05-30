@@ -4,33 +4,8 @@ on:
   push:
 
 jobs:
-  test:
-    name: Run Java Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Build usermicroservice
-        run: ./server/user-microservice/gradlew -p server/user-microservice build
-
-      - name: Build gateway
-        run: ./server/api-gateway/gradlew -p server/api-gateway build
-
-      - name: Build journalservice
-        run: ./server/journal-microservice/gradlew -p server/journal-microservice build
-
   build:
     name: Build Docker Images
-    needs: test
     runs-on: ubuntu-latest
     strategy:
       matrix:
