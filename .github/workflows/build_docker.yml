@@ -46,7 +46,9 @@ jobs:
             type=ref,event=pr
 
       - name: Build & push Docker image
-        if: contains(github.event.head_commit.modified, matrix.service == 'client' && 'client/' || matrix.service == 'genai' && 'genai/' || format('server/{0}/', matrix.service))
+        if: github.event.head_commit.modified | any(startsWith('client/')) && matrix.service == 'client' ||
+            github.event.head_commit.modified | any(startsWith('genai/')) && matrix.service == 'genai' ||
+            github.event.head_commit.modified | any(startsWith(format('server/{0}/', matrix.service)))
         uses: docker/build-push-action@v5
         with:
           platforms: linux/amd64,linux/arm64
