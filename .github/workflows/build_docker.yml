@@ -1,17 +1,13 @@
 name: Build & Push Docker Images
 
 on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
   push:
     branches:
-      - 7-set-up-terraform-and-ansible-scripts
-
-  # workflow_run:
-  #   workflows: ["CI"]
-  #   types:
-  #     - completed
-  # push:
-  #   branches:
-  #     - main
+      - main
 
 jobs:
   build:
@@ -50,6 +46,7 @@ jobs:
             type=ref,event=pr
 
       - name: Build & push Docker image
+        if: contains(github.event.head_commit.modified, matrix.service == 'client' && 'client/' || matrix.service == 'genai' && 'genai/' || format('server/{0}/', matrix.service))
         uses: docker/build-push-action@v5
         with:
           platforms: linux/amd64,linux/arm64
