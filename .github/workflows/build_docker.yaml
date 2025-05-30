@@ -12,9 +12,9 @@ jobs:
         service:
           - client
           - genai
-          - server/usermicroservice
-          - server/gateway
-          - server/journalservice
+          - server/user-microservice
+          - server/api-gateway
+          - server/journal-microservice
     steps:
       - name: Checkout
         uses: actions/checkout@v4
