@@ -1,0 +1,83 @@
+---
+- name: Install Docker, Docker-compose
+  hosts: docker_server
+  become: true
+  tasks:
+    - name: Install Docker
+      yum:
+        name: docker
+        update_cache: true
+        state: present
+    - name: Install docker-compose
+      get_url:
+        url: https://github.com/docker/compose/releases/download/1.27.4/docker-compose-Linux-{{lookup('pipe', 'uname -m')}}
+        dest: /usr/local/bin/docker-compose
+        mode: +x
+    - name: Start docker daemon
+      systemd:
+        name: docker
+        state: started
+    - name: Install docker python module
+      pip:
+        name:
+          - docker
+          - docker-compose
+
+- name: add ubuntu user to docker group
+  hosts: docker_server
+  become: true
+  tasks:
+    - name: add ubuntu to docker group
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
+    - name: reconnect to server session
+      meta: reset_connection
+
+- name: Prepare and start docker containers
+  hosts: docker_server
+  become: true
+  vars:
+    ec2_public_ip: "{{ lookup('env', 'EC2_PUBLIC_IP') }}"
+  tasks:
+    - name: Remove existing .env.prod if exists
+      file:
+        path: /home/ubuntu/.env.prod
+        state: absent
+
+    - name: Create .env.prod file with environment variables
+      copy:
+        dest: /home/ubuntu/.env.prod
+        content: |
+          CLIENT_HOST=client.{{ ec2_public_ip }}.nip.io
+          SERVER_HOST=api.{{ ec2_public_ip }}.nip.io
+          PUBLIC_API_URL=https://api.{{ ec2_public_ip }}.nip.io
+        owner: ubuntu
+        group: ubuntu
+        mode: "0644"
+
+    - name: Copy docker compose file
+      copy:
+        src: ../docker-compose.yml
+        dest: /home/ubuntu/docker-compose.yml
+        owner: ubuntu
+        group: ubuntu
+        mode: "0644"
+
+    - name: Log in to GitHub Container Registry
+      docker_login:
+        registry_url: ghcr.io
+        username: "{{ lookup('env', 'GITHUB_ACTOR') }}"
+        password: "{{ lookup('env', 'GITHUB_TOKEN') }}"
+
+    - name: Start docker containers with compose
+      become_user: ubuntu
+      community.docker.docker_compose:
+        project_src: /home/ubuntu
+        files:
+          - docker-compose.yml
+        env_file: /home/ubuntu/.env.prod
+        state: present
+        pull: true
+        restarted: true

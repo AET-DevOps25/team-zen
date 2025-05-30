@@ -22,6 +22,14 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.2
+          terraform_wrapper: false
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_DEFAULT_REGION }}
 
       - name: Terraform fmt
         id: fmt
@@ -54,8 +62,13 @@ jobs:
       - name: Install Ansible
         run: sudo apt-get update && sudo apt-get install -y ansible
 
+      - name: Add SSH private key
+        run: |
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/private_key.pem
+          chmod 400 ~/.ssh/private_key.pem
+
       - name: Run Ansible Playbook
         run: |
           ansible-playbook ansible/playbook.yml -i ansible/inventory.ini \
-            --private-key "${{ secrets.SSH_PRIVATE_KEY_PATH }}" \
-            -u ubuntu
+          --private-key ~/.ssh/private_key.pem \
+          -u ubuntu
