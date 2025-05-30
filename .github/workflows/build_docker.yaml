@@ -19,8 +19,14 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Build with Gradle
-        run: cd server && ./gradlew build
+      - name: Build usermicroservice
+        run: ./server/usermicroservice/gradlew -p server/usermicroservice build
+
+      - name: Build gateway
+        run: ./server/gateway/gradlew -p server/gateway build
+
+      - name: Build journalservice
+        run: ./server/journalservice/gradlew -p server/journalservice build
 
   build:
     name: Build Docker Images
