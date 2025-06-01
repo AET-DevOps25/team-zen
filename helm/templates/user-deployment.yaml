@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zenai-user
+  namespace: {{ .Values.namespaceId }}
+spec:
+  replicas: {{ .Values.user.replicaCount }}
+  selector:
+    matchLabels:
+      app: zenai-user-selector
+  template:
+    metadata:
+      labels:
+        app: zenai-user-selector
+    spec:
+      containers:
+        - name: user-microservice
+          image: "{{ .Values.user.image.repository }}:{{ .Values.user.image.tag }}"
+          imagePullPolicy: {{ .Values.user.image.pullPolicy }}
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+            requests:
+              cpu: "50m"
+              memory: "50Mi"
+          ports:
+            - containerPort: {{ .Values.user.service.targetPort }}
+          env:
+            - name: SPRING_DATA_MONGODB_URI
+              value: mongodb://user-db:27017/userdb
+      imagePullSecrets:
+        - name: ghcr-secret

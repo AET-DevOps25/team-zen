@@ -1,0 +1,77 @@
+# This file contains the default values for the Canteen App Helm chart.
+
+# Add your tumid here
+namespaceId: team-zenai
+
+##################################################################################################################
+# No changes needed below this line
+namespace:
+  create: false
+
+client:
+  image:
+    repository: ghcr.io/aet-devops25/team-zen/client
+    tag: 7-set-up-terraform-and-ansible-scripts
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 3000
+    targetPort: 3000
+  replicaCount: 2
+
+apiGateway:
+  image:
+    repository: ghcr.io/aet-devops25/team-zen/api-gateway
+    tag: 7-set-up-terraform-and-ansible-scripts
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8085
+    targetPort: 8085
+  replicaCount: 2
+
+user:
+  image:
+    repository: ghcr.io/aet-devops25/team-zen/user-microservice
+    tag: 7-set-up-terraform-and-ansible-scripts
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8080
+    targetPort: 8080
+  replicaCount: 2
+
+journal:
+  image:
+    repository: ghcr.io/aet-devops25/team-zen/journal-microservice
+    tag: 7-set-up-terraform-and-ansible-scripts
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8081
+    targetPort: 8081
+  replicaCount: 2
+
+
+genai:
+  image:
+    repository: ghcr.io/aet-devops25/team-zen/genai
+    tag: 7-set-up-terraform-and-ansible-scripts
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8082
+    targetPort: 8082
+  replicaCount: 2
+
+mongodb:
+  storageSize: 1Gi
+  replicaCount: 2
+
+
+ingress:
+  enabled: true
+  className: "nginx"
+  tls: true
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"

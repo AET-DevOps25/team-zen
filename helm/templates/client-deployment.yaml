@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zenai-client
+  namespace: {{ .Values.namespaceId }}
+spec:
+  replicas: {{ .Values.client.replicaCount }}
+  selector:
+    matchLabels:
+      app: zenai-client-selector
+  template:
+    metadata:
+      labels:
+        app: zenai-client-selector
+    spec:
+      containers:
+        - name: client
+          image: "{{ .Values.client.image.repository }}:{{ .Values.client.image.tag }}"
+          imagePullPolicy: {{ .Values.client.image.pullPolicy }}
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+            requests:
+              cpu: "50m"
+              memory: "50Mi"
+          env:
+            - name: REACT_APP_API_URL
+              value: "http://zenai-api-gateway:8085"
+          ports:
+            - containerPort: {{ .Values.client.service.targetPort }}
+      imagePullSecrets:
+        - name: ghcr-secret
