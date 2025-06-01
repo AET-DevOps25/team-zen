@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zenai-api-gateway
+  namespace: {{ .Values.namespaceId }}
+spec:
+  replicas: {{ .Values.apiGateway.replicaCount }}
+  selector:
+    matchLabels:
+      app: zenai-api-gateway-selector
+  template:
+    metadata:
+      labels:
+        app: zenai-api-gateway-selector
+    spec:
+      containers:
+        - name: api-gateway
+          image: "{{ .Values.apiGateway.image.repository }}:{{ .Values.apiGateway.image.tag }}"
+          imagePullPolicy: {{ .Values.apiGateway.image.pullPolicy }}
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+            requests:
+              cpu: "50m"
+              memory: "50Mi"
+          ports:
+            - containerPort: {{ .Values.apiGateway.service.targetPort }}
+          env:
+            - name: USER_SERVICE_URL
+              value: "http://user-service:8080"
+            - name: JOURNAL_SERVICE_URL
+              value: "http://journal-service:8081"
+            - name: GENAI_SERVICE_URL
+              value: "http://genai-service:8082"
+      imagePullSecrets:
+        - name: ghcr-secret
