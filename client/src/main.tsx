@@ -12,7 +12,8 @@ import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import './styles.css';
 import reportWebVitals from './reportWebVitals.ts';
 
-import App from './App.tsx';
+import SnippetsPage from './pages/SnippetsPage.tsx';
+import Home from './pages/Home.tsx';
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -26,10 +27,16 @@ const rootRoute = createRootRoute({
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  component: App,
+  component: Home,
 });
 
-const routeTree = rootRoute.addChildren([indexRoute]);
+const snippetsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/snippets',
+  component: SnippetsPage,
+});
+
+const routeTree = rootRoute.addChildren([indexRoute, snippetsRoute]);
 
 const router = createRouter({
   routeTree,

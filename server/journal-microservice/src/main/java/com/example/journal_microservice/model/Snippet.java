@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.security.Timestamp;
 import java.util.Date;
 
 import org.springframework.data.annotation.Id;
@@ -23,5 +22,5 @@ public class Snippet {
     private String content;
     private Date timestamp;
     // The journalEntryID that contains this snippet
-    private String entry;
+    private String journalEntryId;
 }
