@@ -25,8 +25,7 @@ public class ClerkJwtService {
      */
     public Mono<Boolean> validateToken(ServerHttpRequest request) {
         Boolean isSignedIn = AuthenticateRequest.authenticateRequest(request.getHeaders(), AuthenticateRequestOptions
-        // TODO: how to handle secret key?
-          .secretKey(System.getenv("CLERK_SECRET_KEY"))
+          .secretKey(clerkSecretKey)
           .authorizedParty("https://example.com")
           .build())
           .isSignedIn();
