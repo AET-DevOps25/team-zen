@@ -62,11 +62,11 @@ const Footer = () => {
                 <motion.a
                   key={index}
                   href={icon.href}
-                  className="text-gray-400 hover:text-white transition"
+                  className="text-gray-400 hover:text-white transition size-6"
                   whileHover={{ scale: 1.2, y: -2 }}
                   whileTap={{ scale: 0.9 }}
                 >
-                  <a className="w-6 h-6">{icon.logo}</a>
+                  {icon.logo}
                 </motion.a>
               ))}
             </div>

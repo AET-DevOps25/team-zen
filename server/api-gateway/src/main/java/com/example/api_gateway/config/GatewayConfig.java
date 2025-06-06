@@ -28,36 +28,29 @@ public class GatewayConfig {
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()
-            // User Service Routes
-            .route("user-service", r -> r
-                .path("/api/users/**")
-                .filters(f -> f
-                    .filter(clerkAuthenticationFilter)
-                    .stripPrefix(0))
-                .uri(userServiceUri))
-            
-            // Journal Service Routes
-            .route("journal-service", r -> r
-                .path("/api/journalEntry/**", "/api/snippets/**")
-                .filters(f -> f
-                    .filter(clerkAuthenticationFilter)
-                    .stripPrefix(0))
-                .uri(journalServiceUri))
+                // User Service Routes
+                .route("user-service", r -> r
+                        .path("/api/users/**")
+                        .filters(f -> f
+                                .filter(clerkAuthenticationFilter)
+                                .stripPrefix(0))
+                        .uri(userServiceUri))
 
-            // GenAI Service Routes
-            .route("genai-service", r -> r
-                .path("/api/genai/**")
-                .filters(f -> f
-                    .filter(clerkAuthenticationFilter)
-                    .stripPrefix(0))
-                .uri(genaiServiceUri))
+                // Journal Service Routes
+                .route("journal-service", r -> r
+                        .path("/api/journalEntry/**", "/api/snippets/**")
+                        .filters(f -> f
+                                .filter(clerkAuthenticationFilter)
+                                .stripPrefix(0))
+                        .uri(journalServiceUri))
 
-            // Public routes (no authentication required)
-            // .route("health-check", r -> r
-            //     .path("/health", "/actuator/health")
-            //     .filters(f -> f.stripPrefix(0))
-            //     .uri("http://localhost:8080"))
-                        
-            .build();
+                // GenAI Service Routes
+                .route("genai-service", r -> r
+                        .path("/api/genai/**")
+                        .filters(f -> f
+                                .filter(clerkAuthenticationFilter)
+                                .stripPrefix(0))
+                        .uri(genaiServiceUri))
+                .build();
     }
 }

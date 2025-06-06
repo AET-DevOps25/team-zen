@@ -8,6 +8,7 @@ import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 
 import Home from './app/home.tsx';
 import { default as Root } from './root.tsx';
+import Dashboard from './app/dashboard.tsx';
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -24,9 +25,15 @@ const indexRoute = createRoute({
   component: Home,
 });
 
+const dashboardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/dashboard',
+  component: Dashboard,
+});
+
 // Reference for layouts https://tanstack.com/router/v1/docs/framework/react/routing/code-based-routing#layout-routes
 
-const routeTree = rootRoute.addChildren([indexRoute]);
+const routeTree = rootRoute.addChildren([indexRoute, dashboardRoute]);
 
 export const router = createRouter({
   routeTree,

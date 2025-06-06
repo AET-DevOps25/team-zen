@@ -1,6 +1,6 @@
 from fastapi import FastAPI, APIRouter
 
-router = APIRouter(prefix="/api")
+router = APIRouter(prefix="/api/genai")
 
 @router.get("/health")
 async def health_check():
