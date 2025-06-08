@@ -28,29 +28,29 @@ public class GatewayConfig {
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()
-                // User Service Routes
-                .route("user-service", r -> r
-                        .path("/api/users/**")
-                        .filters(f -> f
-                                .filter(clerkAuthenticationFilter)
-                                .stripPrefix(0))
-                        .uri(userServiceUri))
+            // All /api/** routes require authentication
+            .route("api-routes", r -> r
+            .path("/api/**")
+            .filters(f -> f
+                .filter(clerkAuthenticationFilter)
+                .stripPrefix(0))
+            .uri("no://op")) // placeholder, will be overridden by predicates below
 
-                // Journal Service Routes
-                .route("journal-service", r -> r
-                        .path("/api/journalEntry/**", "/api/snippets/**")
-                        .filters(f -> f
-                                .filter(clerkAuthenticationFilter)
-                                .stripPrefix(0))
-                        .uri(journalServiceUri))
+            // User Service
+            .route("user-service", r -> r
+            .path("/api/users/**")
+            .uri(userServiceUri))
 
-                // GenAI Service Routes
-                .route("genai-service", r -> r
-                        .path("/api/genai/**")
-                        .filters(f -> f
-                                .filter(clerkAuthenticationFilter)
-                                .stripPrefix(0))
-                        .uri(genaiServiceUri))
-                .build();
+            // Journal Service
+            .route("journal-service", r -> r
+            .path("/api/journalEntry/**", "/api/snippets/**")
+            .uri(journalServiceUri))
+
+            // GenAI Service
+            .route("genai-service", r -> r
+            .path("/api/genai/**")
+            .uri(genaiServiceUri))
+
+            .build();
     }
 }
