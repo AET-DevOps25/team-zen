@@ -10,6 +10,8 @@ import Home from './app/home.tsx';
 import { default as Root } from './root.tsx';
 import Dashboard from './app/dashboard.tsx';
 import Profile from './app/profile.tsx';
+import Journal from './app/journal.tsx';
+import CreateSnippet from './app/snippet.tsx';
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -38,12 +40,26 @@ const profileRoute = createRoute({
   component: Profile,
 });
 
+const journalRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/journal',
+  component: Journal,
+});
+
+const snippetRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/snippet',
+  component: CreateSnippet,
+});
+
 // Reference for layouts https://tanstack.com/router/v1/docs/framework/react/routing/code-based-routing#layout-routes
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
   dashboardRoute,
   profileRoute,
+  journalRoute,
+  snippetRoute,
 ]);
 
 export const router = createRouter({

@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion';
-import { ArrowLeft, Camera, Clock, MapPin, Mic, Save } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, Mic, Save } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { ContentLayout } from '@/components/Layout';
+import { Button } from '@/components/ui/button';
 
 interface Snippet {
   id: number;
@@ -116,14 +116,9 @@ const CreateSnippet = ({ onBack, onSave }: CreateSnippetProps) => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
-              <motion.button
-                onClick={handleBack}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
+              <Button onClick={handleBack} variant="ghost-animated" size="icon">
                 <ArrowLeft className="w-5 h-5 text-gray-600" />
-              </motion.button>
+              </Button>
               <div>
                 <h1 className="text-xl font-bold text-gray-800">New Snippet</h1>
                 <p className="text-sm text-gray-600">
@@ -134,16 +129,15 @@ const CreateSnippet = ({ onBack, onSave }: CreateSnippetProps) => {
                 </p>
               </div>
             </div>
-            <motion.button
+            <Button
               onClick={handleSave}
               disabled={!content.trim() || selectedMood === null}
-              className="bg-teal-500 hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              variant="teal-animated"
+              className="disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="w-4 h-4" />
               <span>Save Snippet</span>
-            </motion.button>
+            </Button>
           </div>
         </div>
       </header>

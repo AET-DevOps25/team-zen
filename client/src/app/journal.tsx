@@ -12,6 +12,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
+import { Button } from '@/components/ui/button';
 
 interface Snippet {
   id: number;
@@ -178,14 +179,13 @@ const JournalView = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
-              <motion.button
+              <Button
                 onClick={handleBackToDashboard}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                variant="ghost-animated"
+                size="icon"
               >
                 <ArrowLeft className="w-5 h-5 text-gray-600" />
-              </motion.button>
+              </Button>
               <div>
                 <h1 className="text-xl font-bold text-gray-800">
                   Today's Journal

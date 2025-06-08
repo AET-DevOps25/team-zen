@@ -21,6 +21,16 @@ const buttonVariants = cva(
         ghost:
           'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
         link: 'text-primary underline-offset-4 hover:underline',
+        'default-animated':
+          'bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 hover:scale-105 active:scale-95 transition-all duration-200',
+        'teal-animated':
+          'bg-teal-500 hover:bg-teal-600 text-white hover:scale-105 active:scale-95 transition-all duration-200',
+        'blue-animated':
+          'bg-blue-500 hover:bg-blue-600 text-white hover:scale-105 active:scale-95 transition-all duration-200',
+        'purple-animated':
+          'bg-purple-500 hover:bg-purple-600 text-white hover:scale-105 active:scale-95 transition-all duration-200',
+        'ghost-animated':
+          'hover:bg-gray-100 hover:text-accent-foreground hover:scale-105 active:scale-95 transition-all duration-200',
       },
       size: {
         default: 'h-9 px-4 py-2 has-[>svg]:px-3',

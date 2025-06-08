@@ -6,7 +6,7 @@ import {
   useAuth,
 } from '@clerk/clerk-react';
 import { Link } from '@tanstack/react-router';
-import { TreeDeciduousIcon, UserIcon } from 'lucide-react';
+import { NotebookPenIcon, TreeDeciduousIcon } from 'lucide-react';
 import { Button } from './ui/button';
 
 export default function Header() {
@@ -52,14 +52,22 @@ export default function Header() {
           </Link>
         </div>
       </nav>
-      <div className="flex items-center gap-2">
-        <Button onClick={getUsers}>Test API</Button>
+      <div className="flex items-center gap-4">
+        <Button variant="outline" onClick={getUsers}>
+          Test API
+        </Button>
         <SignedOut>
           <Button asChild>
             <SignInButton />
           </Button>
         </SignedOut>
         <SignedIn>
+          <Button asChild>
+            <Link to="/dashboard" className="flex items-center gap-2">
+              <NotebookPenIcon className="size-4" />
+              My Journal
+            </Link>
+          </Button>
           <UserButton userProfileMode="navigation" userProfileUrl="/profile" />
         </SignedIn>
       </div>
