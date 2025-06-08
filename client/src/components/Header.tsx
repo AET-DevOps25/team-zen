@@ -6,34 +6,34 @@ import {
   useAuth,
 } from '@clerk/clerk-react';
 import { Link } from '@tanstack/react-router';
-import { TreeDeciduousIcon } from 'lucide-react';
+import { TreeDeciduousIcon, UserIcon } from 'lucide-react';
 import { Button } from './ui/button';
 
 export default function Header() {
-  const {getToken} = useAuth();
+  const { getToken } = useAuth();
 
+  // TODO: to be removed, this is just for testing the API
   const getUsers = async () => {
     try {
-        const token = await getToken();
-        console.log('Token:', token);
-        const response = await fetch('http://localhost:8085/api/users', {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/json',
-          },
-        }
-        );
+      const token = await getToken();
+      console.log('Token:', token);
+      const response = await fetch('http://localhost:8085/api/users', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+        },
+      });
 
-        if (response.status == 401) {
-          alert('Authentication failed. Please sign in.');
-          return;
-        } else if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
+      if (response.status == 401) {
+        alert('Authentication failed. Please sign in.');
+        return;
+      } else if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
 
-        const data = await response.json();
-        console.log('Users:', data);
+      const data = await response.json();
+      console.log('Users:', data);
     } catch (error) {
       console.error('Error fetching users:', error);
     }
@@ -60,7 +60,7 @@ export default function Header() {
           </Button>
         </SignedOut>
         <SignedIn>
-          <UserButton />
+          <UserButton userProfileMode="navigation" userProfileUrl="/profile" />
         </SignedIn>
       </div>
     </header>

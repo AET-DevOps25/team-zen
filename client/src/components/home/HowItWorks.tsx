@@ -8,31 +8,31 @@ const HowItWorks = () => {
   const steps = [
     {
       number: '01',
-      title: 'Write Your Journal Entry',
+      title: 'Capture Snippets Throughout Your Day',
       description:
-        'Express your thoughts, feelings, and experiences in our easy-to-use journal interface. Write as much or as little as you want.',
-      image: '/placeholder.svg?height=300&width=400&text=Journal+Entry',
+        'Quickly jot down thoughts, feelings, or moments as they happen. Each snippet is a mini journal entry, making it easy to reflect in real time.',
+      image: '/placeholder.svg?height=300&width=400&text=Capture+Snippets',
     },
     {
       number: '02',
-      title: 'AI Analysis & Insights',
+      title: 'Review Your Daily Snippets',
       description:
-        'Our AI analyzes your entries to identify patterns, emotions, and potential areas for growth, all while maintaining your privacy.',
-      image: '/placeholder.svg?height=300&width=400&text=AI+Analysis',
+        'At the end of the day, revisit your snippets to see a timeline of your experiences and emotions.',
+      image: '/placeholder.svg?height=300&width=400&text=Review+Snippets',
     },
     {
       number: '03',
-      title: 'Receive Personalized Guidance',
+      title: 'Analyze with AI Insights',
       description:
-        'Get tailored recommendations, exercises, and insights based on your journal entries to improve your mental wellbeing.',
-      image: '/placeholder.svg?height=300&width=400&text=Personalized+Guidance',
+        'Request an AI analysis to uncover patterns, emotional trends, and receive personalized feedback based on your daily snippets.',
+      image: '/placeholder.svg?height=300&width=400&text=AI+Analysis',
     },
     {
       number: '04',
-      title: 'Track Your Progress',
+      title: 'Track Your Growth Over Time',
       description:
-        'Monitor your mental wellness journey with visual charts and reports that show your improvement over time.',
-      image: '/placeholder.svg?height=300&width=400&text=Progress+Tracking',
+        'Monitor your mental wellness journey with visual reports and insights, helping you recognize progress and areas for improvement.',
+      image: '/placeholder.svg?height=300&width=400&text=Track+Growth',
     },
   ];
 

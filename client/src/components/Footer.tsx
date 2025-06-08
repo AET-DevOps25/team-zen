@@ -27,16 +27,16 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-gray-900 text-white pt-16 pb-8" ref={ref}>
+    <footer className="bg-gray-900 text-white pt-8 pb-8" ref={ref}>
       <div className="container mx-auto px-4">
         <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12"
+          className="flex flex-col items-center text-center max-w-2xl mx-auto"
           variants={containerVariants}
           initial="hidden"
           animate={isInView ? 'visible' : 'hidden'}
         >
           <motion.div className="lg:col-span-2" variants={itemVariants}>
-            <div className="flex items-center mb-4">
+            <div className="flex items-center justify-center mb-4">
               <motion.svg
                 className="w-8 h-8 text-teal-500"
                 fill="currentColor"
@@ -52,7 +52,7 @@ const Footer = () => {
               Transform your mental wellness with our AI-powered journaling app.
               Track your mood, gain insights, and improve your wellbeing.
             </p>
-            <div className="flex space-x-4">
+            <div className="flex justify-center space-x-6">
               {[
                 {
                   logo: <GithubIcon />,
@@ -71,54 +71,6 @@ const Footer = () => {
               ))}
             </div>
           </motion.div>
-
-          {[
-            {
-              title: 'Product',
-              links: [
-                'Features',
-                'How It Works',
-                'Pricing',
-                'FAQ',
-                'Download App',
-              ],
-            },
-            {
-              title: 'Company',
-              links: ['About Us', 'Careers', 'Blog', 'Press', 'Contact'],
-            },
-            {
-              title: 'Legal',
-              links: [
-                'Privacy Policy',
-                'Terms of Service',
-                'Cookie Policy',
-                'GDPR',
-              ],
-            },
-          ].map((section, sectionIndex) => (
-            <motion.div key={sectionIndex} variants={itemVariants}>
-              <h3 className="text-lg font-semibold mb-4">{section.title}</h3>
-              <ul className="space-y-2">
-                {section.links.map((link, linkIndex) => (
-                  <motion.li key={linkIndex}>
-                    <motion.a
-                      href="#"
-                      className="text-gray-400 hover:text-white transition"
-                      whileHover={{ x: 5 }}
-                      transition={{
-                        type: 'spring',
-                        stiffness: 400,
-                        damping: 17,
-                      }}
-                    >
-                      {link}
-                    </motion.a>
-                  </motion.li>
-                ))}
-              </ul>
-            </motion.div>
-          ))}
         </motion.div>
 
         <motion.div
@@ -131,19 +83,18 @@ const Footer = () => {
             <p className="text-gray-400 text-sm mb-4 md:mb-0">
               © {new Date().getFullYear()} ZenAI. All rights reserved.
             </p>
-            <div className="flex space-x-4">
-              {['Privacy', 'Terms', 'Cookies'].map((link, index) => (
-                <motion.a
-                  key={index}
-                  href="#"
-                  className="text-gray-400 hover:text-white text-sm transition"
-                  whileHover={{ y: -2 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-                >
-                  {link}
-                </motion.a>
-              ))}
-            </div>
+            <motion.div
+              className="flex items-center text-gray-400 text-sm"
+              initial={{ opacity: 0, y: 10 }}
+              animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+              transition={{ duration: 0.6, delay: 1 }}
+            >
+              Made with{' '}
+              <span className="mx-1" role="img" aria-label="love">
+                ❤️
+              </span>{' '}
+              by Team Zen
+            </motion.div>
           </div>
         </motion.div>
       </div>

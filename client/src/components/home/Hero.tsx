@@ -70,7 +70,7 @@ const Hero = () => {
               >
                 <a href="#">
                   <Button className="w-full sm:w-auto">
-                    Start Your Free Trial
+                    Start Your Journalling Now
                   </Button>
                 </a>
               </motion.div>
@@ -91,22 +91,19 @@ const Hero = () => {
               className="mt-8 flex items-center"
             >
               <div className="*:data-[slot=avatar]:ring-background flex -space-x-2 *:data-[slot=avatar]:ring-2 *:data-[slot=avatar]:grayscale">
-                {[1, 2, 3, 4].map((i) => (
+                {['🦉', '🤓', '📚', '☕️'].map((emoji, i) => (
                   <Avatar
                     key={i}
-                    className="w-10 h-10 -ml-2 border-2 border-white"
+                    className="w-10 h-10 -ml-2 border-2 border-white flex items-center justify-center bg-gray-100"
                   >
-                    <AvatarImage
-                      src={`/placeholder.svg?height=40&width=40&text=${i}`}
-                      alt="User avatar"
-                    />
-                    <AvatarFallback>{i}</AvatarFallback>
+                    <span className="text-xl">{emoji}</span>
+                    <AvatarFallback>{i + 1}</AvatarFallback>
                   </Avatar>
                 ))}
               </div>
               <p className="ml-4 text-sm text-gray-600">
-                <span className="font-semibold">1,000+</span> people have
-                improved their wellbeing
+                <span className="font-semibold">Countless</span> TUM students
+                now smiling—one journal snippet at a time
               </p>
             </motion.div>
           </motion.div>
@@ -122,10 +119,10 @@ const Hero = () => {
                 whileHover={{ y: -10, rotateY: 5 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               >
-                <Card>
+                <Card className="py-0">
                   <CardContent className="p-0">
                     <img
-                      src="/placeholder.svg?height=600&width=800&text=AI+Journal+Dashboard"
+                      src="pictures/smile-phone.jpg"
                       alt="ZenAI Journal Dashboard"
                       className="w-full h-auto"
                     />
