@@ -38,8 +38,8 @@ public class ClerkJwtService {
 
       // Log headers for debugging (be careful not to log sensitive data in
       // production)
-      logger.debug("Authorization header present: {}",
-          request.getHeaders().containsKey("Authorization"));
+      logger.debug("Authorization header present: {}, Headers: {}",
+          request.getHeaders().containsKey("Authorization"), request.getHeaders());
 
       // Check if secret key is configured
       if (clerkSecretKey == null || clerkSecretKey.equals("your-clerk-secret-key")) {
@@ -52,7 +52,7 @@ public class ClerkJwtService {
           request.getHeaders(),
           AuthenticateRequestOptions
               .secretKey(clerkSecretKey)
-              .authorizedParty(authorizedParty)
+              // .authorizedParty(authorizedParty)
               .build())
           .isSignedIn();
 

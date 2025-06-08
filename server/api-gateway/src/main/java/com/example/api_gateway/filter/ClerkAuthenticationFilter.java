@@ -32,16 +32,15 @@ public class ClerkAuthenticationFilter implements GatewayFilter {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
+        Boolean isAuthenticated = clerkJwtService.validateToken(request).block();
 
-        Boolean result = clerkJwtService.validateToken(request).block();
-
-        if (result) {
+        if (isAuthenticated) {
             // If the token is valid, proceed with the request
             // TODO: maybe add user information to the request attributes for downstream services
             return chain.filter(exchange);
         } else {
             // If the token is invalid, return an error response
-            return onError(exchange, "Invalid or expired token", HttpStatus.UNAUTHORIZED);
+            return onError(exchange, "Clerk auth failed, Invalid or expired token", HttpStatus.UNAUTHORIZED);
         }    
       }
 
