@@ -46,6 +46,8 @@ public class ClerkJwtService {
         logger.error("Clerk secret key not properly configured. Current value: {}",
             clerkSecretKey != null ? "***masked***" : "null");
         return Mono.just(false);
+      } else {
+        logger.debug("Using Clerk secret key: {}", clerkSecretKey);
       }
 
       Boolean isSignedIn = AuthenticateRequest.authenticateRequest(
