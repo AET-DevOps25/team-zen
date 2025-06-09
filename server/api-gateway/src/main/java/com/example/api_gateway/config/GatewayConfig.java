@@ -1,7 +1,6 @@
 package com.example.api_gateway.config;
 
-// import com.example.api_gateway.filter.AuthenticationFilter;
-// import com.example.api_gateway.filter.LoggingFilter;
+import com.example.api_gateway.filter.ClerkAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
@@ -11,14 +10,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class GatewayConfig {
 
-    // private final AuthenticationFilter authenticationFilter;
-    // private final LoggingFilter loggingFilter;
-
-    // public GatewayConfig(AuthenticationFilter authenticationFilter, 
-    //                     LoggingFilter loggingFilter) {
-    //     this.authenticationFilter = authenticationFilter;
-    //     this.loggingFilter = loggingFilter;
-    // }
+    private final ClerkAuthenticationFilter clerkAuthenticationFilter;
 
     @Value("${user-service-url}")
     private String userServiceUri;
@@ -29,60 +21,36 @@ public class GatewayConfig {
     @Value("${genai-service-url}")
     private String genaiServiceUri;
 
-
-    public GatewayConfig() {
-        // Initialize filters here if needed
+    public GatewayConfig(ClerkAuthenticationFilter clerkAuthenticationFilter) {
+        this.clerkAuthenticationFilter = clerkAuthenticationFilter;
     }
 
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()
-            // User Service Routes
-            .route("user-service", r -> r
-                .path("/api/users/**")
-                .filters(f -> f
-                    // .filter(loggingFilter)
-                    // .filter(authenticationFilter)
-                    .stripPrefix(0)
-                    // .circuitBreaker(config -> config
-                    //     .setName("user-service-cb")
-                    //     .setFallbackUri("forward:/fallback/users"))
-                    )
-                .uri(userServiceUri))
-            
-            // Product Service Routes
-            .route("journal-service", r -> r
-                .path("/api/journalEntry/**", "/api/snippets/**")
-                .filters(f -> f
-                    // .filter(loggingFilter)
-                    // .filter(authenticationFilter)
-                    .stripPrefix(0)
-                    // .circuitBreaker(config -> config
-                    //     .setName("journal-service-cb")
-                    //     .setFallbackUri("forward:/fallback/journal"))
-                    )
-                .uri(journalServiceUri))
+            // All /api/** routes require authentication
+            .route("api-routes", r -> r
+            .path("/api/**")
+            .filters(f -> f
+                .filter(clerkAuthenticationFilter)
+                .stripPrefix(0))
+            .uri("no://op")) // placeholder, will be overridden by predicates below
 
-                .route("genai-service", r -> r
-                .path("/api/genai/**")
-                .filters(f -> f
-                                // .filter(loggingFilter)
-                                // .filter(authenticationFilter)
-                                .stripPrefix(0)
-                        // .circuitBreaker(config -> config
-                        //     .setName("journal-service-cb")
-                        //     .setFallbackUri("forward:/fallback/journal"))
-                )
-                .uri(genaiServiceUri))
-                        
-            // Authentication Service Routes (no auth filter needed)
-            // .route("auth-service", r -> r
-            //     .path("/api/auth/**")
-            //     .filters(f -> f
-            //         .filter(loggingFilter)
-            //         .stripPrefix(0))
-            //     .uri("http://localhost:8084"))
-            
+            // User Service
+            .route("user-service", r -> r
+            .path("/api/users/**")
+            .uri(userServiceUri))
+
+            // Journal Service
+            .route("journal-service", r -> r
+            .path("/api/journalEntry/**", "/api/snippets/**")
+            .uri(journalServiceUri))
+
+            // GenAI Service
+            .route("genai-service", r -> r
+            .path("/api/genai/**")
+            .uri(genaiServiceUri))
+
             .build();
     }
 }
