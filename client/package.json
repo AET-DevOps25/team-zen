@@ -8,7 +8,7 @@
     "build": "vite build && tsc",
     "serve": "vite preview --port 3000",
     "test": "vitest run",
-    "lint": "prettier --check .",
+    "lint": "prettier --check . && eslint . --ignore-pattern '*.config.js'",
     "format": "prettier --write . && eslint --fix"
   },
   "dependencies": {
@@ -39,6 +39,7 @@
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
     "@vitejs/plugin-react": "^4.3.4",
+    "eslint-plugin-import": "^2.31.0",
     "jsdom": "^26.0.0",
     "prettier": "^3.5.3",
     "tw-animate-css": "^1.2.9",

@@ -6,7 +6,7 @@ import {
   useAuth,
 } from '@clerk/clerk-react';
 import { Link } from '@tanstack/react-router';
-import { TreeDeciduousIcon, UserIcon } from 'lucide-react';
+import { TreeDeciduousIcon } from 'lucide-react';
 import { Button } from './ui/button';
 
 export default function Header() {
