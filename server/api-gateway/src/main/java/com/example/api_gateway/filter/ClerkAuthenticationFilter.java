@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -32,17 +31,15 @@ public class ClerkAuthenticationFilter implements GatewayFilter {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
-        Boolean isAuthenticated = clerkJwtService.validateToken(request).block();
-
-        if (isAuthenticated) {
-            // If the token is valid, proceed with the request
-            // TODO: maybe add user information to the request attributes for downstream services
-            return chain.filter(exchange);
-        } else {
-            // If the token is invalid, return an error response
-            return onError(exchange, "Clerk auth failed, Invalid or expired token", HttpStatus.UNAUTHORIZED);
-        }    
-      }
+        return clerkJwtService.validateToken(request)
+            .flatMap(isAuthenticated -> {
+                if (isAuthenticated) {
+                    return chain.filter(exchange);
+                } else {
+                    return onError(exchange, "Clerk auth failed, Invalid or expired token", HttpStatus.UNAUTHORIZED);
+                }
+            });
+    }
 
     private Mono<Void> onError(ServerWebExchange exchange, String message, HttpStatus status) {
         ServerHttpResponse response = exchange.getResponse();

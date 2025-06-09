@@ -33,7 +33,11 @@ export default function Header() {
       }
 
       const data = await response.json();
-      console.log('Users:', data);
+      if (data) {
+        console.log('Users:', data);
+      } else {
+        console.log('No users data returned.');
+      }
     } catch (error) {
       console.error('Error fetching users:', error);
     }
