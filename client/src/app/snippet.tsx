@@ -71,8 +71,8 @@ const CreateSnippet = () => {
       };
 
       // TODO: add toast or notification
-      await createSnippet(snippet).catch((error) => {
-        console.error('Error creating snippet:', error);
+      await createSnippet(snippet).catch((e) => {
+        console.error('Error creating snippet', e);
       });
 
       if (!error) {
