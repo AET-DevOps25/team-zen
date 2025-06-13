@@ -1,7 +1,7 @@
+import { useNavigate } from '@tanstack/react-router';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Clock, MapPin, Mic, Save } from 'lucide-react';
 import { useState } from 'react';
-import { useNavigate } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 
 interface Snippet {
@@ -112,8 +112,8 @@ const CreateSnippet = ({ onBack, onSave }: CreateSnippetProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-blue-50">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40">
-        <div className="container mx-auto px-4 py-4">
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40">
+        <div className="container mx-auto py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
               <Button onClick={handleBack} variant="ghost-animated" size="icon">
@@ -140,7 +140,7 @@ const CreateSnippet = ({ onBack, onSave }: CreateSnippetProps) => {
             </Button>
           </div>
         </div>
-      </header>
+      </div>
 
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <motion.div
@@ -158,7 +158,7 @@ const CreateSnippet = ({ onBack, onSave }: CreateSnippetProps) => {
                 <motion.button
                   key={mood.value}
                   onClick={() => setSelectedMood(mood.value)}
-                  className={`p-4 rounded-xl border-2 transition-all ${
+                  className={`p-4 rounded-xl border-2 transition-all w-[7rem] lg:w-[9rem] ${
                     selectedMood === mood.value
                       ? `${mood.color} border-current`
                       : 'border-gray-200 hover:border-gray-300 bg-gray-50'

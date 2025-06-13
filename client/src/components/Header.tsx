@@ -44,7 +44,7 @@ export default function Header() {
   };
 
   return (
-    <header className="py-4 flex bg-white text-black justify-between">
+    <header className="container mx-auto py-4 flex bg-white text-black justify-between">
       <nav className="flex flex-row">
         <div className="font-bold">
           <Link
