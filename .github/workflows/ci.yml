@@ -97,6 +97,6 @@ jobs:
 
       - name: Health check FastAPI server
         run: |
-          curl --fail http://localhost:8000/api/health
+          curl --fail http://localhost:8000/api/genai/health
   ansible-lint:
     uses: ./.github/workflows/ansible_lint.yml
