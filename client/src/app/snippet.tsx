@@ -1,29 +1,18 @@
 import { useNavigate } from '@tanstack/react-router';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Clock, MapPin, Mic, Save } from 'lucide-react';
+import { ArrowLeft, Clock, Mic, Save } from 'lucide-react';
 import { useState } from 'react';
+import type { Snippet } from '@/model/snippet';
 import { Button } from '@/components/ui/button';
+import { useCreateSnippet } from '@/api/snippet';
 
-interface Snippet {
-  id: number;
-  content: string;
-  mood: number;
-  tags: Array<string>;
-  location?: string;
-  timestamp: string;
-}
-
-interface CreateSnippetProps {
-  onBack?: () => void;
-  onSave?: (snippet: Snippet) => void;
-}
-
-const CreateSnippet = ({ onBack, onSave }: CreateSnippetProps) => {
+const CreateSnippet = () => {
   const [content, setContent] = useState<string>('');
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [tags, setTags] = useState<Array<string>>([]);
-  const [location, setLocation] = useState<string>('');
   const [isRecording, setIsRecording] = useState<boolean>(false);
+
+  const { mutateAsync: createSnippet, error } = useCreateSnippet(); // Assuming you have a hook to create snippets
 
   const navigate = useNavigate();
 
@@ -71,35 +60,24 @@ const CreateSnippet = ({ onBack, onSave }: CreateSnippetProps) => {
     'achievement',
   ];
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (content.trim() && selectedMood !== null) {
       const snippet: Snippet = {
         id: Date.now(),
         content,
         mood: selectedMood,
         tags,
-        location,
         timestamp: new Date().toISOString(),
       };
 
-      if (onSave) {
-        onSave(snippet);
-      }
+      // TODO: add toast or notification
+      await createSnippet(snippet).catch((error) => {
+        console.error('Error creating snippet:', error);
+      });
 
-      // Navigate back to dashboard or use onBack if provided
-      if (onBack) {
-        onBack();
-      } else {
+      if (!error) {
         navigate({ to: '/dashboard' });
       }
-    }
-  };
-
-  const handleBack = () => {
-    if (onBack) {
-      onBack();
-    } else {
-      navigate({ to: '/dashboard' });
     }
   };
 
@@ -116,7 +94,11 @@ const CreateSnippet = ({ onBack, onSave }: CreateSnippetProps) => {
         <div className="container mx-auto py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
-              <Button onClick={handleBack} variant="ghost-animated" size="icon">
+              <Button
+                onClick={() => navigate({ to: '/dashboard' })}
+                variant="ghost-animated"
+                size="icon"
+              >
                 <ArrowLeft className="w-5 h-5 text-gray-600" />
               </Button>
               <div>
@@ -253,21 +235,6 @@ const CreateSnippet = ({ onBack, onSave }: CreateSnippetProps) => {
 
             {/* Context */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  Location (optional)
-                </label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    type="text"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="Where are you?"
-                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-800 mb-2">
                   Time

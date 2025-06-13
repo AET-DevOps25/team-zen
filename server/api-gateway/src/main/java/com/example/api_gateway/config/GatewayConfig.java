@@ -45,7 +45,7 @@ public class GatewayConfig {
                 .path("/api/genai/**")
                 .filters(f -> f.filter(clerkAuthenticationFilter))
                 .uri(genaiServiceUri))
-
+          
             .build();
     }
 }
