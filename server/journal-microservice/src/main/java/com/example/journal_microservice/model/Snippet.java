@@ -18,9 +18,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Snippet {
     @Id
     private String id;
-    private String title;
     private String content;
     private Date timestamp;
+    private Mood mood;
+    private String[] tags;
+    private String insights; // Insights about the snippet
     // The journalEntryID that contains this snippet
     private String journalEntryId;
+    private String userID; // The user ID of the user who created this snippet
 }

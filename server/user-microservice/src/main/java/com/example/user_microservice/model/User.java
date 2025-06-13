@@ -19,4 +19,5 @@ public class User {
     private String email;
     private String[] journalEntries; // Array of journal entry IDs
     private String[] snippets; // Array of snippet IDs
+    private String[] tags; // Array of tags associated with the user
 }

@@ -24,4 +24,5 @@ public class JournalEntry {
     private Date date;
     private Mood mood;
     private List<String> snippetIds = new ArrayList<>();
+    private String[] insights; // Tags associated with the journal entry
 }
