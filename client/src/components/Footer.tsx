@@ -1,4 +1,4 @@
-import { motion, useInView, easeOut } from 'framer-motion';
+import { easeOut, motion, useInView } from 'framer-motion';
 import { GithubIcon, TreeDeciduousIcon } from 'lucide-react';
 import { useRef } from 'react';
 
