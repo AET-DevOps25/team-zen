@@ -1,4 +1,4 @@
-import { motion, useInView } from 'framer-motion';
+import { easeOut, motion, useInView } from 'framer-motion';
 import { GithubIcon, TreeDeciduousIcon } from 'lucide-react';
 import { useRef } from 'react';
 
@@ -22,7 +22,7 @@ const Footer = () => {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.6, ease: 'easeOut' },
+      transition: { duration: 0.6, ease: easeOut },
     },
   };
 

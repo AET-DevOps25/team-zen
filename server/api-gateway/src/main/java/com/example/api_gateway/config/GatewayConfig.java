@@ -28,29 +28,24 @@ public class GatewayConfig {
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()
-            // All /api/** routes require authentication
-            .route("api-routes", r -> r
-            .path("/api/**")
-            .filters(f -> f
-                .filter(clerkAuthenticationFilter)
-                .stripPrefix(0))
-            .uri("no://op")) // placeholder, will be overridden by predicates below
-
-            // User Service
+            // User Service (with auth filter)
             .route("user-service", r -> r
-            .path("/api/users/**")
-            .uri(userServiceUri))
+                .path("/api/users/**")
+                .filters(f -> f.filter(clerkAuthenticationFilter))
+                .uri(userServiceUri))
 
-            // Journal Service
+            // Journal Service (with auth filter)
             .route("journal-service", r -> r
-            .path("/api/journalEntry/**", "/api/snippets/**")
-            .uri(journalServiceUri))
+                .path("/api/journalEntry/**", "/api/snippets/**")
+                .filters(f -> f.filter(clerkAuthenticationFilter))
+                .uri(journalServiceUri))
 
-            // GenAI Service
+            // GenAI Service (with auth filter)
             .route("genai-service", r -> r
-            .path("/api/genai/**")
-            .uri(genaiServiceUri))
-
+                .path("/api/genai/**")
+                .filters(f -> f.filter(clerkAuthenticationFilter))
+                .uri(genaiServiceUri))
+          
             .build();
     }
 }

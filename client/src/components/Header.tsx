@@ -4,13 +4,15 @@ import {
   SignedOut,
   UserButton,
   useAuth,
+  useUser,
 } from '@clerk/clerk-react';
 import { Link } from '@tanstack/react-router';
-import { TreeDeciduousIcon } from 'lucide-react';
+import { NotebookPenIcon, TreeDeciduousIcon } from 'lucide-react';
 import { Button } from './ui/button';
 
 export default function Header() {
   const { getToken } = useAuth();
+  const { user } = useUser();
 
   // TODO: to be removed, this is just for testing the API
   const getUsers = async () => {
@@ -32,15 +34,20 @@ export default function Header() {
         throw new Error('Network response was not ok');
       }
 
+      console.log('User ID: ', user?.id);
       const data = await response.json();
-      console.log('Users:', data);
+      if (data) {
+        console.log('Users:', data);
+      } else {
+        console.log('No users data returned.');
+      }
     } catch (error) {
       console.error('Error fetching users:', error);
     }
   };
 
   return (
-    <header className="py-4 flex bg-white text-black justify-between">
+    <header className="container mx-auto py-4 flex bg-white text-black justify-between">
       <nav className="flex flex-row">
         <div className="font-bold">
           <Link
@@ -52,14 +59,22 @@ export default function Header() {
           </Link>
         </div>
       </nav>
-      <div className="flex items-center gap-2">
-        <Button onClick={getUsers}>Test API</Button>
+      <div className="flex items-center gap-4">
+        <Button variant="outline" onClick={getUsers}>
+          Test API
+        </Button>
         <SignedOut>
           <Button asChild>
             <SignInButton />
           </Button>
         </SignedOut>
         <SignedIn>
+          <Button asChild>
+            <Link to="/dashboard" className="flex items-center gap-2">
+              <NotebookPenIcon className="size-4" />
+              My Journal
+            </Link>
+          </Button>
           <UserButton userProfileMode="navigation" userProfileUrl="/profile" />
         </SignedIn>
       </div>

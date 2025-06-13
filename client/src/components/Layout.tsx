@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 const Layout = ({ children }: PropsWithChildren) => {
   return (
     <main>
-      <div className="mx-auto block max-w-[calc(90rem_+_2rem)] px-[2rem]">
+      <div className="mx-auto block max-w-[calc(80rem_+_2rem)] px-[1rem]">
         <Header />
       </div>
       {children}
@@ -22,7 +22,7 @@ const ContentLayout = ({
   return (
     <div
       className={cn(
-        'mx-auto block max-w-[calc(90rem_+_2rem)] px-[2rem]',
+        'mx-auto block max-w-[calc(80rem_+_2rem)] px-[1rem]',
         className,
       )}
     >

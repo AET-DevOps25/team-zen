@@ -8,12 +8,13 @@
     "build": "vite build && tsc",
     "serve": "vite preview --port 3000",
     "test": "vitest run",
-    "lint": "prettier --check . && eslint . --ignore-pattern '*.config.js'",
+    "lint": "prettier --check .",
     "format": "prettier --write . && eslint --fix"
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.31.8",
     "@radix-ui/react-avatar": "^1.1.10",
+    "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-slot": "^1.2.2",
     "@t3-oss/env-core": "^0.13.4",
     "@tailwindcss/vite": "^4.1.7",

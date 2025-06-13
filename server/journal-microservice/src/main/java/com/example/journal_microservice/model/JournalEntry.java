@@ -4,7 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Date;
 
 import org.springframework.data.annotation.Id;
@@ -22,6 +23,5 @@ public class JournalEntry {
     private String summary;
     private Date date;
     private Mood mood;
-    // TODO: store IDs of snippets or the snippets themselves?
-    private String[] snippets;
+    private List<String> snippetIds = new ArrayList<>();
 }
