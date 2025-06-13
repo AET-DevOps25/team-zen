@@ -4,6 +4,7 @@ import {
   SignedOut,
   UserButton,
   useAuth,
+  useUser,
 } from '@clerk/clerk-react';
 import { Link } from '@tanstack/react-router';
 import { NotebookPenIcon, TreeDeciduousIcon } from 'lucide-react';
@@ -11,6 +12,7 @@ import { Button } from './ui/button';
 
 export default function Header() {
   const { getToken } = useAuth();
+  const { user } = useUser();
 
   // TODO: to be removed, this is just for testing the API
   const getUsers = async () => {
@@ -32,6 +34,7 @@ export default function Header() {
         throw new Error('Network response was not ok');
       }
 
+      console.log('User ID: ', user?.id);
       const data = await response.json();
       if (data) {
         console.log('Users:', data);
