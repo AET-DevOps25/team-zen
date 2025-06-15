@@ -24,4 +24,7 @@ public class JournalEntry {
     private Date date;
     private Mood mood;
     private List<String> snippetIds = new ArrayList<>();
+    private String journalInsight;
+    private Date updatedAt;
+    private String userId;
 }
