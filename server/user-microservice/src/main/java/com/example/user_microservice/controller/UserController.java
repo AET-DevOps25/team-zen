@@ -4,7 +4,7 @@ import com.example.user_microservice.model.User;
 import com.example.user_microservice.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.http.ResponseEntity;
 import java.util.List;
 
 @RestController
@@ -16,6 +16,25 @@ public class UserController {
     @GetMapping()
     public List<User> getAllUsers() {
         return userRepository.findAll();
+    }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<User> getUser(@PathVariable("userId") String userId) {
+        return userRepository.findById(userId)
+                .map(user -> ResponseEntity.ok(user))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{userId}")
+    public ResponseEntity<User> updateUser(@PathVariable("userId") String userId, @RequestBody User newUser){
+        return userRepository.findById(userId)
+                .map(existingUser -> {
+                    existingUser.setName(newUser.getName());
+                    User updatedUser = userRepository.save(existingUser);
+                    return ResponseEntity.ok(updatedUser);
+                })
+                .orElse(ResponseEntity.notFound().build());
+
     }
 
     @PostMapping()
