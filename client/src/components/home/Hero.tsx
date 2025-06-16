@@ -68,7 +68,7 @@ const Hero = () => {
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 17 }}
               >
-                <a href="#">
+                <a href="/dashboard">
                   <Button className="w-full sm:w-auto">
                     Start Your Journalling Now
                   </Button>

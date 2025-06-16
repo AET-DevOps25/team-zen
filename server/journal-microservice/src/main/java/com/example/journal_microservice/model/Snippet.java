@@ -24,7 +24,7 @@ public class Snippet {
     private Date timestamp;
     // The journalEntryID that contains this snippet
     private String journalEntryId;
-    private Double moodRating;
+    private Double mood;
     private List<String> tags;
     private String userId;
     private Date updatedAt;

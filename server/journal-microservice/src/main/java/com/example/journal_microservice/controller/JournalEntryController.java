@@ -13,6 +13,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import org.springframework.http.ResponseEntity;
 import org.springframework.format.annotation.DateTimeFormat;
+import com.example.journal_microservice.model.Snippet;
+import java.util.*;
+
 
 @RestController
 @RequestMapping("/api/journalEntry")
@@ -113,7 +116,7 @@ public class JournalEntryController {
             if (userSnippet.getContent() != null) {
                 wholeUserContent.append(userSnippet.getContent().replaceAll("\\s+", "")); // remove all whitespaces and non-visible characters
             }
-            sumRating += snippet.getMoodRating() != null ? snippet.getMoodRating() : 0.0;
+            sumRating += userSnippet.getMood() != null ? userSnippet.getMood() : 0.0;
         }
 
         Map<String, Object> stats = new HashMap<>();
@@ -121,6 +124,6 @@ public class JournalEntryController {
         stats.put("words", wholeUserContent.length());
         stats.put("avgMood", userSnippets.isEmpty() ? 0.0 : sumRating / userSnippets.size());
 
-        return stats
+        return stats;
     }
 }
