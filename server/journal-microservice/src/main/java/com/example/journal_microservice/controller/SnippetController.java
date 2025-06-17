@@ -3,11 +3,14 @@ package com.example.journal_microservice.controller;
 import com.example.journal_microservice.model.Snippet;
 import com.example.journal_microservice.repository.SnippetRepository;
 import com.example.journal_microservice.repository.JournalEntryRepository;
+import com.example.journal_microservice.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestClient;
 import org.springframework.format.annotation.DateTimeFormat;
 import com.example.journal_microservice.model.JournalEntry;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.time.ZoneId;
@@ -15,10 +18,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import org.springframework.http.ResponseEntity;
 
-
 @RestController
 @RequestMapping("/api/snippets")
 public class SnippetController {
+
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SnippetController.class);
+
+    RestClient restClient = RestClient.create();
+
     @Autowired
     private SnippetRepository snippetRepository;
     @Autowired
@@ -56,6 +63,23 @@ public class SnippetController {
 
         entry.getSnippetIds().add(savedSnippet.getId());
         journalEntryRepository.save(entry);
+
+        User user = restClient.get()
+                .uri("http://localhost:8080/api/users/" + savedSnippet.getUserId())
+                .retrieve()
+                .body(User.class);
+        logger.debug("User retrieved: {}", user);
+        String[] currentSnippets = user.getSnippets();
+        String[] updatedSnippets = Arrays.copyOf(currentSnippets, currentSnippets.length + 1);
+        logger.debug("Current snippets: {}", Arrays.toString(currentSnippets));
+        updatedSnippets[currentSnippets.length] = savedSnippet.getId();
+        logger.debug("Updated snippets: {}", Arrays.toString(updatedSnippets));
+        user.setSnippets(updatedSnippets);
+        User newUser = restClient.put()
+                .uri("http://localhost:8080/api/users/" + savedSnippet.getUserId())
+                .body(user)
+                .retrieve().body(User.class);
+        logger.debug("Snippet created and user updated: {}", newUser);
         return savedSnippet;
     }
 
@@ -81,7 +105,7 @@ public class SnippetController {
     }
 
     @PutMapping("/{id}")
-    public void updateSnippet(@PathVariable String id, @RequestBody Snippet updatedSnippet){
+    public void updateSnippet(@PathVariable("id") String id, @RequestBody Snippet updatedSnippet) {
         Snippet snippet = snippetRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Snippet not found with ID: " + id));
 
@@ -99,11 +123,14 @@ public class SnippetController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<?> getUserSnippets(@PathVariable String userId, @RequestParam(required = false) String snippetId, @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date ){
+    public ResponseEntity<?> getUserSnippets(@PathVariable("userId") String userId,
+            @RequestParam(required = false) String snippetId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
 
         if (snippetId != null) {
             Snippet snippet = snippetRepository.findByUserIdAndId(userId, snippetId)
-                    .orElseThrow(() -> new IllegalArgumentException("Snippet not found for user: " + userId + " and snippetId: " + snippetId));
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Snippet not found for user: " + userId + " and snippetId: " + snippetId));
             return ResponseEntity.ok(snippet);
         }
         List<Snippet> snippets = snippetRepository.findByUserId(userId);
@@ -131,5 +158,3 @@ public class SnippetController {
                 .toInstant());
     }
 }
-
-

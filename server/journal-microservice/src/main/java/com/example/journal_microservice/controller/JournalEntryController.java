@@ -5,6 +5,7 @@ import com.example.journal_microservice.repository.JournalEntryRepository;
 import com.example.journal_microservice.repository.SnippetRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestClient;
 
 import java.util.List;
 import java.util.Date;
@@ -15,11 +16,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.format.annotation.DateTimeFormat;
 import com.example.journal_microservice.model.Snippet;
 import java.util.*;
-
+import com.example.journal_microservice.model.User;
 
 @RestController
 @RequestMapping("/api/journalEntry")
 public class JournalEntryController {
+
+    RestClient restClient = RestClient.create();
+
     @Autowired
     private JournalEntryRepository journalEntryRepository;
 
@@ -33,13 +37,30 @@ public class JournalEntryController {
 
     @PostMapping
     public JournalEntry createJournalEntry(@RequestBody JournalEntry journalEntry) {
-        return journalEntryRepository.save(journalEntry);
+        JournalEntry newEntry = journalEntryRepository.save(journalEntry);
+        // call user microservice to update the user's journal list
+        if (newEntry != null) {
+            User user = restClient.get()
+                    .uri("http://localhost:8080/api/users/" + newEntry.getUserId())
+                    .retrieve()
+                    .body(User.class);
+            String[] currentEntries = user.getJournalEntries();
+            String[] updatedEntries = Arrays.copyOf(currentEntries, currentEntries.length + 1);
+            updatedEntries[currentEntries.length] = newEntry.getId();
+            user.setJournalEntries(updatedEntries);
+            restClient.put()
+                    .uri("http://localhost:8080/api/users/" + newEntry.getUserId())
+                    .body(user)
+                    .retrieve();
+        }
+        return newEntry;
     }
 
     @DeleteMapping("/{id}")
     public void deleteJournalEntry(@PathVariable("id") String id) {
         try {
-            JournalEntry journalEntryToDelete = journalEntryRepository.findById(id).orElseThrow(() -> new RuntimeException("Journal entry not found"));
+            JournalEntry journalEntryToDelete = journalEntryRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Journal entry not found"));
             List<String> snippetIds = journalEntryToDelete.getSnippetIds();
             if (snippetIds != null) {
                 for (String snippetId : snippetIds) {
@@ -54,7 +75,7 @@ public class JournalEntryController {
     }
 
     @PutMapping("/{id}")
-    public void updateJournalEntry(@PathVariable("id") String id, @RequestBody JournalEntry newJournalEntry){
+    public void updateJournalEntry(@PathVariable("id") String id, @RequestBody JournalEntry newJournalEntry) {
 
         JournalEntry journalEntry = journalEntryRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Journal not found with ID: " + id));
@@ -80,11 +101,14 @@ public class JournalEntryController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<?> getUserJournals(@PathVariable String userId, @RequestParam(required = false) String journalId, @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date ){
+    public ResponseEntity<?> getUserJournals(@PathVariable String userId,
+            @RequestParam(required = false) String journalId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
 
         if (journalId != null) {
             JournalEntry journalEntry = journalEntryRepository.findByUserIdAndId(userId, journalId)
-                    .orElseThrow(() -> new IllegalArgumentException("Journal Entry not found for user: " + userId + " and journalId: " + journalId));
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Journal Entry not found for user: " + userId + " and journalId: " + journalId));
             return ResponseEntity.ok(journalEntry);
         }
         List<JournalEntry> journalEntries = journalEntryRepository.findByUserId(userId);
@@ -105,7 +129,7 @@ public class JournalEntryController {
     }
 
     @GetMapping("/{userId}/statistics")
-    public Map<String, Object> getStatistics(@PathVariable String userId){
+    public Map<String, Object> getStatistics(@PathVariable String userId) {
         List<JournalEntry> userJournalEntries = journalEntryRepository.findByUserId(userId);
         List<Snippet> userSnippets = snippetRepository.findByUserId(userId);
 
@@ -114,7 +138,8 @@ public class JournalEntryController {
 
         for (Snippet userSnippet : userSnippets) {
             if (userSnippet.getContent() != null) {
-                wholeUserContent.append(userSnippet.getContent().replaceAll("\\s+", "")); // remove all whitespaces and non-visible characters
+                wholeUserContent.append(userSnippet.getContent().replaceAll("\\s+", "")); // remove all whitespaces and
+                                                                                          // non-visible characters
             }
             sumRating += userSnippet.getMood() != null ? userSnippet.getMood() : 0.0;
         }

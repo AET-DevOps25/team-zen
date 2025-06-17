@@ -30,6 +30,10 @@ public class UserController {
         return userRepository.findById(userId)
                 .map(existingUser -> {
                     existingUser.setName(newUser.getName());
+                    if (newUser.getJournalEntries() != null && newUser.getJournalEntries().length > 0)
+                        existingUser.setJournalEntries(newUser.getJournalEntries());
+                    if (newUser.getSnippets() != null && newUser.getSnippets().length > 0)
+                        existingUser.setSnippets(newUser.getSnippets());
                     User updatedUser = userRepository.save(existingUser);
                     return ResponseEntity.ok(updatedUser);
                 })
