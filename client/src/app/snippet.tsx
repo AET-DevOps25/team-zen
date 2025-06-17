@@ -5,8 +5,11 @@ import { useState } from 'react';
 import type { Snippet } from '@/model/snippet';
 import { Button } from '@/components/ui/button';
 import { useCreateSnippet } from '@/api/snippet';
+import { useUser } from '@clerk/clerk-react';
 
 const CreateSnippet = () => {
+  const { user } = useUser();
+  const userId = user?.id || '';
   const [content, setContent] = useState<string>('');
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [tags, setTags] = useState<Array<string>>([]);
@@ -67,6 +70,7 @@ const CreateSnippet = () => {
         content,
         mood: selectedMood,
         tags,
+        userId: userId,
         timestamp: new Date().toISOString(),
       };
 

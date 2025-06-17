@@ -4,7 +4,7 @@ interface Snippet {
   mood: Mood;
   tags: Array<string>;
   timestamp: string;
-  insights?: string;
+  userId: string;
 }
 
 enum Mood {
