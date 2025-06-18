@@ -7,7 +7,6 @@ import lombok.Setter;
 
 import java.util.Date;
 import java.util.List;
-import java.util.ArrayList;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -22,11 +21,10 @@ public class Snippet {
     private String id;
     private String content;
     private Date timestamp;
+    private Mood mood;
+    private List<String> tags;
     // The journalEntryID that contains this snippet
     private String journalEntryId;
-    private Double mood;
-    private List<String> tags;
     private String userId;
     private Date updatedAt;
 }
-

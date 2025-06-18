@@ -88,8 +88,8 @@ public class JournalEntryController {
             journalEntry.setSummary(newJournalEntry.getSummary());
         }
 
-        if (newJournalEntry.getMood() != null) {
-            journalEntry.setMood(newJournalEntry.getMood());
+        if (newJournalEntry.getDailyMood() != null) {
+            journalEntry.setDailyMood(newJournalEntry.getDailyMood());
         }
 
         if (newJournalEntry.getJournalInsight() != null) {
@@ -128,27 +128,28 @@ public class JournalEntryController {
         return ResponseEntity.ok(journalEntries);
     }
 
-    @GetMapping("/{userId}/statistics")
-    public Map<String, Object> getStatistics(@PathVariable String userId) {
-        List<JournalEntry> userJournalEntries = journalEntryRepository.findByUserId(userId);
-        List<Snippet> userSnippets = snippetRepository.findByUserId(userId);
-
-        StringBuilder wholeUserContent = new StringBuilder();
-        double sumRating = 0.0;
-
-        for (Snippet userSnippet : userSnippets) {
-            if (userSnippet.getContent() != null) {
-                wholeUserContent.append(userSnippet.getContent().replaceAll("\\s+", "")); // remove all whitespaces and
-                                                                                          // non-visible characters
-            }
-            sumRating += userSnippet.getMood() != null ? userSnippet.getMood() : 0.0;
-        }
-
-        Map<String, Object> stats = new HashMap<>();
-        stats.put("journals", userJournalEntries.size());
-        stats.put("words", wholeUserContent.length());
-        stats.put("avgMood", userSnippets.isEmpty() ? 0.0 : sumRating / userSnippets.size());
-
-        return stats;
-    }
+    // TODO: Fix statistics endpoint
+//    @GetMapping("/{userId}/statistics")
+//    public Map<String, Object> getStatistics(@PathVariable String userId) {
+//        List<JournalEntry> userJournalEntries = journalEntryRepository.findByUserId(userId);
+//        List<Snippet> userSnippets = snippetRepository.findByUserId(userId);
+//
+//        StringBuilder wholeUserContent = new StringBuilder();
+//        double sumRating = 0.0;
+//
+//        for (Snippet userSnippet : userSnippets) {
+//            if (userSnippet.getContent() != null) {
+//                wholeUserContent.append(userSnippet.getContent().replaceAll("\\s+", "")); // remove all whitespaces and
+//                                                                                          // non-visible characters
+//            }
+//            sumRating += userSnippet.getMood() != null ? userSnippet.getMood() : 0.0;
+//        }
+//
+//        Map<String, Object> stats = new HashMap<>();
+//        stats.put("journals", userJournalEntries.size());
+//        stats.put("words", wholeUserContent.length());
+//        stats.put("avgMood", userSnippets.isEmpty() ? 0.0 : sumRating / userSnippets.size());
+//
+//        return stats;
+//    }
 }

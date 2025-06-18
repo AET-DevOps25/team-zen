@@ -15,8 +15,7 @@ const CreateSnippet = () => {
   const [tags, setTags] = useState<Array<string>>([]);
   const [isRecording, setIsRecording] = useState<boolean>(false);
 
-  const { mutateAsync: createSnippet, error } = useCreateSnippet(); // Assuming you have a hook to create snippets
-
+  const { mutateAsync: createSnippet, error } = useCreateSnippet();
   const navigate = useNavigate();
 
   const moodEmojis = [
@@ -75,8 +74,8 @@ const CreateSnippet = () => {
       };
 
       // TODO: add toast or notification
-      await createSnippet(snippet).catch((e) => {
-        console.error('Error creating snippet', e);
+      await createSnippet(snippet).catch((error) => {
+        console.error('Error creating snippet:', error);
       });
 
       if (!error) {

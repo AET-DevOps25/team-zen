@@ -34,6 +34,18 @@ const dashboardRoute = createRoute({
   component: Dashboard,
 });
 
+const dashboardTabRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/dashboard/$tab',
+  component: Dashboard,
+});
+
+const dashboardJournalRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/journal/$journalId',
+  component: Journal,
+});
+
 const profileRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/profile',
@@ -57,6 +69,8 @@ const snippetRoute = createRoute({
 const routeTree = rootRoute.addChildren([
   indexRoute,
   dashboardRoute,
+  dashboardTabRoute,
+  dashboardJournalRoute,
   profileRoute,
   journalRoute,
   snippetRoute,

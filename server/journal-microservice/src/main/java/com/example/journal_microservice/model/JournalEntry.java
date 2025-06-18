@@ -22,7 +22,7 @@ public class JournalEntry {
     private String title;
     private String summary;
     private Date date;
-    private Mood mood;
+    private Double dailyMood;
     private List<String> snippetIds = new ArrayList<>();
     private String journalInsight;
     private Date updatedAt;
