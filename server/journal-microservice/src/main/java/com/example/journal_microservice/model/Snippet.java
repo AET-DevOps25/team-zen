@@ -21,10 +21,11 @@ public class Snippet {
     private String id;
     private String content;
     private Date timestamp;
-    private Mood mood;
+    private Double mood;
     private List<String> tags;
     // The journalEntryID that contains this snippet
     private String journalEntryId;
-    private String userId;
-    private Date updatedAt;
+    private String userId; // The user ID of the user who created this snippet
+    private Date updatedAt; // when updated
 }
+

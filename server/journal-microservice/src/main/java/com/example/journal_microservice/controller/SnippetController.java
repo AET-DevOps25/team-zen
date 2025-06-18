@@ -49,11 +49,9 @@ public class SnippetController {
         if (entry == null) {
             entry = new JournalEntry();
             entry.setDate(snippetDate);
-            entry.setTitle("Entry for " + snippetDate.toString());
-            entry.setSummary("");
             entry.setSnippetIds(new ArrayList<>());
             entry.setUpdatedAt(snippetDate);
-
+            entry.setUserId(snippet.getUserId());
             entry = journalEntryRepository.save(entry);
         }
 
@@ -62,6 +60,8 @@ public class SnippetController {
         Snippet savedSnippet = snippetRepository.save(snippet);
 
         entry.getSnippetIds().add(savedSnippet.getId());
+        double currentMood = entry.getDailyMood() != null ? entry.getDailyMood() : 0.0;
+        entry.setDailyMood((currentMood + snippet.getMood()) / (entry.getSnippetIds().size()));
         journalEntryRepository.save(entry);
 
         User user = restClient.get()
@@ -93,12 +93,15 @@ public class SnippetController {
 
         JournalEntry entry = journalEntryRepository.findByDate(snippetDate);
         if (entry != null) {
-            entry.getSnippetIds().remove(snippet.getId());
-            journalEntryRepository.save(entry);
+            List<String> snippetIds = entry.getSnippetIds();
+            entry.setDailyMood((entry.getDailyMood() * snippetIds.size() - snippet.getMood()) / (snippetIds.size() - 1));
 
-            if (entry.getSnippetIds().isEmpty()) {
-                journalEntryRepository.delete(entry);
+            if (snippetIds.size() <= 1) {
+                throw new IllegalStateException("Cannot delete the last remaining snippet in a journal entry.");
             }
+
+            snippetIds.remove(snippet.getId());
+            journalEntryRepository.save(entry);
         }
 
         snippetRepository.deleteById(id);
