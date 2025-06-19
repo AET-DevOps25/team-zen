@@ -97,7 +97,7 @@ export const useGetAllJournals = () => {
 export const useUpdateJournal = () => {
   const { getToken } = useAuth();
 
-  const updateJournal = async (updatedJournal) => {
+  const updateJournal = async (updatedJournal: JournalEntry) => {
     const token = await getToken();
     const response = await fetch(
       `${API_BASE_URL}/api/journalEntry/${updatedJournal.id}`,
