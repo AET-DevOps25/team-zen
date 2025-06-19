@@ -2,10 +2,10 @@ import { useNavigate } from '@tanstack/react-router';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Clock, Mic, Save } from 'lucide-react';
 import { useState } from 'react';
+import { useUser } from '@clerk/clerk-react';
 import type { Snippet } from '@/model/snippet';
 import { Button } from '@/components/ui/button';
 import { useCreateSnippet } from '@/api/snippet';
-import { useUser } from '@clerk/clerk-react';
 
 const CreateSnippet = () => {
   const { user } = useUser();

@@ -15,10 +15,10 @@ import {
   TrendingUp,
   Zap,
 } from 'lucide-react';
-import {useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Mood } from '@/model/snippet';
-import {months, moodEmojis } from '@/mock/data';
-import {useGetAllJournals} from "@/api/journal.ts";
+import { months, moodEmojis } from '@/mock/data';
+import { useGetAllJournals } from '@/api/journal.ts';
 
 export interface JournalEntry {
   id: string;
@@ -52,10 +52,8 @@ const JournalHistory = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [searchResults, setSearchResults] = useState<Array<JournalEntry>>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [journals, setJournals] = useState<JournalEntry[]>([])
-  const {
-    mutateAsync: getAllJournals,
-  } = useGetAllJournals();
+  const [journals, setJournals] = useState<Array<JournalEntry>>([]);
+  const { mutateAsync: getAllJournals } = useGetAllJournals();
 
   const navigate = useNavigate();
 
@@ -170,13 +168,11 @@ const JournalHistory = () => {
   }, []);
 
   useEffect(() => {
-    console.log("search query", searchQuery)
-    if(journals){
-      console.log("journals", journals)
-
+    console.log('search query', searchQuery);
+    if (journals) {
+      console.log('journals', journals);
     }
   }, [journals, searchQuery]);
-
 
   // Highlight matching text
   const highlightText = (text: string, keywords: Array<string>) => {
@@ -330,8 +326,7 @@ const JournalHistory = () => {
       0,
     );
     const avgMood = (
-      journals.reduce((sum, journal) => sum + journal.mood, 0) /
-      totalJournals
+      journals.reduce((sum, journal) => sum + journal.mood, 0) / totalJournals
     ).toFixed(1);
     const avgWordsPerJournal = Math.round(totalWords / totalJournals);
 

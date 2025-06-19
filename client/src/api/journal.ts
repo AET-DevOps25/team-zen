@@ -1,5 +1,5 @@
-import {useMutation, useQuery} from '@tanstack/react-query';
-import {useAuth, useUser} from '@clerk/clerk-react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useAuth, useUser } from '@clerk/clerk-react';
 import { API_BASE_URL } from './base';
 
 export const testQuery = () => {
@@ -38,14 +38,16 @@ export const useGetJournal = () => {
     const token = await getToken();
     const today = new Date().toISOString().split('T')[0];
 
-    const response = await fetch(`${API_BASE_URL}/api/journalEntry/${user?.id}?date=${today}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
+    const response = await fetch(
+      `${API_BASE_URL}/api/journalEntry/${user?.id}?date=${today}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
       },
-    });
-
+    );
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -68,13 +70,16 @@ export const useGetAllJournals = () => {
   const fetchAllJournals = async () => {
     const token = await getToken();
 
-    const response = await fetch(`${API_BASE_URL}/api/journalEntry/${user?.id}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
+    const response = await fetch(
+      `${API_BASE_URL}/api/journalEntry/${user?.id}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
       },
-    });
+    );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -89,20 +94,22 @@ export const useGetAllJournals = () => {
   });
 };
 
-
 export const useUpdateJournal = () => {
   const { getToken } = useAuth();
 
   const updateJournal = async (updatedJournal) => {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/journalEntry/${updatedJournal.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
+    const response = await fetch(
+      `${API_BASE_URL}/api/journalEntry/${updatedJournal.id}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(updatedJournal),
       },
-      body: JSON.stringify(updatedJournal),
-    });
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to update journal. Status: ${response.status}`);

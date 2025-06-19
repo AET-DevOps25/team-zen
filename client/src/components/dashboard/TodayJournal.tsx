@@ -12,18 +12,16 @@ import {
   Zap,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useUser } from '@clerk/clerk-react';
 import { Button } from '../ui/button';
 import type { Snippet } from '@/model/snippet';
-import {useGetSnippets} from "@/api/snippet.ts";
-import {useUser} from "@clerk/clerk-react";
+import { useGetSnippets } from '@/api/snippet.ts';
 
 const TodayJournal = () => {
   const [snippets, setSnippets] = useState<Array<Snippet>>([]);
   const [currentStreak] = useState(7);
   const [todaysMood] = useState(4);
-  const {
-    mutateAsync: fetchSnippets,
-  } = useGetSnippets();
+  const { mutateAsync: fetchSnippets } = useGetSnippets();
   const { user } = useUser();
 
   const navigate = useNavigate();
@@ -94,7 +92,7 @@ const TodayJournal = () => {
       }
     };
 
-    if(user) {
+    if (user) {
       loadSnippets();
       // loadJournal();
     }

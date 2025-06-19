@@ -12,11 +12,11 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
+import { useUser } from '@clerk/clerk-react';
 import { Button } from '@/components/ui/button';
-import {useGetSnippets} from "@/api/snippet.ts";
+import { useGetSnippets } from '@/api/snippet.ts';
 // import {useGetJournal} from "@/api/journal.ts";
-import {useUser} from "@clerk/clerk-react";
-import {useGetJournal, useUpdateJournal} from "@/api/journal.ts";
+import { useGetJournal, useUpdateJournal } from '@/api/journal.ts';
 // import type { JournalEntry } from '@/model/journal';
 
 interface Snippet {
@@ -34,19 +34,13 @@ const JournalView = () => {
   const [isEditing, setIsEditing] = useState(false);
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const navigate = useNavigate();
-  const {
-    mutateAsync: fetchSnippets,
-  } = useGetSnippets();
-  const {
-    mutateAsync: fetchJournal,
-  } = useGetJournal();
-  const {
-    mutateAsync: updateJournal,
-  } = useUpdateJournal();
+  const { mutateAsync: fetchSnippets } = useGetSnippets();
+  const { mutateAsync: fetchJournal } = useGetJournal();
+  const { mutateAsync: updateJournal } = useUpdateJournal();
 
-  const [snippets, setSnippets] = useState<Snippet[]>([]);
-  const {user} = useUser();
-  const [journalEntry, setJournalEntry] = useState<JournalEntry>()
+  const [snippets, setSnippets] = useState<Array<Snippet>>([]);
+  const { user } = useUser();
+  const [journalEntry, setJournalEntry] = useState<JournalEntry>();
 
   useEffect(() => {
     const loadSnippets = async () => {
@@ -69,7 +63,7 @@ const JournalView = () => {
       }
     };
 
-    if(user) {
+    if (user) {
       loadSnippets();
       loadJournal();
     }
@@ -82,7 +76,7 @@ const JournalView = () => {
   }, [journalEntry]);
 
   useEffect(() => {
-    console.log("journalContent updated:", journalContent);
+    console.log('journalContent updated:', journalContent);
   }, [journalContent]);
 
   // Mock snippets for demonstration - in a real app this would come from props or state
@@ -129,7 +123,6 @@ const JournalView = () => {
   //     setJournalContent(journalEntry.summary)
   //   }
   // }, [journalEntry]);
-
 
   // const generateJournalFromSnippets = (snippetList: Array<Snippet>) => {
   //   const sortedSnippets = [...snippetList].sort(
@@ -183,15 +176,17 @@ const JournalView = () => {
       .map(([tag]) => tag);
   };
 
-  const handleContentChange = async(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleContentChange = async (
+    e: React.ChangeEvent<HTMLTextAreaElement>,
+  ) => {
     setJournalContent(e.target.value);
   };
 
-  const handleUpdate = async() => {
+  const handleUpdate = async () => {
     if (journalEntry?.summary !== journalContent) {
-      await updateJournal({...journalEntry, summary: journalContent });
+      await updateJournal({ ...journalEntry, summary: journalContent });
     }
-  }
+  };
 
   const handleBackToDashboard = () => {
     navigate({ to: '/dashboard' });
@@ -315,10 +310,10 @@ const JournalView = () => {
                       Journal Entry
                     </h2>
                     <button
-                        onClick={() => {
-                          if (isEditing) handleUpdate();
-                          setIsEditing(!isEditing);
-                        }}
+                      onClick={() => {
+                        if (isEditing) handleUpdate();
+                        setIsEditing(!isEditing);
+                      }}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                         isEditing
                           ? 'bg-teal-500 text-white hover:bg-teal-600'
