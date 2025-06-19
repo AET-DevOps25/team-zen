@@ -12,7 +12,12 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
+import { useUser } from '@clerk/clerk-react';
 import { Button } from '@/components/ui/button';
+import { useGetSnippets } from '@/api/snippet.ts';
+// import {useGetJournal} from "@/api/journal.ts";
+import { useGetJournal, useUpdateJournal } from '@/api/journal.ts';
+// import type { JournalEntry } from '@/model/journal';
 
 interface Snippet {
   id: number;
@@ -25,88 +30,138 @@ interface Snippet {
 
 const JournalView = () => {
   const [activeTab, setActiveTab] = useState<'edit' | 'insights'>('edit');
-  const [journalContent, setJournalContent] = useState('');
+  const [journalContent, setJournalContent] = useState<string>('');
   const [isEditing, setIsEditing] = useState(false);
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const navigate = useNavigate();
+  const { mutateAsync: fetchSnippets } = useGetSnippets();
+  const { mutateAsync: fetchJournal } = useGetJournal();
+  const { mutateAsync: updateJournal } = useUpdateJournal();
+
+  const [snippets, setSnippets] = useState<Array<Snippet>>([]);
+  const { user } = useUser();
+  const [journalEntry, setJournalEntry] = useState<JournalEntry>();
+
+  useEffect(() => {
+    const loadSnippets = async () => {
+      try {
+        const result = await fetchSnippets();
+        console.log('Fetched snippets:', result);
+        setSnippets(result);
+      } catch (e) {
+        console.error('Failed to fetch snippets:', e);
+      }
+    };
+
+    const loadJournal = async () => {
+      try {
+        const result = await fetchJournal();
+        console.log('Fetched journal:', result[0].summary);
+        setJournalEntry(result[0]);
+      } catch (e) {
+        console.error('Failed to fetch journal:', e);
+      }
+    };
+
+    if (user) {
+      loadSnippets();
+      loadJournal();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (journalEntry?.summary) {
+      setJournalContent(journalEntry.summary);
+    }
+  }, [journalEntry]);
+
+  useEffect(() => {
+    console.log('journalContent updated:', journalContent);
+  }, [journalContent]);
 
   // Mock snippets for demonstration - in a real app this would come from props or state
-  const snippets: Array<Snippet> = [
-    {
-      id: 1,
-      content:
-        'Had a great morning coffee and felt energized for the day ahead. The weather is perfect!',
-      mood: 5,
-      timestamp: new Date().toISOString(),
-      tags: ['morning', 'energy'],
-      aiInsight: 'Positive morning routine detected',
-    },
-    {
-      id: 2,
-      content:
-        'Meeting went well, but feeling a bit overwhelmed with the workload.',
-      mood: 3,
-      timestamp: new Date(Date.now() - 3600000).toISOString(),
-      tags: ['work', 'stress'],
-      aiInsight: 'Work stress pattern identified',
-    },
-    {
-      id: 3,
-      content:
-        'Took a walk during lunch break. Fresh air really helped clear my mind.',
-      mood: 4,
-      timestamp: new Date(Date.now() - 7200000).toISOString(),
-      tags: ['exercise', 'mindfulness'],
-      aiInsight: 'Physical activity boosting mood',
-    },
-  ];
+  // const snippets: Array<Snippet> = [
+  //   {
+  //     id: 1,
+  //     content:
+  //       'Had a great morning coffee and felt energized for the day ahead. The weather is perfect!',
+  //     mood: 5,
+  //     timestamp: new Date().toISOString(),
+  //     tags: ['morning', 'energy'],
+  //     aiInsight: 'Positive morning routine detected',
+  //   },
+  //   {
+  //     id: 2,
+  //     content:
+  //       'Meeting went well, but feeling a bit overwhelmed with the workload.',
+  //     mood: 3,
+  //     timestamp: new Date(Date.now() - 3600000).toISOString(),
+  //     tags: ['work', 'stress'],
+  //     aiInsight: 'Work stress pattern identified',
+  //   },
+  //   {
+  //     id: 3,
+  //     content:
+  //       'Took a walk during lunch break. Fresh air really helped clear my mind.',
+  //     mood: 4,
+  //     timestamp: new Date(Date.now() - 7200000).toISOString(),
+  //     tags: ['exercise', 'mindfulness'],
+  //     aiInsight: 'Physical activity boosting mood',
+  //   },
+  // ];
 
   // Generate initial journal content from snippets
-  useEffect(() => {
-    if (snippets.length > 0 && !journalContent) {
-      const generatedContent = generateJournalFromSnippets(snippets);
-      setJournalContent(generatedContent);
-    }
-  }, [snippets, journalContent]);
+  // useEffect(() => {
+  //   if (snippets.length > 0 && !journalContent) {
+  //     const generatedContent = generateJournalFromSnippets(snippets);
+  //     setJournalContent(generatedContent);
+  //   }
+  // }, [snippets, journalContent]);
 
-  const generateJournalFromSnippets = (snippetList: Array<Snippet>) => {
-    const sortedSnippets = [...snippetList].sort(
-      (a, b) =>
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
-    );
+  // useEffect(() => {
+  //   if (journalEntry){
+  //     setJournalContent(journalEntry.summary)
+  //   }
+  // }, [journalEntry]);
 
-    let content = `# Today's Journal - ${new Date().toLocaleDateString(
-      'en-US',
-      {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      },
-    )}\n\n`;
-
-    content += `## Daily Reflection\n\n`;
-
-    sortedSnippets.forEach((snippet) => {
-      const time = new Date(snippet.timestamp).toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-      content += `**${time}** - ${snippet.content}\n\n`;
-    });
-
-    content += `## Mood Summary\n\n`;
-    const avgMood = (
-      snippetList.reduce((sum, s) => sum + s.mood, 0) / snippetList.length
-    ).toFixed(1);
-    content += `Average mood today: ${avgMood}/5\n\n`;
-
-    content += `## Key Insights\n\n`;
-    content += `- Captured ${snippetList.length} moments throughout the day\n`;
-    content += `- Most common themes: ${getMostCommonTags(snippetList).join(', ')}\n\n`;
-
-    return content;
-  };
+  // const generateJournalFromSnippets = (snippetList: Array<Snippet>) => {
+  //   const sortedSnippets = [...snippetList].sort(
+  //     (a, b) =>
+  //       new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+  //   );
+  //
+  //   let content = journal?.title ?? `# Today's Journal - ${new Date().toLocaleDateString(
+  //     'en-US',
+  //     {
+  //       weekday: 'long',
+  //       year: 'numeric',
+  //       month: 'long',
+  //       day: 'numeric',
+  //     },
+  //   )}\n\n`;
+  //
+  //   content += `## Daily Reflection\n\n`;
+  //
+  //   sortedSnippets.forEach((snippet) => {
+  //     const time = new Date(snippet.timestamp).toLocaleTimeString([], {
+  //       hour: '2-digit',
+  //       minute: '2-digit',
+  //     });
+  //     content += `**${time}** - ${snippet.content}\n\n`;
+  //   });
+  //
+  //   content += `## Mood Summary\n\n`;
+  //   const avgMood = (
+  //     snippetList.reduce((sum, s) => sum + s.mood, 0) / snippetList.length
+  //   ).toFixed(1);
+  //   content += `Average mood today: ${avgMood}/5\n\n`;
+  //
+  //   content += `## Key Insights\n\n`;
+  //   content += `- Captured ${snippetList.length} moments throughout the day\n`;
+  //   content += `- Most common themes: ${getMostCommonTags(snippetList).join(', ')}\n\n`;
+  //
+  //   return content;
+  // };
 
   const getMostCommonTags = (snippetList: Array<Snippet>) => {
     const tagCount: Record<string, number> = {};
@@ -121,8 +176,20 @@ const JournalView = () => {
       .map(([tag]) => tag);
   };
 
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleContentChange = async (
+    e: React.ChangeEvent<HTMLTextAreaElement>,
+  ) => {
     setJournalContent(e.target.value);
+  };
+
+  const handleUpdate = async () => {
+    if (journalEntry?.summary !== journalContent && journalEntry?.id) {
+      await updateJournal({
+        ...journalEntry,
+        summary: journalContent,
+        id: journalEntry.id,
+      });
+    }
   };
 
   const handleBackToDashboard = () => {
@@ -247,7 +314,10 @@ const JournalView = () => {
                       Journal Entry
                     </h2>
                     <button
-                      onClick={() => setIsEditing(!isEditing)}
+                      onClick={() => {
+                        if (isEditing) handleUpdate();
+                        setIsEditing(!isEditing);
+                      }}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                         isEditing
                           ? 'bg-teal-500 text-white hover:bg-teal-600'
@@ -294,7 +364,7 @@ const JournalView = () => {
                   Today's Snippets
                 </h3>
                 <div className="space-y-3">
-                  {snippets.map((snippet) => (
+                  {snippets.map((snippet: Snippet) => (
                     <div key={snippet.id} className="p-3 bg-gray-50 rounded-lg">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-lg">
@@ -311,7 +381,7 @@ const JournalView = () => {
                       <p className="text-sm text-gray-700 line-clamp-2">
                         {snippet.content}
                       </p>
-                      {snippet.tags.length > 0 && (
+                      {snippet.tags?.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-2">
                           {snippet.tags.map((tag) => (
                             <span

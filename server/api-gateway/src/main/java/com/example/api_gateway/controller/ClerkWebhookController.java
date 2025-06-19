@@ -45,7 +45,7 @@ public class ClerkWebhookController {
         ResponseEntity response = ResponseEntity.status(HttpStatus.UNAUTHORIZED)
             .body("Invalid signature");
         return Mono.just(response);
-      }else{
+      } else {
         Logger logger = org.slf4j.LoggerFactory.getLogger(ClerkWebhookController.class);
         logger.debug("Webhook signature verified successfully");
         return processWebhook(payload).thenReturn(ResponseEntity.ok("Webhook received"));
@@ -147,6 +147,7 @@ public class ClerkWebhookController {
 
       try {
         Map<String, Object> event = objectMapper.readValue(payload, Map.class);
+
         if (event.containsKey("type") && event.get("type").equals("user.created")) {
 
           logger.info("User created event: {}", event);
@@ -175,8 +176,47 @@ public class ClerkWebhookController {
           logger.info("User created in user microservice: {}", responseUser);
 
         } else if (event.containsKey("type") && event.get("type").equals("user.deleted")) {
-          // TODO: Handle user deletion in user microservice
+
           logger.info("User deleted event: {}", event);
+
+          Map<String, Object> data = (Map<String, Object>) event.get("data");
+          String userId = (String) data.get("id");
+
+          // Send http request to user microservice to create user (blocking)
+          restClient.delete()
+            .uri("http://localhost:8080/api/users/" + userId)
+            .retrieve()
+            .toBodilessEntity();
+
+          logger.info("User deleted in user microservice");
+
+        } else if (event.containsKey("type") && event.get("type").equals("user.updated")) {
+
+          logger.info("User updated event: {}", event);
+
+          Map<String, Object> data = (Map<String, Object>) event.get("data");
+          String userId = (String) data.get("id");
+          String firstName = (String) data.get("first_name");
+          String lastName = (String) data.get("last_name");
+          String email = (String) ((Map<String, Object>) (((ArrayList) data.get("email_addresses")).get(0)))
+              .get("email_address");
+
+          Map<String, Object> user = Map.of(
+              "id", userId,
+              "name", firstName + " " + lastName,
+              "email", email,
+              "journalEntries", new String[0],
+              "snippets", new String[0]);
+
+          // Send http request to user microservice to create user (blocking)
+          User responseUser = restClient.put()
+              .uri("http://localhost:8080/api/users/" + userId)
+              .body(user)
+              .retrieve()
+              .body(User.class);
+
+          logger.info("User updated in user microservice: {}", responseUser);
+
         } else {
           logger.warn("Unhandled event type: {}", event.get("type"));
         }

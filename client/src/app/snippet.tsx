@@ -2,18 +2,20 @@ import { useNavigate } from '@tanstack/react-router';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Clock, Mic, Save } from 'lucide-react';
 import { useState } from 'react';
+import { useUser } from '@clerk/clerk-react';
 import type { Snippet } from '@/model/snippet';
 import { Button } from '@/components/ui/button';
 import { useCreateSnippet } from '@/api/snippet';
 
 const CreateSnippet = () => {
+  const { user } = useUser();
+  const userId = user?.id || '';
   const [content, setContent] = useState<string>('');
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [tags, setTags] = useState<Array<string>>([]);
   const [isRecording, setIsRecording] = useState<boolean>(false);
 
-  const { mutateAsync: createSnippet, error } = useCreateSnippet(); // Assuming you have a hook to create snippets
-
+  const { mutateAsync: createSnippet, error } = useCreateSnippet();
   const navigate = useNavigate();
 
   const moodEmojis = [
@@ -67,12 +69,13 @@ const CreateSnippet = () => {
         content,
         mood: selectedMood,
         tags,
+        userId: userId,
         timestamp: new Date().toISOString(),
       };
 
       // TODO: add toast or notification
-      await createSnippet(snippet).catch((e) => {
-        console.error('Error creating snippet', e);
+      await createSnippet(snippet).catch((error) => {
+        console.error('Error creating snippet:', error);
       });
 
       if (!error) {
