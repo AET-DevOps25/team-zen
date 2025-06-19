@@ -44,7 +44,7 @@ public class SnippetController {
 
         Date snippetDate = getDateOnly(snippet.getTimestamp());
 
-        JournalEntry entry = journalEntryRepository.findByDate(snippetDate, snippet.getUserId());
+        JournalEntry entry = journalEntryRepository.findByDateAndUserId(snippetDate, snippet.getUserId());
 
         if (entry == null) {
             entry = new JournalEntry();
@@ -91,7 +91,7 @@ public class SnippetController {
 
         Date snippetDate = getDateOnly(snippet.getTimestamp());
 
-        JournalEntry entry = journalEntryRepository.findByDate(snippetDate, snippet.getUserId());
+        JournalEntry entry = journalEntryRepository.findByDateAndUserId(snippetDate, snippet.getUserId());
         if (entry != null) {
             List<String> snippetIds = entry.getSnippetIds();
             entry.setDailyMood((entry.getDailyMood() * snippetIds.size() - snippet.getMood()) / (snippetIds.size() - 1));
@@ -136,7 +136,9 @@ public class SnippetController {
                             "Snippet not found for user: " + userId + " and snippetId: " + snippetId));
             return ResponseEntity.ok(snippet);
         }
+        System.out.println("Fetching snippets for user: " + userId + " on date: " + date);
         List<Snippet> snippets = snippetRepository.findByUserId(userId);
+        System.out.println("Snippets found: " + snippets);
         if (snippets.isEmpty()) {
             throw new IllegalArgumentException("No snippets found for user: " + userId);
         }
