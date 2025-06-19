@@ -15,7 +15,6 @@ import java.util.Date;
 import java.util.List;
 import java.time.ZoneId;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import org.springframework.http.ResponseEntity;
 
 @RestController
@@ -36,6 +35,33 @@ public class SnippetController {
         return snippetRepository.findAll();
     }
 
+    @GetMapping("/{userId}")
+    public ResponseEntity<?> getUserSnippets(@PathVariable("userId") String userId,
+            @RequestParam(name = "snippetId", required = false) String snippetId,
+            @RequestParam(name = "data", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        if (snippetId != null) {
+            Snippet snippet = snippetRepository.findByUserIdAndId(userId, snippetId)
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Snippet not found for user: " + userId + " and snippetId: " + snippetId));
+            return ResponseEntity.ok(snippet);
+        }
+        List<Snippet> snippets = snippetRepository.findByUserId(userId);
+        if (snippets.isEmpty()) {
+            throw new IllegalArgumentException("No snippets found for user: " + userId);
+        }
+
+        if (date != null) {
+            snippets = snippets.stream()
+                    .filter(s -> s.getUpdatedAt() != null &&
+                            s.getUpdatedAt().toInstant()
+                                    .atZone(ZoneId.systemDefault())
+                                    .toLocalDate()
+                                    .isEqual(date))
+                    .toList();
+        }
+        return ResponseEntity.ok(snippets);
+    }
+
     @PostMapping
     public Snippet createSnippet(@RequestBody Snippet snippet) {
         if (snippet.getTimestamp() == null) {
@@ -53,6 +79,24 @@ public class SnippetController {
             entry.setUpdatedAt(snippetDate);
             entry.setUserId(snippet.getUserId());
             entry = journalEntryRepository.save(entry);
+
+            User user = restClient.get()
+                    .uri("http://localhost:8080/api/users/" + entry.getUserId())
+                    .retrieve()
+                    .body(User.class);
+            String[] currentEntries = user.getJournalEntries();
+            logger.debug("Current journal entries: {}", Arrays.toString(currentEntries));
+            String[] updatedEntries = Arrays.copyOf(currentEntries, currentEntries.length + 1);
+            updatedEntries[currentEntries.length] = entry.getId();
+            user.setJournalEntries(updatedEntries);
+            logger.debug("Updated journal entries: {}", Arrays.toString(updatedEntries));
+            User newUser = restClient.put()
+                    .uri("http://localhost:8080/api/users/" + entry.getUserId())
+                    .body(user)
+                    .retrieve()
+                    .body(User.class);
+            logger.debug("User updated with new journal entry: {}", newUser);
+
         }
 
         snippet.setJournalEntryId(entry.getId());
@@ -94,7 +138,8 @@ public class SnippetController {
         JournalEntry entry = journalEntryRepository.findByDateAndUserId(snippetDate, snippet.getUserId());
         if (entry != null) {
             List<String> snippetIds = entry.getSnippetIds();
-            entry.setDailyMood((entry.getDailyMood() * snippetIds.size() - snippet.getMood()) / (snippetIds.size() - 1));
+            entry.setDailyMood(
+                    (entry.getDailyMood() * snippetIds.size() - snippet.getMood()) / (snippetIds.size() - 1));
 
             if (snippetIds.size() <= 1) {
                 throw new IllegalStateException("Cannot delete the last remaining snippet in a journal entry.");
@@ -123,36 +168,6 @@ public class SnippetController {
         snippet.setUpdatedAt(new Date());
 
         snippetRepository.save(snippet);
-    }
-
-    @GetMapping("/{userId}")
-    public ResponseEntity<?> getUserSnippets(@PathVariable("userId") String userId,
-            @RequestParam(required = false) String snippetId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-
-        if (snippetId != null) {
-            Snippet snippet = snippetRepository.findByUserIdAndId(userId, snippetId)
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "Snippet not found for user: " + userId + " and snippetId: " + snippetId));
-            return ResponseEntity.ok(snippet);
-        }
-        System.out.println("Fetching snippets for user: " + userId + " on date: " + date);
-        List<Snippet> snippets = snippetRepository.findByUserId(userId);
-        System.out.println("Snippets found: " + snippets);
-        if (snippets.isEmpty()) {
-            throw new IllegalArgumentException("No snippets found for user: " + userId);
-        }
-
-        if (date != null) {
-            snippets = snippets.stream()
-                    .filter(s -> s.getUpdatedAt() != null &&
-                            s.getUpdatedAt().toInstant()
-                                    .atZone(ZoneId.systemDefault())
-                                    .toLocalDate()
-                                    .isEqual(date))
-                    .toList();
-        }
-        return ResponseEntity.ok(snippets);
     }
 
     private Date getDateOnly(Date dateTime) {
