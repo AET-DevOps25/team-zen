@@ -190,7 +190,7 @@ public class ClerkWebhookController {
 
           logger.info("User deleted in user microservice");
 
-        } else if (event.containsKey("type") && event.get("type").equals("user.deleted")) {
+        } else if (event.containsKey("type") && event.get("type").equals("user.updated")) {
 
           logger.info("User updated event: {}", event);
 
