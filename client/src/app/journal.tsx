@@ -184,7 +184,11 @@ const JournalView = () => {
 
   const handleUpdate = async () => {
     if (journalEntry?.summary !== journalContent && journalEntry?.id) {
-      await updateJournal({ ...journalEntry, summary: journalContent, id: journalEntry.id });
+      await updateJournal({
+        ...journalEntry,
+        summary: journalContent,
+        id: journalEntry.id,
+      });
     }
   };
 
