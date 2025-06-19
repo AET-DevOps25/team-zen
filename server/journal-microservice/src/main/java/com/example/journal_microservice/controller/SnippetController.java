@@ -44,7 +44,7 @@ public class SnippetController {
 
         Date snippetDate = getDateOnly(snippet.getTimestamp());
 
-        JournalEntry entry = journalEntryRepository.findByDate(snippetDate);
+        JournalEntry entry = journalEntryRepository.findByDate(snippetDate, snippet.getUserId());
 
         if (entry == null) {
             entry = new JournalEntry();
@@ -91,7 +91,7 @@ public class SnippetController {
 
         Date snippetDate = getDateOnly(snippet.getTimestamp());
 
-        JournalEntry entry = journalEntryRepository.findByDate(snippetDate);
+        JournalEntry entry = journalEntryRepository.findByDate(snippetDate, snippet.getUserId());
         if (entry != null) {
             List<String> snippetIds = entry.getSnippetIds();
             entry.setDailyMood((entry.getDailyMood() * snippetIds.size() - snippet.getMood()) / (snippetIds.size() - 1));

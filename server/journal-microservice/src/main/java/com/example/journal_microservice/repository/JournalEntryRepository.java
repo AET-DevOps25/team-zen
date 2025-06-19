@@ -10,7 +10,7 @@ import java.util.Optional;
 
 @Repository
 public interface JournalEntryRepository extends MongoRepository<JournalEntry, String> {
-    JournalEntry findByDate(Date date);
+    JournalEntry findByDateAndUserId(Date date, String userId);
 
     List<JournalEntry> findByUserId(String userId);
 
