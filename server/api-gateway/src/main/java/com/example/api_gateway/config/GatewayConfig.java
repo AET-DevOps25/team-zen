@@ -36,7 +36,7 @@ public class GatewayConfig {
 
             // Journal Service (with auth filter)
             .route("journal-service", r -> r
-                .path("/api/journalEntry/**", "/api/snippets/**")
+                .path("/api/journalEntry/**", "/api/snippets/**", "/api/summary/**")
                 .filters(f -> f.filter(clerkAuthenticationFilter))
                 .uri(journalServiceUri))
 
