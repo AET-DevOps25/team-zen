@@ -101,9 +101,9 @@ public class JournalEntryController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<?> getUserJournals(@PathVariable String userId,
-            @RequestParam(required = false) String journalId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+    public ResponseEntity<?> getUserJournals(@PathVariable("userId") String userId,
+            @RequestParam(name="journalId", required = false) String journalId,
+            @RequestParam(name="date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
 
         if (journalId != null) {
             JournalEntry journalEntry = journalEntryRepository.findByUserIdAndId(userId, journalId)
@@ -130,7 +130,7 @@ public class JournalEntryController {
 
 
     @GetMapping("/{userId}/statistics")
-    public Map<String, Object> getStatistics(@PathVariable String userId) {
+    public Map<String, Object> getStatistics(@PathVariable("userId") String userId) {
         List<JournalEntry> userJournalEntries = journalEntryRepository.findByUserId(userId);
         List<Snippet> userSnippets = snippetRepository.findByUserId(userId);
 
