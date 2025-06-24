@@ -38,7 +38,7 @@ public class SnippetController {
     @GetMapping("/{userId}")
     public ResponseEntity<?> getUserSnippets(@PathVariable("userId") String userId,
             @RequestParam(name = "snippetId", required = false) String snippetId,
-            @RequestParam(name = "data", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+            @RequestParam(name = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         if (snippetId != null) {
             Snippet snippet = snippetRepository.findByUserIdAndId(userId, snippetId)
                     .orElseThrow(() -> new IllegalArgumentException(

@@ -16,6 +16,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useUser } from '@clerk/clerk-react';
 import type { Mood } from '@/model/snippet';
 import { months, moodEmojis } from '@/mock/data';
 import { useGetAllJournals } from '@/api/journal.ts';
@@ -45,6 +46,7 @@ interface SearchFilters {
 }
 
 const JournalHistory = () => {
+  const { user } = useUser();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMood, setSelectedMood] = useState('all');
   const [selectedMonth, setSelectedMonth] = useState('all');
@@ -154,23 +156,25 @@ const JournalHistory = () => {
   };
 
   useEffect(() => {
-    const fetchJournals = async () => {
-      try {
-        const data = await getAllJournals();
-        // TODO: Use journals instead of mock journals
-        setJournals(data);
-      } catch (error) {
-        console.error('Failed to fetch journals:', error);
-      }
-    };
+    if (user) {
+      const fetchJournals = async () => {
+        try {
+          const data = await getAllJournals();
+          // TODO: Use journals instead of mock journals
+          setJournals(data);
+        } catch (error) {
+          console.error('Failed to fetch journals:', error);
+        }
+      };
 
-    fetchJournals();
-  }, []);
+      fetchJournals();
+    }
+  }, [user]);
 
   useEffect(() => {
-    console.log('search query', searchQuery);
-    if (journals) {
-      console.log('journals', journals);
+    if (user) {
+      console.log('search query', searchQuery);
+      console.log(`${journals.length} journals`, journals);
     }
   }, [journals, searchQuery]);
 
@@ -276,6 +280,10 @@ const JournalHistory = () => {
   };
 
   const filteredJournals = useMemo(() => {
+    if (journals.length === 0) {
+      return [];
+    }
+    console.log('filtered journals', journals);
     if (searchQuery && searchResults.length > 0) {
       return searchResults;
     }
@@ -331,7 +339,7 @@ const JournalHistory = () => {
     const avgWordsPerJournal = Math.round(totalWords / totalJournals);
 
     return { totalJournals, totalWords, avgMood, avgWordsPerJournal };
-  }, []);
+  }, [journals]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

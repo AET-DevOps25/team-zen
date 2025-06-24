@@ -13,4 +13,7 @@ public interface SnippetRepository extends MongoRepository<Snippet, String> {
     List<Snippet> findByUserId(String userId);
 
     Optional<Snippet> findByUserIdAndId(String userId, String id);
+
+    List<Snippet> findByJournalEntryId(String journalId);
+
 }
