@@ -9,4 +9,5 @@ interface JournalEntry {
   wordCount?: number;
   tags?: Array<string>;
   keyStrategies?: Array<string>;
+  summary?: string;
 }

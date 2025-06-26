@@ -12,13 +12,17 @@ import {
   Zap,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useUser } from '@clerk/clerk-react';
 import { Button } from '../ui/button';
 import type { Snippet } from '@/model/snippet';
+import { useGetSnippets } from '@/api/snippet.ts';
 
 const TodayJournal = () => {
   const [snippets, setSnippets] = useState<Array<Snippet>>([]);
   const [currentStreak] = useState(7);
   const [todaysMood] = useState(4);
+  const { mutateAsync: fetchSnippets } = useGetSnippets();
+  const { user } = useUser();
 
   const navigate = useNavigate();
 
@@ -30,35 +34,38 @@ const TodayJournal = () => {
         ).toFixed(1)
       : 0;
 
-  const mockSnippets: Array<Snippet> = [
-    {
-      id: 1,
-      content:
-        'Had a great morning coffee and felt energized for the day ahead. The weather is perfect!',
-      mood: 5,
-      timestamp: new Date().toISOString(),
-      tags: ['morning', 'energy'],
-      insights: 'Positive morning routine detected',
-    },
-    {
-      id: 2,
-      content:
-        'Meeting went well, but feeling a bit overwhelmed with the workload.',
-      mood: 3,
-      timestamp: new Date(Date.now() - 3600000).toISOString(),
-      tags: ['work', 'stress'],
-      insights: 'Work stress pattern identified',
-    },
-    {
-      id: 3,
-      content:
-        'Took a walk during lunch break. Fresh air really helped clear my mind.',
-      mood: 4,
-      timestamp: new Date(Date.now() - 7200000).toISOString(),
-      tags: ['exercise', 'mindfulness'],
-      insights: 'Physical activity boosting mood',
-    },
-  ];
+  // const mockSnippets: Array<Snippet> = [
+  //   {
+  //     id: 1,
+  //     content:
+  //       'Had a great morning coffee and felt energized for the day ahead. The weather is perfect!',
+  //     mood: 5,
+  //     timestamp: new Date().toISOString(),
+  //     tags: ['morning', 'energy'],
+  //     insights: 'Positive morning routine detected',
+  //     userId: "user-id-placeholder", // Replace with actual user ID
+  //   },
+  //   {
+  //     id: 2,
+  //     content:
+  //       'Meeting went well, but feeling a bit overwhelmed with the workload.',
+  //     mood: 3,
+  //     timestamp: new Date(Date.now() - 3600000).toISOString(),
+  //     tags: ['work', 'stress'],
+  //     insights: 'Work stress pattern identified',
+  //     userId: "user-id-placeholder", // Replace with actual user ID
+  //   },
+  //   {
+  //     id: 3,
+  //     content:
+  //       'Took a walk during lunch break. Fresh air really helped clear my mind.',
+  //     mood: 4,
+  //     timestamp: new Date(Date.now() - 7200000).toISOString(),
+  //     tags: ['exercise', 'mindfulness'],
+  //     insights: 'Physical activity boosting mood',
+  //     userId: "user-id-placeholder", // Replace with actual user ID
+  //   },
+  // ];
 
   const handleCreateSnippet = () => {
     // Navigate to snippet creation page
@@ -75,8 +82,21 @@ const TodayJournal = () => {
   };
 
   useEffect(() => {
-    setSnippets(mockSnippets);
-  }, []);
+    const loadSnippets = async () => {
+      try {
+        const result = await fetchSnippets();
+        console.log('Fetched snippets:', result);
+        setSnippets(result);
+      } catch (e) {
+        console.error('Failed to fetch snippets:', e);
+      }
+    };
+
+    if (user) {
+      loadSnippets();
+      // loadJournal();
+    }
+  }, [user]);
 
   const moodEmojis = [
     { value: 1, emoji: '😢', label: 'Very Low', color: 'text-red-500' },
@@ -209,7 +229,7 @@ const TodayJournal = () => {
                     </div>
                   </div>
                   <p className="text-gray-700 mb-2">{snippet.content}</p>
-                  {snippet.tags.length > 0 && (
+                  {snippet.tags?.length > 0 && (
                     <div className="flex flex-wrap gap-1 mb-2">
                       {snippet.tags.map((tag: string) => (
                         <span

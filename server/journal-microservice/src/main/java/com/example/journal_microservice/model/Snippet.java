@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.Date;
+import java.util.List;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -20,10 +21,11 @@ public class Snippet {
     private String id;
     private String content;
     private Date timestamp;
-    private Mood mood;
-    private String[] tags;
-    private String insights; // Insights about the snippet
+    private Double mood;
+    private List<String> tags;
     // The journalEntryID that contains this snippet
     private String journalEntryId;
-    private String userID; // The user ID of the user who created this snippet
+    private String userId; // The user ID of the user who created this snippet
+    private Date updatedAt; // when updated
 }
+

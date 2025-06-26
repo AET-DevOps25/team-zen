@@ -19,7 +19,7 @@ const mockJournals: Array<JournalEntry> = [
       'Positive mood sustained throughout day',
     ],
     keyStrategies: [
-      'Morn∏ing walk routine',
+      'Morning walk routine',
       'Task prioritization',
       'Gratitude practice',
     ],

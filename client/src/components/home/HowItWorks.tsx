@@ -106,7 +106,7 @@ const HowItWorks = () => {
                   </motion.p>
                   {index === steps.length - 1 && (
                     <motion.a
-                      href="#"
+                      href="/dashboard"
                       className="btn-primary inline-block"
                       initial={{ opacity: 0, y: 20 }}
                       animate={

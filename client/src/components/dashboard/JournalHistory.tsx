@@ -15,9 +15,11 @@ import {
   TrendingUp,
   Zap,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useUser } from '@clerk/clerk-react';
 import type { Mood } from '@/model/snippet';
-import { mockJournals, months, moodEmojis } from '@/mock/data';
+import { months, moodEmojis } from '@/mock/data';
+import { useGetAllJournals } from '@/api/journal.ts';
 
 export interface JournalEntry {
   id: string;
@@ -44,6 +46,7 @@ interface SearchFilters {
 }
 
 const JournalHistory = () => {
+  const { user } = useUser();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMood, setSelectedMood] = useState('all');
   const [selectedMonth, setSelectedMonth] = useState('all');
@@ -51,6 +54,8 @@ const JournalHistory = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [searchResults, setSearchResults] = useState<Array<JournalEntry>>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [journals, setJournals] = useState<Array<JournalEntry>>([]);
+  const { mutateAsync: getAllJournals } = useGetAllJournals();
 
   const navigate = useNavigate();
 
@@ -150,6 +155,29 @@ const JournalHistory = () => {
     return filters;
   };
 
+  useEffect(() => {
+    if (user) {
+      const fetchJournals = async () => {
+        try {
+          const data = await getAllJournals();
+          // TODO: Use journals instead of mock journals
+          setJournals(data);
+        } catch (error) {
+          console.error('Failed to fetch journals:', error);
+        }
+      };
+
+      fetchJournals();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      console.log('search query', searchQuery);
+      console.log(`${journals.length} journals`, journals);
+    }
+  }, [journals, searchQuery]);
+
   // Highlight matching text
   const highlightText = (text: string, keywords: Array<string>) => {
     if (!keywords.length) return text;
@@ -177,7 +205,7 @@ const JournalHistory = () => {
     // Simulate API delay
     setTimeout(() => {
       const filters = processNaturalLanguageQuery(query);
-      let results = mockJournals;
+      let results = journals;
 
       // Apply mood filters
       if (filters.moods.length > 0) {
@@ -252,11 +280,15 @@ const JournalHistory = () => {
   };
 
   const filteredJournals = useMemo(() => {
+    if (journals.length === 0) {
+      return [];
+    }
+    console.log('filtered journals', journals);
     if (searchQuery && searchResults.length > 0) {
       return searchResults;
     }
 
-    let filtered = mockJournals;
+    let filtered = journals;
 
     // Apply traditional filters when not using smart search
     if (!searchQuery) {
@@ -296,19 +328,18 @@ const JournalHistory = () => {
   }, [searchQuery, searchResults, selectedMood, selectedMonth, sortBy]);
 
   const stats = useMemo(() => {
-    const totalJournals = mockJournals.length;
-    const totalWords = mockJournals.reduce(
+    const totalJournals = journals.length;
+    const totalWords = journals.reduce(
       (sum, journal) => sum + journal.wordCount,
       0,
     );
     const avgMood = (
-      mockJournals.reduce((sum, journal) => sum + journal.mood, 0) /
-      totalJournals
+      journals.reduce((sum, journal) => sum + journal.mood, 0) / totalJournals
     ).toFixed(1);
     const avgWordsPerJournal = Math.round(totalWords / totalJournals);
 
     return { totalJournals, totalWords, avgMood, avgWordsPerJournal };
-  }, []);
+  }, [journals]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
