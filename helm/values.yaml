@@ -11,7 +11,7 @@ namespace:
 client:
   image:
     repository: ghcr.io/aet-devops25/team-zen/client
-    tag: 7-set-up-terraform-and-ansible-scripts
+    tag: feat-kubernets-config-and-helm-charts
     pullPolicy: Always
   service:
     type: ClusterIP
