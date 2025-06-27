@@ -27,6 +27,10 @@ spec:
           env:
             - name: REACT_APP_API_URL
               value: "http://zenai-api-gateway:8085"
+            {{- range .Values.client.env }}
+            - name: {{ .name }}
+              value: {{ .value | quote }}
+             {{- end }}
           ports:
             - containerPort: {{ .Values.client.service.targetPort }}
       imagePullSecrets:

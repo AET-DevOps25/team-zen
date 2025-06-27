@@ -7,6 +7,8 @@ services:
       - '3000:80'
     environment:
       - REACT_APP_API_URL=http://localhost:8085
+      - API_HOST=api-gateway
+      - API_PORT=8085
     depends_on:
       - api-gateway
     networks:

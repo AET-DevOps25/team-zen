@@ -18,6 +18,11 @@ client:
     port: 3000
     targetPort: 3000
   replicaCount: 2
+  env:
+    - name: API_HOST
+      value: gateway-service.zenai-team.svc.cluster.local
+    - name: API_PORT
+      value: "8085"
 
 apiGateway:
   image:
