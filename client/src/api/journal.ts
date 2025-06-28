@@ -4,6 +4,7 @@ import { API_BASE_URL } from './base';
 import type { ApiResponse } from './base';
 import type { JournalEntry } from '@/model/journal';
 
+// Get today's journal entry for the user
 export const useGetJournal = () => {
   const { getToken } = useAuth();
   const { user } = useUser();
@@ -111,5 +112,35 @@ export const useUpdateJournal = () => {
     mutationKey: ['updateJournal'],
     mutationFn: updateJournal,
     retry: 1,
+  });
+};
+
+export const useGetSummary = (journalId: string, enabled: boolean = true) => {
+  const { getToken } = useAuth();
+
+  const fetchSummary = async (): Promise<string> => {
+    const token = await getToken();
+    const response = await fetch(`${API_BASE_URL}/api/summary/${journalId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch summary: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.summary;
+  };
+
+  return useQuery({
+    queryKey: ['summary', journalId],
+    queryFn: fetchSummary,
+    enabled: !!journalId && enabled,
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
   });
 };

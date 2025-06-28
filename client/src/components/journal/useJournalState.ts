@@ -54,6 +54,10 @@ export const useJournalState = () => {
     navigate({ to: '/dashboard' });
   }, [navigate]);
 
+  const handleSummarise = useCallback((summary: string) => {
+    setJournalContent(summary);
+  }, []);
+
   return {
     // State
     activeTab,
@@ -62,6 +66,7 @@ export const useJournalState = () => {
     isEditing,
     isEditingTitle,
     snippets,
+    journal,
     // Actions
     setActiveTab,
     setJournalContent,
@@ -70,5 +75,6 @@ export const useJournalState = () => {
     handleToggleEdit,
     handleTitleEditEnd,
     handleBackToDashboard,
+    handleSummarise,
   };
 };

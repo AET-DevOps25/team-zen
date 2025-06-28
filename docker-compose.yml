@@ -88,9 +88,9 @@ services:
   genai-microservice:
     build: ./genai
     environment:
+      - GENAI_API_URL=${GENAI_API_URL:-https://gpu.aet.cit.tum.de/api/chat/completions}
+      - GENAI_API_KEY=${GENAI_API_KEY}
       - WEAVIATE_HOST=http://weaviate:8080
-      - GENAI_API_KEY=value
-      - API_URL=https://gpu.aet.cit.tum.de/api/chat/completions
     depends_on:
       - weaviate
     networks:

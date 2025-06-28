@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api/genai")
 
 # Create a GENAI_API_KEY (Check here: https://artemis.tum.de/courses/446/lectures/1485)
 GENAI_API_KEY = os.getenv("GENAI_API_KEY")
-GENAI_API_URL = os.getenv("API_URL", "https://gpu.aet.cit.tum.de/api/chat/completions")
+GENAI_API_URL = os.getenv("GENAI_API_URL", "https://gpu.aet.cit.tum.de/api/chat/completions")
 
 class SummaryRequest(BaseModel):
     snippetContents: List[str]

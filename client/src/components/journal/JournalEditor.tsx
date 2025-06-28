@@ -1,17 +1,23 @@
 import { motion } from 'framer-motion';
+import { Brain } from 'lucide-react';
+import { useGetSummary } from '@/api/journal';
 
 interface JournalEditorProps {
   content: string;
   isEditing: boolean;
+  journalId?: string;
   onContentChange: (content: string) => void;
   onToggleEdit: () => void;
+  onSummarise?: (summary: string) => void;
 }
 
 export const JournalEditor = ({
   content,
   isEditing,
+  journalId,
   onContentChange,
   onToggleEdit,
+  onSummarise,
 }: JournalEditorProps) => {
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onContentChange(e.target.value);
@@ -30,6 +36,25 @@ export const JournalEditor = ({
     }
   };
 
+  const {
+    data: summary,
+    isLoading: isSummaryLoading,
+    refetch: fetchSummary,
+  } = useGetSummary(journalId || '', false); // Disable automatic fetching
+
+  const handleSummarise = async () => {
+    if (journalId && onSummarise) {
+      try {
+        const result = await fetchSummary();
+        if (result.data) {
+          onSummarise(result.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch summary:', error);
+      }
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -39,16 +64,29 @@ export const JournalEditor = ({
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-lg font-semibold text-gray-800">Journal Entry</h2>
-          <button
-            onClick={onToggleEdit}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              isEditing
-                ? 'bg-teal-500 text-white hover:bg-teal-600'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            {isEditing ? 'Save' : 'Edit'}
-          </button>
+          <div className="flex space-x-2">
+            {content && journalId && (
+              <button
+                onClick={handleSummarise}
+                disabled={isSummaryLoading}
+                className="px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-purple-100 text-purple-700 hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              >
+                <Brain className="w-4 h-4" />
+                <span>{isSummaryLoading ? 'Summarising...' : 'Summarise'}</span>
+              </button>
+            )}
+            <button
+              onClick={onToggleEdit}
+              disabled={isSummaryLoading}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isEditing
+                  ? 'bg-teal-500 text-white hover:bg-teal-600'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              } ${isSummaryLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {isEditing ? 'Save' : 'Edit'}
+            </button>
+          </div>
         </div>
 
         {isEditing ? (
@@ -56,7 +94,10 @@ export const JournalEditor = ({
             value={content}
             onChange={handleTextareaChange}
             onKeyDown={handleKeyDown}
-            className="w-full h-96 p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none font-mono text-sm"
+            disabled={isSummaryLoading}
+            className={`w-full h-96 p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none font-mono text-sm ${
+              isSummaryLoading ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''
+            }`}
             placeholder="Start writing your journal entry..."
             autoFocus
           />
