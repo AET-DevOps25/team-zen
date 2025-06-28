@@ -11,9 +11,9 @@ import traceback
 
 router = APIRouter(prefix="/api/genai")
 
-# TODO: Create a GENAI_API_KEY (Check here: https://artemis.tum.de/courses/446/lectures/1485)
+# Create a GENAI_API_KEY (Check here: https://artemis.tum.de/courses/446/lectures/1485)
 GENAI_API_KEY = os.getenv("GENAI_API_KEY")
-API_URL = "https://gpu.aet.cit.tum.de/api/chat/completions"
+GENAI_API_URL = os.getenv("API_URL", "https://gpu.aet.cit.tum.de/api/chat/completions")
 
 class SummaryRequest(BaseModel):
     snippetContents: List[str]
@@ -30,8 +30,8 @@ class OpenWebUILLM(LLM):
     allowing us to use the API in LangChain chains and pipelines.
     """
 
-    api_url: str = API_URL
-    api_key: str = GENAI_API_KEY
+    api_url: str = GENAI_API_URL or ""
+    api_key: str = GENAI_API_KEY or ""
     model_name: str = "llama3.3:latest"
 
     @property

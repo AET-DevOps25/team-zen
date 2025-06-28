@@ -68,6 +68,8 @@ services:
       - MONGODB_URI=${MONGO_DB_URI_JOURNAL:-mongodb://journal-db:27017/journaldb}
       - MONGODB_DB=journaldb
       - SERVER_PORT=8081
+      - LLM_SERVICE_URL=http://genai-microservice:8082
+      - USER_SERVICE_URL=http://user-microservice:8080
     # Uncomment the following lines to use a MongoDB container 
     # depends_on:
     #   - journal-db
@@ -87,6 +89,8 @@ services:
     build: ./genai
     environment:
       - WEAVIATE_HOST=http://weaviate:8080
+      - GENAI_API_KEY=value
+      - API_URL=https://gpu.aet.cit.tum.de/api/chat/completions
     depends_on:
       - weaviate
     networks:
