@@ -1,4 +1,4 @@
-interface Snippet {
+type Snippet = {
   id: number;
   content: string;
   mood: Mood;
@@ -6,7 +6,9 @@ interface Snippet {
   timestamp: string;
   insights?: string;
   userId: string;
-}
+  journalEntryId?: string;
+  updatedAt?: string;
+};
 
 enum Mood {
   VeryLow = 1,

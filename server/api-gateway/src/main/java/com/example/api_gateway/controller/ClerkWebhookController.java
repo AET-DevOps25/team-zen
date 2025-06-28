@@ -168,7 +168,8 @@ public class ClerkWebhookController {
 
           // Send http request to user microservice to create user (blocking)
           User responseUser = restClient.post()
-              .uri("http://localhost:8080/api/users")
+              // .uri("http://localhost:8080/api/users")
+              .uri("http://user-microservice:8080/api/users")
               .body(user)
               .retrieve()
               .body(User.class);
@@ -184,9 +185,10 @@ public class ClerkWebhookController {
 
           // Send http request to user microservice to create user (blocking)
           restClient.delete()
-            .uri("http://localhost:8080/api/users/" + userId)
-            .retrieve()
-            .toBodilessEntity();
+              // .uri("http://localhost:8080/api/users/" + userId)
+              .uri("http://user-microservice:8080/api/users/" + userId)
+              .retrieve()
+              .toBodilessEntity();
 
           logger.info("User deleted in user microservice");
 
@@ -210,7 +212,8 @@ public class ClerkWebhookController {
 
           // Send http request to user microservice to create user (blocking)
           User responseUser = restClient.put()
-              .uri("http://localhost:8080/api/users/" + userId)
+              // .uri("http://localhost:8080/api/users/" + userId)
+              .uri("http://user-microservice:8080/api/users/" + userId)
               .body(user)
               .retrieve()
               .body(User.class);

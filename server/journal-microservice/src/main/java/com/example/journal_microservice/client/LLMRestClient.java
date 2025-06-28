@@ -13,7 +13,7 @@ public class LLMRestClient {
     private final WebClient webClient;
 
 //    TODO: Use env for the service URL
-    public LLMRestClient(WebClient.Builder builder, @Value("${llm.service.url:http://localhost:8082}") String llmServiceUrl) {
+    public LLMRestClient(WebClient.Builder builder, @Value("${llm.service.url:http://genai-microservice:8082}") String llmServiceUrl) {
         this.webClient = builder
                 .baseUrl(llmServiceUrl)
                 .build();

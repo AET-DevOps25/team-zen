@@ -13,20 +13,12 @@ import {
 } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import { useUser } from '@clerk/clerk-react';
+import type { Snippet } from '@/model/snippet';
 import { Button } from '@/components/ui/button';
 import { useGetSnippets } from '@/api/snippet.ts';
 // import {useGetJournal} from "@/api/journal.ts";
 import { useGetJournal, useUpdateJournal } from '@/api/journal.ts';
 // import type { JournalEntry } from '@/model/journal';
-
-interface Snippet {
-  id: number;
-  content: string;
-  mood: number;
-  timestamp: string;
-  tags: Array<string>;
-  aiInsight: string;
-}
 
 const JournalView = () => {
   const [activeTab, setActiveTab] = useState<'edit' | 'insights'>('edit');
@@ -34,25 +26,14 @@ const JournalView = () => {
   const [isEditing, setIsEditing] = useState(false);
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const navigate = useNavigate();
-  const { mutateAsync: fetchSnippets } = useGetSnippets();
+  const { snippets } = useGetSnippets();
   const { mutateAsync: fetchJournal } = useGetJournal();
   const { mutateAsync: updateJournal } = useUpdateJournal();
 
-  const [snippets, setSnippets] = useState<Array<Snippet>>([]);
   const { user } = useUser();
   const [journalEntry, setJournalEntry] = useState<JournalEntry>();
 
   useEffect(() => {
-    const loadSnippets = async () => {
-      try {
-        const result = await fetchSnippets();
-        console.log('Fetched snippets:', result);
-        setSnippets(result);
-      } catch (e) {
-        console.error('Failed to fetch snippets:', e);
-      }
-    };
-
     const loadJournal = async () => {
       try {
         const result = await fetchJournal();
@@ -64,7 +45,6 @@ const JournalView = () => {
     };
 
     if (user) {
-      loadSnippets();
       loadJournal();
     }
   }, [user]);
@@ -364,37 +344,44 @@ const JournalView = () => {
                   Today's Snippets
                 </h3>
                 <div className="space-y-3">
-                  {snippets.map((snippet: Snippet) => (
-                    <div key={snippet.id} className="p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-lg">
-                          {moodEmojis[snippet.mood]}
-                        </span>
-                        <span className="text-xs text-gray-500 flex items-center">
-                          <Clock className="w-3 h-3 mr-1" />
-                          {new Date(snippet.timestamp).toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-700 line-clamp-2">
-                        {snippet.content}
-                      </p>
-                      {snippet.tags?.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {snippet.tags.map((tag) => (
-                            <span
-                              key={tag}
-                              className="text-xs bg-teal-100 text-teal-700 px-2 py-1 rounded"
-                            >
-                              #{tag}
-                            </span>
-                          ))}
+                  {snippets.length > 0 &&
+                    snippets.map((snippet: Snippet) => (
+                      <div
+                        key={snippet.id}
+                        className="p-3 bg-gray-50 rounded-lg"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-lg">
+                            {moodEmojis[snippet.mood]}
+                          </span>
+                          <span className="text-xs text-gray-500 flex items-center">
+                            <Clock className="w-3 h-3 mr-1" />
+                            {new Date(snippet.timestamp).toLocaleTimeString(
+                              [],
+                              {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              },
+                            )}
+                          </span>
                         </div>
-                      )}
-                    </div>
-                  ))}
+                        <p className="text-sm text-gray-700 line-clamp-2">
+                          {snippet.content}
+                        </p>
+                        {snippet.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {snippet.tags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="text-xs bg-teal-100 text-teal-700 px-2 py-1 rounded"
+                              >
+                                #{tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
                 </div>
               </motion.div>
 

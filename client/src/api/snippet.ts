@@ -1,6 +1,7 @@
 import { useAuth, useUser } from '@clerk/clerk-react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { API_BASE_URL } from './base';
+import type { Snippet } from '@/model/snippet';
 
 type SnippetData = {
   title?: string;
@@ -34,34 +35,47 @@ export const useCreateSnippet = () => {
   });
 };
 
-export const useGetSnippets = () => {
+type GetSnippetsParams = {
+  snippetId?: string;
+  date?: string;
+};
+
+export const useGetSnippets = (params: GetSnippetsParams = {}) => {
   const { getToken } = useAuth();
   const { user } = useUser();
 
   const fetchSnippets = async () => {
     const token = await getToken();
-    const today = new Date().toISOString().split('T')[0];
 
-    const response = await fetch(
-      `${API_BASE_URL}/api/snippets/${user?.id}?date=${today}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+    const urlParams = new URLSearchParams();
+    if (params.snippetId) urlParams.append('snippetId', params.snippetId);
+    if (params.date) urlParams.append('date', params.date);
+
+    const queryString = urlParams.toString();
+    const url = `${API_BASE_URL}/api/snippets/${user?.id}${queryString ? `?${queryString}` : ''}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
       },
-    );
+    });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response.json();
+    return response.json() as Promise<Array<Snippet>>;
   };
 
-  return useMutation({
-    mutationKey: ['getSnippets'],
-    mutationFn: fetchSnippets,
+  const { data, isLoading, error, isError, refetch } = useQuery({
+    queryKey: ['getSnippets', user?.id, params.snippetId, params.date],
+    queryFn: fetchSnippets,
+    enabled: !!user?.id,
     retry: 2,
   });
+
+  const snippets: Array<Snippet> = data || [];
+
+  return { snippets, isLoading, error, isError, refetch };
 };

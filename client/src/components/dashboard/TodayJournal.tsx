@@ -11,23 +11,21 @@ import {
   Sparkles,
   Zap,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { useUser } from '@clerk/clerk-react';
+import { useState } from 'react';
 import { Button } from '../ui/button';
-import type { Snippet } from '@/model/snippet';
 import { useGetSnippets } from '@/api/snippet.ts';
 
 const TodayJournal = () => {
-  const [snippets, setSnippets] = useState<Array<Snippet>>([]);
   const [currentStreak] = useState(7);
   const [todaysMood] = useState(4);
-  const { mutateAsync: fetchSnippets } = useGetSnippets();
-  const { user } = useUser();
+  const { snippets, isLoading } = useGetSnippets({
+    date: new Date().toISOString().split('T')[0],
+  });
 
   const navigate = useNavigate();
 
   const averageMood =
-    snippets.length > 0
+    !isLoading && snippets.length > 0
       ? (
           snippets.reduce((sum, snippet) => sum + snippet.mood, 0) /
           snippets.length
@@ -81,23 +79,6 @@ const TodayJournal = () => {
     });
   };
 
-  useEffect(() => {
-    const loadSnippets = async () => {
-      try {
-        const result = await fetchSnippets();
-        console.log('Fetched snippets:', result);
-        setSnippets(result);
-      } catch (e) {
-        console.error('Failed to fetch snippets:', e);
-      }
-    };
-
-    if (user) {
-      loadSnippets();
-      // loadJournal();
-    }
-  }, [user]);
-
   const moodEmojis = [
     { value: 1, emoji: '😢', label: 'Very Low', color: 'text-red-500' },
     { value: 2, emoji: '😔', label: 'Low', color: 'text-orange-500' },
@@ -137,7 +118,12 @@ const TodayJournal = () => {
                 <span>Add Snippet</span>
               </Button>
               {snippets.length > 0 && (
-                <Button onClick={handleViewJournal} variant="blue-animated">
+                <Button
+                  onClick={handleViewJournal}
+                  variant="blue-animated"
+                  // TODO: Add logic to disable button if no journal
+                  disabled={!isLoading && snippets.length === 0}
+                >
                   <BookOpen className="w-4 h-4" />
                   <span>View Journal</span>
                 </Button>
@@ -202,63 +188,70 @@ const TodayJournal = () => {
             </h3>
 
             <AnimatePresence>
-              {snippets.map((snippet, index) => (
-                <motion.div
-                  key={snippet.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="bg-gray-50 rounded-lg p-4 border-l-4 border-teal-400"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-2xl">
-                        {
-                          moodEmojis.find((m) => m.value === snippet.mood)
-                            ?.emoji
-                        }
-                      </span>
-                      <span className="text-sm text-gray-500 flex items-center">
-                        <Clock className="w-3 h-3 mr-1" />
-                        {new Date(snippet.timestamp).toLocaleTimeString([], {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </span>
-                    </div>
-                  </div>
-                  <p className="text-gray-700 mb-2">{snippet.content}</p>
-                  {snippet.tags?.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-2">
-                      {snippet.tags.map((tag: string) => (
-                        <span
-                          key={tag}
-                          className="text-xs bg-teal-100 text-teal-700 px-2 py-1 rounded"
-                        >
-                          #{tag}
+              {!isLoading &&
+                snippets.map((snippet, index) => (
+                  <motion.div
+                    key={snippet.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="bg-gray-50 rounded-lg p-4 border-l-4 border-teal-400"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-2xl">
+                          {
+                            moodEmojis.find((m) => m.value === snippet.mood)
+                              ?.emoji
+                          }
                         </span>
-                      ))}
+                        <span className="text-sm text-gray-500 flex items-center">
+                          <Clock className="w-3 h-3 mr-1" />
+                          {new Date(snippet.timestamp).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                      </div>
                     </div>
-                  )}
-                  {snippet.insights && (
-                    <div className="bg-teal-50 rounded-md p-2 flex items-center">
-                      <Brain className="w-4 h-4 text-teal-600 mr-2" />
-                      <span className="text-sm text-teal-700">
-                        {snippet.insights}
-                      </span>
-                    </div>
-                  )}
-                </motion.div>
-              ))}
+                    <p className="text-gray-700 mb-2">{snippet.content}</p>
+                    {snippet.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {snippet.tags.map((tag: string) => (
+                          <span
+                            key={tag}
+                            className="text-xs bg-teal-100 text-teal-700 px-2 py-1 rounded"
+                          >
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {snippet.insights && (
+                      <div className="bg-teal-50 rounded-md p-2 flex items-center">
+                        <Brain className="w-4 h-4 text-teal-600 mr-2" />
+                        <span className="text-sm text-teal-700">
+                          {snippet.insights}
+                        </span>
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
             </AnimatePresence>
 
-            {snippets.length === 0 && (
+            {!isLoading && snippets.length === 0 && (
               <div className="text-center py-8 text-gray-500">
                 <Edit3 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                 <p>
                   No snippets yet today. Start by adding your first thought!
                 </p>
+              </div>
+            )}
+
+            {isLoading && (
+              <div className="text-center py-8 text-gray-500">
+                <p>Loading today's snippets...</p>
               </div>
             )}
           </div>
