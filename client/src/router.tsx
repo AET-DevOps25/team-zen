@@ -20,7 +20,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isSignedIn, isLoaded } = useAuth();
 
   if (!isLoaded) {
-    // Show loading state while auth is loading
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-teal-600"></div>
@@ -29,7 +28,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!isSignedIn) {
-    // Redirect to sign-in if not authenticated
     throw redirect({ to: '/' });
   }
 
@@ -72,12 +70,6 @@ const protectedRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: 'protected',
   component: ProtectedLayout,
-  beforeLoad: () => {
-    // This hook runs before any protected route loads
-    // The actual auth check is in the ProtectedRoute component
-    // We can add additional logic here if needed
-    return {};
-  },
 });
 
 // Protected routes - require authentication

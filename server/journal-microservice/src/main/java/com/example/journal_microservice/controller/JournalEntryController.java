@@ -38,24 +38,24 @@ public class JournalEntryController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<JournalEntry>> updateJournalEntry(@PathVariable("id") String id, 
+    public ResponseEntity<ApiResponse<JournalEntry>> updateJournalEntry(@PathVariable("id") String id,
             @RequestBody JournalEntry journalEntry) {
         JournalEntry updatedEntry = journalEntryService.updateJournalEntry(id, journalEntry);
         return ResponseEntity.ok(new ApiResponse<>("Journal entry updated successfully.", updatedEntry));
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<?> getUserJournals(@PathVariable("userId") String userId,
-            @RequestParam(name="journalId", required = false) String journalId,
-            @RequestParam(name="date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+    public ResponseEntity<ApiResponse<Object>> getUserJournals(@PathVariable("userId") String userId,
+            @RequestParam(name = "journalId", required = false) String journalId,
+            @RequestParam(name = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
 
         if (journalId != null) {
             JournalEntry journalEntry = journalEntryService.getUserJournalById(userId, journalId);
-            return ResponseEntity.ok(journalEntry);
+            return ResponseEntity.ok(new ApiResponse<>("Journal entry retrieved successfully.", journalEntry));
         }
-        
+
         List<JournalEntry> journalEntries = journalEntryService.getUserJournals(userId, date);
-        return ResponseEntity.ok(journalEntries);
+        return ResponseEntity.ok(new ApiResponse<>("Journal entries retrieved successfully.", journalEntries));
     }
 
     @GetMapping("/{userId}/statistics")

@@ -18,20 +18,11 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import type { Mood } from '@/model/snippet';
+import type { JournalEntry as Journal } from '@/model/journal';
 import { months, moodEmojis } from '@/mock/data';
 import { useGetAllJournals } from '@/api/journal.ts';
 
-export interface JournalEntry {
-  id: string;
-  date: string;
-  title: string;
-  content: string;
-  mood: Mood;
-  wordCount: number;
-  tags: Array<string>;
-  snippetIds: Array<string>;
-  insights: Array<string>;
-  keyStrategies: Array<string>;
+export interface JournalEntry extends Journal {
   highlightedContent?: string;
   highlightedTitle?: string;
   relevanceScore?: number;
@@ -218,7 +209,7 @@ const JournalHistory = () => {
       if (filters.topics.length > 0) {
         results = results.filter(
           (journal) =>
-            filters.topics.some((topic) => journal.tags.includes(topic)) ||
+            filters.topics.some((topic) => journal.tags?.includes(topic)) ||
             filters.topics.some((topic) =>
               journal.content.toLowerCase().includes(topic),
             ),
@@ -232,7 +223,7 @@ const JournalHistory = () => {
             (keyword) =>
               journal.content.toLowerCase().includes(keyword) ||
               journal.title.toLowerCase().includes(keyword) ||
-              journal.tags.some((tag) => tag.toLowerCase().includes(keyword)),
+              journal.tags?.some((tag) => tag.toLowerCase().includes(keyword)),
           ),
         );
       }
@@ -264,7 +255,7 @@ const JournalHistory = () => {
 
     // Topic match
     filters.topics.forEach((topic: string) => {
-      if (journal.tags.includes(topic)) score += 2;
+      if (journal.tags?.includes(topic)) score += 2;
       if (journal.content.toLowerCase().includes(topic)) score += 1;
     });
 
@@ -315,9 +306,9 @@ const JournalHistory = () => {
           case 'mood-low':
             return a.mood - b.mood;
           case 'longest':
-            return b.wordCount - a.wordCount;
+            return (b.wordCount || 0) - (a.wordCount || 0);
           case 'shortest':
-            return a.wordCount - b.wordCount;
+            return (a.wordCount || 0) - (b.wordCount || 0);
           default:
             return new Date(b.date).getTime() - new Date(a.date).getTime();
         }
@@ -330,7 +321,7 @@ const JournalHistory = () => {
   const stats = useMemo(() => {
     const totalJournals = journals.length;
     const totalWords = journals.reduce(
-      (sum, journal) => sum + journal.wordCount,
+      (sum, journal) => sum + (journal.wordCount || 0),
       0,
     );
     const avgMood = (
@@ -632,7 +623,7 @@ const JournalHistory = () => {
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
                       <span className="text-2xl">
-                        {moodEmojis[journal.mood].emoji}
+                        {moodEmojis[journal.mood as Mood].emoji}
                       </span>
                       <div>
                         <h3
@@ -695,7 +686,7 @@ const JournalHistory = () => {
                   </div>
 
                   <div className="flex flex-wrap gap-1">
-                    {journal.tags.slice(0, 3).map((tag) => (
+                    {journal.tags?.slice(0, 3).map((tag) => (
                       <span
                         key={tag}
                         className="text-xs bg-teal-100 text-teal-700 px-2 py-1 rounded-full"
@@ -703,7 +694,7 @@ const JournalHistory = () => {
                         #{tag}
                       </span>
                     ))}
-                    {journal.tags.length > 3 && (
+                    {journal.tags && journal.tags.length > 3 && (
                       <span className="text-xs text-gray-500">
                         +{journal.tags.length - 3}
                       </span>
@@ -712,7 +703,7 @@ const JournalHistory = () => {
                 </div>
 
                 {/* Key Strategies */}
-                {journal.keyStrategies.length > 0 && (
+                {journal.keyStrategies && journal.keyStrategies.length > 0 && (
                   <div className="mb-4 p-3 bg-blue-50 rounded-lg">
                     <div className="flex items-center text-sm text-blue-700 mb-2">
                       <Lightbulb className="w-3 h-3 mr-1" />
@@ -731,7 +722,7 @@ const JournalHistory = () => {
                   </div>
                 )}
 
-                {journal.insights.length > 0 && (
+                {journal.insights && journal.insights.length > 0 && (
                   <div className="p-3 bg-teal-50 rounded-lg">
                     <div className="flex items-center text-sm text-teal-700 mb-1">
                       <TrendingUp className="w-3 h-3 mr-1" />

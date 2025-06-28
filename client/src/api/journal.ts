@@ -1,40 +1,16 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
 import { useAuth, useUser } from '@clerk/clerk-react';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { API_BASE_URL } from './base';
+import type { ApiResponse } from './base';
+import type { JournalEntry } from '@/model/journal';
 
-export const testQuery = () => {
-  const { getToken } = useAuth();
-
-  const testFetch = async () => {
-    const token = await getToken();
-    console.log('Token:', token);
-    const response = await fetch(`${API_BASE_URL}/api/journalEntry`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
-  };
-
-  const { data, error, isLoading } = useQuery({
-    queryKey: ['test'],
-    queryFn: testFetch,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 2,
-  });
-
-  return { data, error, isLoading };
-};
 export const useGetJournal = () => {
   const { getToken } = useAuth();
   const { user } = useUser();
 
-  const fetchJournal = async () => {
+  const fetchJournal = async (): Promise<
+    ApiResponse<JournalEntry | Array<JournalEntry>>
+  > => {
     const token = await getToken();
     const today = new Date().toISOString().split('T')[0];
 
@@ -50,17 +26,30 @@ export const useGetJournal = () => {
     );
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`Failed to fetch journal: ${response.status}`);
     }
 
     return response.json();
   };
 
-  return useMutation({
-    mutationKey: ['getJournal'],
-    mutationFn: fetchJournal,
+  const { data, ...rest } = useQuery({
+    queryKey: ['journal', user?.id, new Date().toISOString().split('T')[0]],
+    queryFn: fetchJournal,
+    staleTime: 5 * 60 * 1000,
     retry: 2,
+    enabled: !!user?.id,
   });
+
+  const journal = data
+    ? Array.isArray(data.data)
+      ? data.data[0]
+      : data.data
+    : undefined;
+
+  return {
+    journal,
+    ...rest,
+  };
 };
 
 export const useGetAllJournals = () => {
@@ -84,7 +73,7 @@ export const useGetAllJournals = () => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    return response.json();
+    return response.json() as Promise<Array<JournalEntry>>;
   };
 
   return useMutation({

@@ -7,7 +7,7 @@ const Overview = () => {
   const stats = useMemo(() => {
     const totalJournals = mockJournals.length;
     const totalWords = mockJournals.reduce(
-      (sum, journal) => sum + journal.wordCount,
+      (sum, journal) => sum + (journal.wordCount || 0),
       0,
     );
     const avgMood = (

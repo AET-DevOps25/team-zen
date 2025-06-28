@@ -14,6 +14,7 @@ import {
 import { useState } from 'react';
 import { Button } from '../ui/button';
 import { useGetSnippets } from '@/api/snippet.ts';
+import { useAuth } from '@/lib/auth';
 
 const TodayJournal = () => {
   const [currentStreak] = useState(7);
@@ -21,7 +22,7 @@ const TodayJournal = () => {
   const { snippets, isLoading } = useGetSnippets({
     date: new Date().toISOString().split('T')[0],
   });
-
+  const { userData } = useAuth();
   const navigate = useNavigate();
 
   const averageMood =
@@ -32,38 +33,7 @@ const TodayJournal = () => {
         ).toFixed(1)
       : 0;
 
-  // const mockSnippets: Array<Snippet> = [
-  //   {
-  //     id: 1,
-  //     content:
-  //       'Had a great morning coffee and felt energized for the day ahead. The weather is perfect!',
-  //     mood: 5,
-  //     timestamp: new Date().toISOString(),
-  //     tags: ['morning', 'energy'],
-  //     insights: 'Positive morning routine detected',
-  //     userId: "user-id-placeholder", // Replace with actual user ID
-  //   },
-  //   {
-  //     id: 2,
-  //     content:
-  //       'Meeting went well, but feeling a bit overwhelmed with the workload.',
-  //     mood: 3,
-  //     timestamp: new Date(Date.now() - 3600000).toISOString(),
-  //     tags: ['work', 'stress'],
-  //     insights: 'Work stress pattern identified',
-  //     userId: "user-id-placeholder", // Replace with actual user ID
-  //   },
-  //   {
-  //     id: 3,
-  //     content:
-  //       'Took a walk during lunch break. Fresh air really helped clear my mind.',
-  //     mood: 4,
-  //     timestamp: new Date(Date.now() - 7200000).toISOString(),
-  //     tags: ['exercise', 'mindfulness'],
-  //     insights: 'Physical activity boosting mood',
-  //     userId: "user-id-placeholder", // Replace with actual user ID
-  //   },
-  // ];
+  console.log('User Data:', userData);
 
   const handleCreateSnippet = () => {
     // Navigate to snippet creation page
@@ -121,7 +91,6 @@ const TodayJournal = () => {
                 <Button
                   onClick={handleViewJournal}
                   variant="blue-animated"
-                  // TODO: Add logic to disable button if no journal
                   disabled={!isLoading && snippets.length === 0}
                 >
                   <BookOpen className="w-4 h-4" />
