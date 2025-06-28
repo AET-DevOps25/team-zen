@@ -50,15 +50,9 @@ const rootRoute = createRootRoute({
       <TanStackRouterDevtools />
     </Root>
   ),
-  beforeLoad: () => {
-    // You can add global auth checks here if needed
-    return {
-      isAuthenticated: false, // This will be updated by individual routes
-    };
-  },
 });
 
-// Public routes (no authentication required)
+// Public routes
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
@@ -72,7 +66,6 @@ const protectedRoute = createRoute({
   component: ProtectedLayout,
 });
 
-// Protected routes - require authentication
 const dashboardRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: '/dashboard',
@@ -131,7 +124,6 @@ export const router = createRouter({
   scrollRestoration: true,
   defaultStructuralSharing: true,
   defaultPreloadStaleTime: 0,
-  // Global error handling
   defaultErrorComponent: ({ error }) => (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
@@ -142,7 +134,6 @@ export const router = createRouter({
       </div>
     </div>
   ),
-  // Global not found handling
   defaultNotFoundComponent: () => (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
