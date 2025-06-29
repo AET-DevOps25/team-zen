@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import type { ExtendedJournalEntry } from '@/components/journal/history/utils';
-import { getMoodValue, sortJournals } from '@/components/journal/history/utils';
+import type { ExtendedJournalEntry } from '@/lib/utils';
+import { getMoodValue, sortJournals } from '@/lib/utils';
 
 export const useJournalFilters = (
   journals: Array<ExtendedJournalEntry>,

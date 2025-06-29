@@ -5,3 +5,6 @@ export { useAuth, useRequireAuth, checkAuthStatus } from './useAuth';
 export { useJournalState } from './useJournalState';
 export { useJournalFilters } from './useJournalFilters';
 export { useJournalSearch } from './useJournalSearch';
+
+// Overview hooks
+export { useWeeklyMoodData } from './useWeeklyMoodData';

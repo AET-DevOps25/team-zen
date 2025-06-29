@@ -1,7 +1,6 @@
 import { useUser } from '@clerk/clerk-react';
 import { useQuery } from '@tanstack/react-query';
 import { API_BASE_URL } from './base';
-import { useAuth } from '@/hooks/useAuth';
 
 type GetUser = {
   id?: string;
@@ -55,45 +54,4 @@ export const useGetUser = (
   const userData: User | undefined = data;
 
   return { userData, isLoading, error, isError, refetch };
-};
-
-// Types for user statistics
-export interface UserStatistics {
-  totalJournals: number;
-  totalWords: number;
-  avgMood: number;
-  [keyof: string]: number | string | undefined; // Allow additional properties
-}
-
-export const useGetUserStatistics = () => {
-  const { getToken } = useAuth();
-  const { user } = useUser();
-
-  const fetchUserStatistics = async (): Promise<UserStatistics> => {
-    const token = await getToken();
-    const response = await fetch(
-      `${API_BASE_URL}/api/journalEntry/${user?.id}/statistics`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch user statistics: ${response.status}`);
-    }
-
-    return response.json();
-  };
-
-  return useQuery({
-    queryKey: ['userStatistics', user?.id],
-    queryFn: fetchUserStatistics,
-    enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000,
-    retry: 2,
-  });
 };

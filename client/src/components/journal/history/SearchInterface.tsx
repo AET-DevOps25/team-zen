@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Brain, Filter, Search, Sparkles } from 'lucide-react';
+import { MOOD_OPTIONS } from '../../../constants/moods';
 import { months } from '@/mock/data';
 
 interface SearchInterfaceProps {
@@ -135,11 +136,13 @@ export const SearchInterface = ({
                 className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
               >
                 <option value="all">All Moods</option>
-                <option value="5">😄 Amazing (5)</option>
-                <option value="4">😊 Good (4)</option>
-                <option value="3">😐 Okay (3)</option>
-                <option value="2">😔 Poor (2)</option>
-                <option value="1">😢 Terrible (1)</option>
+                {MOOD_OPTIONS.slice()
+                  .reverse()
+                  .map((mood) => (
+                    <option key={mood.value} value={mood.value.toString()}>
+                      {mood.emoji} {mood.label} ({mood.value})
+                    </option>
+                  ))}
               </select>
             </div>
 

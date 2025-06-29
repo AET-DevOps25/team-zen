@@ -1,10 +1,10 @@
 import { useCallback, useState } from 'react';
-import type { ExtendedJournalEntry } from '@/components/journal/history/utils';
+import type { ExtendedJournalEntry } from '@/lib/utils';
 import {
   calculateBasicRelevanceScore,
   highlightText,
   journalMatchesQuery,
-} from '@/components/journal/history/utils';
+} from '@/lib/utils';
 
 export const useJournalSearch = (journals: Array<ExtendedJournalEntry>) => {
   const [searchQuery, setSearchQuery] = useState('');

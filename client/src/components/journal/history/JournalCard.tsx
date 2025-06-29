@@ -1,10 +1,10 @@
 import { motion } from 'framer-motion';
 import { BookOpen, Calendar, Clock, Eye, Lightbulb, Zap } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
+import { MOOD_CONFIG } from '../../../constants/moods';
 import { AIInsights } from './AIInsights';
-import { formatDate, getMoodValue, getRelativeDate } from './utils';
-import type { ExtendedJournalEntry } from './utils';
-import { moodEmojis } from '@/mock/data';
+import type { ExtendedJournalEntry } from '@/lib/utils';
+import { formatDate, getMoodValue, getRelativeDate } from '@/lib/utils';
 
 interface JournalCardProps {
   journal: ExtendedJournalEntry;
@@ -41,7 +41,7 @@ export const JournalCard = ({
         <div className="flex-1">
           <div className="flex items-center space-x-3 mb-2">
             <span className="text-2xl">
-              {moodEmojis[getMoodValue(journal.dailyMood)].emoji}
+              {MOOD_CONFIG[getMoodValue(journal.dailyMood)].emoji}
             </span>
             <div>
               <h3

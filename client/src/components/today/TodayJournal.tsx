@@ -7,7 +7,7 @@ import {
   QuickStats,
   SnippetsList,
   WeeklyProgress,
-} from '../today';
+} from './index';
 import { useGetSnippets } from '@/api/snippet.ts';
 import { useGetUserStatistics } from '@/api/journal';
 import { useJournalState } from '@/hooks';

@@ -1,17 +1,10 @@
 import { motion } from 'framer-motion';
+import { MOOD_EMOJIS } from '../../constants/moods';
 import type { Snippet } from '@/model/snippet';
 
 interface MoodTimelineProps {
   snippets: Array<Snippet>;
 }
-
-const MOOD_EMOJIS: Record<number, string> = {
-  1: '😢',
-  2: '😔',
-  3: '😐',
-  4: '😊',
-  5: '😄',
-};
 
 export const MoodTimeline = ({ snippets }: MoodTimelineProps) => {
   const formatTime = (timestamp: string) => {

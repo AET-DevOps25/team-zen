@@ -2,10 +2,8 @@ import { AnimatePresence } from 'framer-motion';
 import { useMemo, useState } from 'react';
 import { EmptyState } from './EmptyState';
 import { JournalCard } from './JournalCard';
-import { JournalStats } from './JournalStats';
 import { SearchInterface } from './SearchInterface';
-import { calculateJournalStats } from './utils';
-import type { ExtendedJournalEntry } from './utils';
+import type { ExtendedJournalEntry } from '@/lib/utils';
 import { useGetAllJournals } from '@/api/journal';
 import { useJournalFilters, useJournalSearch } from '@/hooks';
 
@@ -45,9 +43,6 @@ const JournalHistory = () => {
     filteredJournals,
   } = useJournalFilters(journals, searchQuery, searchResults);
 
-  // Statistics calculation
-  const stats = useMemo(() => calculateJournalStats(journals), [journals]);
-
   // Toggle insights expansion for a specific journal
   const toggleInsights = (journalId: string) => {
     setExpandedInsights((prev) => ({
@@ -58,14 +53,6 @@ const JournalHistory = () => {
 
   return (
     <div className="space-y-8">
-      {/* Header with Stats */}
-      <JournalStats
-        totalJournals={stats.totalJournals}
-        totalWords={stats.totalWords}
-        avgMood={stats.avgMood}
-        avgWordsPerJournal={stats.avgWordsPerJournal}
-      />
-
       {/* Search Interface */}
       <SearchInterface
         searchQuery={searchQuery}

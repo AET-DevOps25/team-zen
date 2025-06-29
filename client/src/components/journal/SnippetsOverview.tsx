@@ -1,18 +1,11 @@
 import { motion } from 'framer-motion';
 import { Clock } from 'lucide-react';
+import { MOOD_EMOJIS } from '../../constants/moods';
 import type { Snippet } from '@/model/snippet';
 
 interface SnippetsOverviewProps {
   snippets: Array<Snippet>;
 }
-
-const MOOD_EMOJIS: Record<number, string> = {
-  1: '😢',
-  2: '😔',
-  3: '😐',
-  4: '😊',
-  5: '😄',
-};
 
 export const SnippetsOverview = ({ snippets }: SnippetsOverviewProps) => {
   const formatTime = (timestamp: string) => {
