@@ -2,6 +2,7 @@ package com.example.api_gateway.controller;
 
 import java.util.ArrayList;
 import java.util.Map;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -24,9 +25,23 @@ public class ClerkWebhookController {
   private String clerkWebhookSecret;
 
   private final ClerkWebhookVerifier webhookVerifier;
+  private final Logger logger = org.slf4j.LoggerFactory.getLogger(ClerkWebhookController.class);
 
   public ClerkWebhookController(ClerkWebhookVerifier webhookVerifier) {
     this.webhookVerifier = webhookVerifier;
+  }
+
+  @PostConstruct
+  public void init() {
+    if (clerkWebhookSecret == null || clerkWebhookSecret.trim().isEmpty()) {
+      logger.error("CLERK_WEBHOOK_SECRET is not set or is empty!");
+    } else if (clerkWebhookSecret.equals("whsec_dummy")) {
+      logger.warn("CLERK_WEBHOOK_SECRET is using default dummy value - this will not work in production!");
+    } else {
+      // Mask the secret for security, only show first 10 characters
+      String maskedSecret = clerkWebhookSecret.substring(0, Math.min(10, clerkWebhookSecret.length())) + "...";
+      logger.info("CLERK_WEBHOOK_SECRET successfully loaded: {}", maskedSecret);
+    }
   }
 
   @GetMapping()
@@ -42,11 +57,10 @@ public class ClerkWebhookController {
     try {
       // Verify the webhook signature
       if (!verifyWebhookSignature(payload, signature, timestamp, id)) {
-        ResponseEntity response = ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+        ResponseEntity<String> response = ResponseEntity.status(HttpStatus.UNAUTHORIZED)
             .body("Invalid signature");
         return Mono.just(response);
       } else {
-        Logger logger = org.slf4j.LoggerFactory.getLogger(ClerkWebhookController.class);
         logger.debug("Webhook signature verified successfully");
         return processWebhook(payload).thenReturn(ResponseEntity.ok("Webhook received"));
       }
@@ -168,7 +182,8 @@ public class ClerkWebhookController {
 
           // Send http request to user microservice to create user (blocking)
           User responseUser = restClient.post()
-              .uri("http://localhost:8080/api/users")
+              // .uri("http://localhost:8080/api/users")
+              .uri("http://user-microservice:8080/api/users")
               .body(user)
               .retrieve()
               .body(User.class);
@@ -184,9 +199,10 @@ public class ClerkWebhookController {
 
           // Send http request to user microservice to create user (blocking)
           restClient.delete()
-            .uri("http://localhost:8080/api/users/" + userId)
-            .retrieve()
-            .toBodilessEntity();
+              // .uri("http://localhost:8080/api/users/" + userId)
+              .uri("http://user-microservice:8080/api/users/" + userId)
+              .retrieve()
+              .toBodilessEntity();
 
           logger.info("User deleted in user microservice");
 
@@ -210,7 +226,8 @@ public class ClerkWebhookController {
 
           // Send http request to user microservice to create user (blocking)
           User responseUser = restClient.put()
-              .uri("http://localhost:8080/api/users/" + userId)
+              // .uri("http://localhost:8080/api/users/" + userId)
+              .uri("http://user-microservice:8080/api/users/" + userId)
               .body(user)
               .retrieve()
               .body(User.class);

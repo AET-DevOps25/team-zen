@@ -1,158 +1,74 @@
 package com.example.journal_microservice.controller;
 
+import com.example.journal_microservice.dto.wrapper.ApiResponse;
 import com.example.journal_microservice.model.JournalEntry;
-import com.example.journal_microservice.repository.JournalEntryRepository;
-import com.example.journal_microservice.repository.SnippetRepository;
+import com.example.journal_microservice.service.JournalEntryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestClient;
 
 import java.util.List;
-import java.util.Date;
-import java.time.ZoneId;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import org.springframework.http.ResponseEntity;
-import org.springframework.format.annotation.DateTimeFormat;
-import com.example.journal_microservice.model.Snippet;
 import java.util.*;
-import com.example.journal_microservice.model.User;
 
 @RestController
 @RequestMapping("/api/journalEntry")
 public class JournalEntryController {
 
-    RestClient restClient = RestClient.create();
-
     @Autowired
-    private JournalEntryRepository journalEntryRepository;
-
-    @Autowired
-    private SnippetRepository snippetRepository;
-
-    @GetMapping
-    public List<JournalEntry> getAllSnippets() {
-        return journalEntryRepository.findAll();
-    }
+    private JournalEntryService journalEntryService;
 
     @PostMapping
-    public JournalEntry createJournalEntry(@RequestBody JournalEntry journalEntry) {
-        JournalEntry newEntry = journalEntryRepository.save(journalEntry);
-        // call user microservice to update the user's journal list
-        if (newEntry != null) {
-            User user = restClient.get()
-                    .uri("http://localhost:8080/api/users/" + newEntry.getUserId())
-                    .retrieve()
-                    .body(User.class);
-            String[] currentEntries = user.getJournalEntries();
-            String[] updatedEntries = Arrays.copyOf(currentEntries, currentEntries.length + 1);
-            updatedEntries[currentEntries.length] = newEntry.getId();
-            user.setJournalEntries(updatedEntries);
-            restClient.put()
-                    .uri("http://localhost:8080/api/users/" + newEntry.getUserId())
-                    .body(user)
-                    .retrieve();
-        }
-        return newEntry;
+    public ResponseEntity<JournalEntry> createJournalEntry(@RequestBody JournalEntry journalEntry) {
+        JournalEntry newEntry = journalEntryService.createJournalEntry(journalEntry);
+        return ResponseEntity.ok(newEntry);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteJournalEntry(@PathVariable("id") String id) {
-        try {
-            JournalEntry journalEntryToDelete = journalEntryRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Journal entry not found"));
-            List<String> snippetIds = journalEntryToDelete.getSnippetIds();
-            if (snippetIds != null) {
-                for (String snippetId : snippetIds) {
-                    snippetRepository.deleteById(snippetId);
-                }
-            }
-            journalEntryRepository.deleteById(id);
-        } catch (RuntimeException e) {
-            throw new RuntimeException("Journal entry not found or something went wrong");
-        }
-
+    public ResponseEntity<ApiResponse<String>> deleteJournalEntry(@PathVariable("id") String id) {
+        journalEntryService.deleteJournalEntry(id);
+        return ResponseEntity.ok(new ApiResponse<>("Journal entry deleted successfully.", id));
     }
 
     @PutMapping("/{id}")
-    public void updateJournalEntry(@PathVariable("id") String id, @RequestBody JournalEntry newJournalEntry) {
-
-        JournalEntry journalEntry = journalEntryRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Journal not found with ID: " + id));
-
-        if (newJournalEntry.getTitle() != null) {
-            journalEntry.setTitle(newJournalEntry.getTitle());
-        }
-
-        if (newJournalEntry.getSummary() != null) {
-            journalEntry.setSummary(newJournalEntry.getSummary());
-        }
-
-        if (newJournalEntry.getDailyMood() != null) {
-            journalEntry.setDailyMood(newJournalEntry.getDailyMood());
-        }
-
-        if (newJournalEntry.getJournalInsight() != null) {
-            journalEntry.setJournalInsight(newJournalEntry.getJournalInsight());
-        }
-        journalEntry.setUpdatedAt(new Date());
-
-        journalEntryRepository.save(journalEntry);
+    public ResponseEntity<ApiResponse<JournalEntry>> updateJournalEntry(@PathVariable("id") String id,
+            @RequestBody JournalEntry journalEntry) {
+        JournalEntry updatedEntry = journalEntryService.updateJournalEntry(id, journalEntry);
+        return ResponseEntity.ok(new ApiResponse<>("Journal entry updated successfully.", updatedEntry));
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<?> getUserJournals(@PathVariable("userId") String userId,
-            @RequestParam(name="journalId", required = false) String journalId,
-            @RequestParam(name="date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+    public ResponseEntity<ApiResponse<Object>> getUserJournals(@PathVariable("userId") String userId,
+            @RequestParam(name = "journalId", required = false) String journalId,
+            @RequestParam(name = "date", required = false) String dateParam) {
 
         if (journalId != null) {
-            JournalEntry journalEntry = journalEntryRepository.findByUserIdAndId(userId, journalId)
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "Journal Entry not found for user: " + userId + " and journalId: " + journalId));
-            return ResponseEntity.ok(journalEntry);
-        }
-        List<JournalEntry> journalEntries = journalEntryRepository.findByUserId(userId);
-        if (journalEntries.isEmpty()) {
-            throw new IllegalArgumentException("No journalEntries found for user: " + userId);
+            JournalEntry journalEntry = journalEntryService.getUserJournalById(userId, journalId);
+            return ResponseEntity.ok(new ApiResponse<>("Journal entry retrieved successfully.", journalEntry));
         }
 
-        if (date != null) {
-            journalEntries = journalEntries.stream()
-                    .filter(j -> j.getUpdatedAt() != null &&
-                            j.getUpdatedAt().toInstant()
-                                    .atZone(ZoneId.systemDefault())
-                                    .toLocalDate()
-                                    .isEqual(date))
-                    .toList();
-        }
-        return ResponseEntity.ok(journalEntries);
-    }
-
-
-    @GetMapping("/{userId}/statistics")
-    public Map<String, Object> getStatistics(@PathVariable("userId") String userId) {
-        List<JournalEntry> userJournalEntries = journalEntryRepository.findByUserId(userId);
-        List<Snippet> userSnippets = snippetRepository.findByUserId(userId);
-
-        StringBuilder wholeUserContent = new StringBuilder();
-        double sumRating = 0.0;
-
-        for (Snippet userSnippet : userSnippets) {
-            if (userSnippet.getContent() != null) {
-                wholeUserContent.append(userSnippet.getContent().replaceAll("\\s+", "")); // remove all whitespaces and
-                                                                                          // non-visible characters
+        LocalDate date = null;
+        if (dateParam != null) {
+            try {
+                // Handle both simple date format (YYYY-MM-DD) and ISO timestamp formats
+                if (dateParam.contains("T")) {
+                    // Extract just the date part from ISO timestamp
+                    dateParam = dateParam.split("T")[0];
+                }
+                date = LocalDate.parse(dateParam);
+            } catch (Exception e) {
+                return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>("Invalid date format. Expected YYYY-MM-DD.", null));
             }
         }
 
-        for(JournalEntry userJournalEntry: userJournalEntries){
-            sumRating += userJournalEntry.getDailyMood() != null ? userJournalEntry.getDailyMood() : 0.0;
-        }
+        List<JournalEntry> journalEntries = journalEntryService.getUserJournals(userId, date);
+        return ResponseEntity.ok(new ApiResponse<>("Journal entries retrieved successfully.", journalEntries));
+    }
 
-        Map<String, Object> stats = new HashMap<>();
-        stats.put("totalJournals", userJournalEntries.size());
-        stats.put("totalWords", wholeUserContent.length());
-        stats.put("avgMood", userJournalEntries.isEmpty() ? 0.0 : sumRating / userJournalEntries.size());
-
-        return stats;
+    @GetMapping("/{userId}/statistics")
+    public ResponseEntity<Map<String, Object>> getStatistics(@PathVariable("userId") String userId) {
+        Map<String, Object> stats = journalEntryService.getUserStatistics(userId);
+        return ResponseEntity.ok(stats);
     }
 }

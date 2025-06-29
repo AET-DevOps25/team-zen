@@ -1,13 +1,20 @@
-interface JournalEntry {
+export interface JournalEntry {
   id: string;
   title: string;
-  content: string;
   date: string;
-  mood: number;
+  dailyMood: number;
   snippetIds: Array<string>;
-  insights?: Array<string>;
+  insights?: Insights;
   wordCount?: number;
   tags?: Array<string>;
   keyStrategies?: Array<string>;
   summary?: string;
+}
+
+export interface Insights {
+  analysis?: string;
+  moodPattern?: string;
+  suggestion?: string;
+  achievement?: string;
+  wellnessTip?: string;
 }
