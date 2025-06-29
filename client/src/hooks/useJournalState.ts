@@ -3,7 +3,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useGetJournal, useUpdateJournal } from '@/api/journal';
 import { useGetSnippets } from '@/api/snippet';
 
-export const useJournalState = () => {
+export const useJournalState = (journalId?: string) => {
   const [activeTab, setActiveTab] = useState<'edit' | 'insights'>('edit');
   const [journalContent, setJournalContent] = useState<string>('');
   const [journalTitle, setJournalTitle] = useState<string>("Today's Journal");
@@ -11,9 +11,20 @@ export const useJournalState = () => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
 
   const navigate = useNavigate();
-  const { snippets } = useGetSnippets();
-  const { journal, isLoading } = useGetJournal();
+
+  const { journal, isLoading } = useGetJournal(journalId);
   const { mutateAsync: updateJournal } = useUpdateJournal();
+
+  // Get snippets for the journal's date, fallback to today if no journal date
+  // Ensure date is in YYYY-MM-DD format
+  const getDateFromJournal = (dateString?: string): string => {
+    if (!dateString) return new Date().toISOString().split('T')[0];
+    // Handle both ISO timestamp and simple date formats
+    return dateString.includes('T') ? dateString.split('T')[0] : dateString;
+  };
+
+  const journalDate = getDateFromJournal(journal?.date);
+  const { snippets } = useGetSnippets({ date: journalDate });
 
   useEffect(() => {
     if (journal && !isLoading) {
@@ -33,7 +44,6 @@ export const useJournalState = () => {
         summary: journalContent,
         title: journalTitle,
         id: journal.id,
-        content: journal.content || '',
       });
     }
   }, [journal, journalContent, journalTitle, updateJournal]);
@@ -50,8 +60,14 @@ export const useJournalState = () => {
     handleUpdate();
   }, [handleUpdate]);
 
-  const handleBackToDashboard = useCallback(() => {
-    navigate({ to: '/dashboard' });
+  const handleGoBack = useCallback(() => {
+    // Check if there's a previous page in the browser history
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      // Fallback to dashboard if no history available
+      navigate({ to: '/dashboard' });
+    }
   }, [navigate]);
 
   const handleSummarise = useCallback((summary: string) => {
@@ -74,7 +90,7 @@ export const useJournalState = () => {
     setIsEditingTitle,
     handleToggleEdit,
     handleTitleEditEnd,
-    handleBackToDashboard,
+    handleBackToDashboard: handleGoBack,
     handleSummarise,
   };
 };

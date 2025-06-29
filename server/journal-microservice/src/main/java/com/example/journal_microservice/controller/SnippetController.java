@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,11 +35,26 @@ public class SnippetController {
     @GetMapping("/{userId}")
     public ResponseEntity<?> getUserSnippets(@PathVariable("userId") String userId,
             @RequestParam(name = "snippetId", required = false) String snippetId,
-            @RequestParam(name = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+            @RequestParam(name = "date", required = false) String dateParam) {
 
         if (snippetId != null) {
             Snippet snippet = snippetService.getUserSnippetById(userId, snippetId);
             return ResponseEntity.ok(snippet);
+        }
+
+        LocalDate date = null;
+        if (dateParam != null) {
+            try {
+                // Handle both simple date format (YYYY-MM-DD) and ISO timestamp formats
+                if (dateParam.contains("T")) {
+                    // Extract just the date part from ISO timestamp
+                    dateParam = dateParam.split("T")[0];
+                }
+                date = LocalDate.parse(dateParam);
+            } catch (Exception e) {
+                return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>("Invalid date format. Expected YYYY-MM-DD.", null));
+            }
         }
 
         List<Snippet> snippets = snippetService.getUserSnippets(userId, date);

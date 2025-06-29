@@ -28,10 +28,6 @@ public class JournalEntryService {
     @Autowired
     private UserService userService;
 
-    public List<JournalEntry> getAllJournalEntries() {
-        return journalEntryRepository.findAll();
-    }
-
     public JournalEntry createJournalEntry(JournalEntry journalEntry) {
         JournalEntry newEntry = journalEntryRepository.save(journalEntry);
         
@@ -81,8 +77,8 @@ public class JournalEntryService {
             journalEntry.setDailyMood(updatedJournalEntry.getDailyMood());
         }
 
-        if (updatedJournalEntry.getJournalInsight() != null) {
-            journalEntry.setJournalInsight(updatedJournalEntry.getJournalInsight());
+        if (updatedJournalEntry.getInsights() != null) {
+            journalEntry.setInsights(updatedJournalEntry.getInsights());
         }
         
         journalEntry.setUpdatedAt(new Date());
@@ -119,6 +115,7 @@ public class JournalEntryService {
         List<JournalEntry> userJournalEntries = journalEntryRepository.findByUserId(userId);
         List<Snippet> userSnippets = snippetRepository.findByUserId(userId);
 
+        // Basic statistics calculation
         StringBuilder wholeUserContent = new StringBuilder();
         double sumRating = 0.0;
 
@@ -132,11 +129,120 @@ public class JournalEntryService {
             sumRating += userJournalEntry.getDailyMood() != null ? userJournalEntry.getDailyMood() : 0.0;
         }
 
+        // Calculate weekly statistics
+        Map<String, Object> weeklyStats = calculateWeeklyStatistics(userJournalEntries);
+        
+        // Calculate streak
+        int currentStreak = calculateJournalStreak(userJournalEntries);
+
+        // Build comprehensive statistics
         Map<String, Object> stats = new HashMap<>();
+        
+        // Overall statistics
         stats.put("totalJournals", userJournalEntries.size());
         stats.put("totalWords", wholeUserContent.length());
         stats.put("avgMood", userJournalEntries.isEmpty() ? 0.0 : sumRating / userJournalEntries.size());
+        
+        // Weekly statistics
+        stats.put("weeklyJournalCount", weeklyStats.get("journalCount"));
+        stats.put("weeklyAvgMood", weeklyStats.get("avgMood"));
+        stats.put("weeklyTarget", 7); // Target: one journal per day
+        
+        // Streak statistics
+        stats.put("currentStreak", currentStreak);
 
         return stats;
+    }
+
+    /**
+     * Calculates weekly statistics for the current week
+     * @param journalEntries List of user's journal entries
+     * @return Map containing weekly statistics
+     */
+    private Map<String, Object> calculateWeeklyStatistics(List<JournalEntry> journalEntries) {
+        LocalDate now = LocalDate.now();
+        LocalDate startOfWeek = now.with(java.time.DayOfWeek.MONDAY);
+        LocalDate endOfWeek = startOfWeek.plusDays(6);
+
+        List<JournalEntry> weeklyEntries = journalEntries.stream()
+                .filter(entry -> entry.getUpdatedAt() != null)
+                .filter(entry -> {
+                    LocalDate entryDate = entry.getUpdatedAt().toInstant()
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate();
+                    return !entryDate.isBefore(startOfWeek) && !entryDate.isAfter(endOfWeek);
+                })
+                .collect(java.util.stream.Collectors.toList());
+
+        Map<String, Object> weeklyStats = new HashMap<>();
+        weeklyStats.put("journalCount", weeklyEntries.size());
+        
+        if (weeklyEntries.isEmpty()) {
+            weeklyStats.put("avgMood", 0.0);
+        } else {
+            double weeklyMoodSum = weeklyEntries.stream()
+                    .mapToDouble(entry -> entry.getDailyMood() != null ? entry.getDailyMood() : 0.0)
+                    .sum();
+            weeklyStats.put("avgMood", weeklyMoodSum / weeklyEntries.size());
+        }
+
+        return weeklyStats;
+    }
+
+    /**
+     * Efficiently calculates the current journal streak
+     * A streak is defined as consecutive days with at least one journal entry
+     * @param journalEntries List of user's journal entries
+     * @return Current streak count in days
+     */
+    private int calculateJournalStreak(List<JournalEntry> journalEntries) {
+        if (journalEntries.isEmpty()) {
+            return 0;
+        }
+
+        // Convert journal entries to unique dates and sort in descending order
+        Set<LocalDate> journalDates = journalEntries.stream()
+                .filter(entry -> entry.getUpdatedAt() != null)
+                .map(entry -> entry.getUpdatedAt().toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate())
+                .collect(java.util.stream.Collectors.toSet());
+
+        if (journalDates.isEmpty()) {
+            return 0;
+        }
+
+        List<LocalDate> sortedDates = journalDates.stream()
+                .sorted(java.util.Collections.reverseOrder())
+                .collect(java.util.stream.Collectors.toList());
+
+        LocalDate today = LocalDate.now();
+        LocalDate mostRecentDate = sortedDates.get(0);
+
+        // If the most recent entry is not today or yesterday, streak is 0
+        if (mostRecentDate.isBefore(today.minusDays(1))) {
+            return 0;
+        }
+
+        int streak = 0;
+        LocalDate currentDate = today;
+
+        // If there's no journal today, start checking from yesterday
+        if (!journalDates.contains(today)) {
+            currentDate = today.minusDays(1);
+        }
+
+        // Count consecutive days with journal entries
+        for (LocalDate date : sortedDates) {
+            if (date.equals(currentDate)) {
+                streak++;
+                currentDate = currentDate.minusDays(1);
+            } else if (date.isBefore(currentDate)) {
+                // Gap found, streak ends
+                break;
+            }
+        }
+
+        return streak;
     }
 }

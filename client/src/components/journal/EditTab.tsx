@@ -29,6 +29,7 @@ export const EditTab = ({
           content={journalContent}
           isEditing={isEditing}
           journalId={journalId}
+          snippetCount={snippets.length}
           onContentChange={onContentChange}
           onToggleEdit={onToggleEdit}
           onSummarise={onSummarise}

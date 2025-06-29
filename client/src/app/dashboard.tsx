@@ -28,7 +28,7 @@ const Dashboard: React.FC = () => {
   );
 };
 
-type DashboardTab = 'today' | 'overview' | 'history';
+export type DashboardTab = 'today' | 'overview' | 'history';
 
 interface TabConfig {
   id: DashboardTab;

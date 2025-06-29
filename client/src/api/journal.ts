@@ -4,8 +4,24 @@ import { API_BASE_URL } from './base';
 import type { ApiResponse } from './base';
 import type { JournalEntry } from '@/model/journal';
 
-// Get today's journal entry for the user
-export const useGetJournal = () => {
+// Types for enhanced user statistics
+export interface UserStatistics {
+  // Overall statistics
+  totalJournals: number;
+  totalWords: number;
+  avgMood: number;
+
+  // Weekly statistics
+  weeklyJournalCount: number;
+  weeklyAvgMood: number;
+  weeklyTarget: number;
+
+  // Streak statistics
+  currentStreak: number;
+}
+
+// Get today's journal entry for the user, or a specific journal by ID
+export const useGetJournal = (journalId?: string) => {
   const { getToken } = useAuth();
   const { user } = useUser();
 
@@ -13,18 +29,23 @@ export const useGetJournal = () => {
     ApiResponse<JournalEntry | Array<JournalEntry>>
   > => {
     const token = await getToken();
-    const today = new Date().toISOString().split('T')[0];
 
-    const response = await fetch(
-      `${API_BASE_URL}/api/journalEntry/${user?.id}?date=${today}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+    let url: string;
+    if (journalId) {
+      url = `${API_BASE_URL}/api/journalEntry/${user?.id}?journalId=${journalId}`;
+    } else {
+      // Fetch today's journal
+      const today = new Date().toISOString().split('T')[0];
+      url = `${API_BASE_URL}/api/journalEntry/${user?.id}?date=${today}`;
+    }
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
       },
-    );
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch journal: ${response.status}`);
@@ -33,8 +54,12 @@ export const useGetJournal = () => {
     return response.json();
   };
 
+  const queryKey = journalId
+    ? ['journal', user?.id, journalId]
+    : ['journal', user?.id, new Date().toISOString().split('T')[0]];
+
   const { data, ...rest } = useQuery({
-    queryKey: ['journal', user?.id, new Date().toISOString().split('T')[0]],
+    queryKey,
     queryFn: fetchJournal,
     staleTime: 5 * 60 * 1000,
     retry: 2,
@@ -42,9 +67,11 @@ export const useGetJournal = () => {
   });
 
   const journal = data
-    ? Array.isArray(data.data)
-      ? data.data[0]
-      : data.data
+    ? journalId
+      ? (data.data as JournalEntry) // When fetching by ID, backend returns single entry
+      : Array.isArray(data.data)
+        ? data.data[0] // When fetching by date, backend returns array, take first
+        : data.data
     : undefined;
 
   return {
@@ -57,7 +84,9 @@ export const useGetAllJournals = () => {
   const { getToken } = useAuth();
   const { user } = useUser();
 
-  const fetchAllJournals = async () => {
+  const fetchAllJournals = async (): Promise<
+    ApiResponse<Array<JournalEntry>>
+  > => {
     const token = await getToken();
 
     const response = await fetch(
@@ -74,14 +103,23 @@ export const useGetAllJournals = () => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    return response.json() as Promise<Array<JournalEntry>>;
+    return response.json();
   };
 
-  return useMutation({
-    mutationKey: ['getAllJournals'],
-    mutationFn: fetchAllJournals,
+  const { data, ...rest } = useQuery({
+    queryKey: ['allJournals', user?.id],
+    queryFn: fetchAllJournals,
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
     retry: 2,
   });
+
+  const journals = data?.data || [];
+
+  return {
+    journals,
+    ...rest,
+  };
 };
 
 export const useUpdateJournal = () => {
@@ -140,6 +178,39 @@ export const useGetSummary = (journalId: string, enabled: boolean = true) => {
     queryKey: ['summary', journalId],
     queryFn: fetchSummary,
     enabled: !!journalId && enabled,
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+};
+
+export const useGetUserStatistics = () => {
+  const { getToken } = useAuth();
+  const { user } = useUser();
+
+  const fetchUserStatistics = async (): Promise<UserStatistics> => {
+    const token = await getToken();
+    const response = await fetch(
+      `${API_BASE_URL}/api/journalEntry/${user?.id}/statistics`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch user statistics: ${response.status}`);
+    }
+
+    return response.json();
+  };
+
+  return useQuery({
+    queryKey: ['userStatistics', user?.id],
+    queryFn: fetchUserStatistics,
+    enabled: !!user?.id,
     staleTime: 5 * 60 * 1000,
     retry: 2,
   });

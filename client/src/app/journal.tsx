@@ -1,9 +1,13 @@
+import { useParams } from '@tanstack/react-router';
 import { EditTab } from '@/components/journal/EditTab';
 import { InsightsTab } from '@/components/journal/InsightsTab';
 import { JournalHeader } from '@/components/journal/JournalHeader';
-import { useJournalState } from '@/components/journal/useJournalState';
+import { useJournalState } from '@/hooks';
 
 const JournalView = () => {
+  const params = useParams({ strict: false });
+  const journalId = (params as { journalId?: string }).journalId;
+
   const {
     activeTab,
     journalContent,
@@ -20,7 +24,7 @@ const JournalView = () => {
     handleTitleEditEnd,
     handleBackToDashboard,
     handleSummarise,
-  } = useJournalState();
+  } = useJournalState(journalId);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-blue-50">
@@ -47,7 +51,7 @@ const JournalView = () => {
             onSummarise={handleSummarise}
           />
         ) : (
-          <InsightsTab snippets={snippets} />
+          <InsightsTab snippets={snippets} journal={journal} />
         )}
       </div>
     </div>

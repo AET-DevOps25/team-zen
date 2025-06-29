@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.time.LocalDate;
 import org.springframework.http.ResponseEntity;
-import org.springframework.format.annotation.DateTimeFormat;
 import java.util.*;
 
 @RestController
@@ -18,12 +17,6 @@ public class JournalEntryController {
 
     @Autowired
     private JournalEntryService journalEntryService;
-
-    @GetMapping
-    public ResponseEntity<List<JournalEntry>> getAllJournalEntries() {
-        List<JournalEntry> journalEntries = journalEntryService.getAllJournalEntries();
-        return ResponseEntity.ok(journalEntries);
-    }
 
     @PostMapping
     public ResponseEntity<JournalEntry> createJournalEntry(@RequestBody JournalEntry journalEntry) {
@@ -47,11 +40,26 @@ public class JournalEntryController {
     @GetMapping("/{userId}")
     public ResponseEntity<ApiResponse<Object>> getUserJournals(@PathVariable("userId") String userId,
             @RequestParam(name = "journalId", required = false) String journalId,
-            @RequestParam(name = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+            @RequestParam(name = "date", required = false) String dateParam) {
 
         if (journalId != null) {
             JournalEntry journalEntry = journalEntryService.getUserJournalById(userId, journalId);
             return ResponseEntity.ok(new ApiResponse<>("Journal entry retrieved successfully.", journalEntry));
+        }
+
+        LocalDate date = null;
+        if (dateParam != null) {
+            try {
+                // Handle both simple date format (YYYY-MM-DD) and ISO timestamp formats
+                if (dateParam.contains("T")) {
+                    // Extract just the date part from ISO timestamp
+                    dateParam = dateParam.split("T")[0];
+                }
+                date = LocalDate.parse(dateParam);
+            } catch (Exception e) {
+                return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>("Invalid date format. Expected YYYY-MM-DD.", null));
+            }
         }
 
         List<JournalEntry> journalEntries = journalEntryService.getUserJournals(userId, date);

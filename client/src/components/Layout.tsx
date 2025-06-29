@@ -1,5 +1,6 @@
 import Footer from './Footer';
 import Header from './Header';
+import { Toaster } from './ui/sonner';
 import type { PropsWithChildren } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -10,6 +11,7 @@ const Layout = ({ children }: PropsWithChildren) => {
         <Header />
       </div>
       {children}
+      <Toaster />
       <Footer />
     </main>
   );

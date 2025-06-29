@@ -6,6 +6,7 @@ interface JournalEditorProps {
   content: string;
   isEditing: boolean;
   journalId?: string;
+  snippetCount: number;
   onContentChange: (content: string) => void;
   onToggleEdit: () => void;
   onSummarise?: (summary: string) => void;
@@ -15,6 +16,7 @@ export const JournalEditor = ({
   content,
   isEditing,
   journalId,
+  snippetCount,
   onContentChange,
   onToggleEdit,
   onSummarise,
@@ -36,11 +38,10 @@ export const JournalEditor = ({
     }
   };
 
-  const {
-    data: summary,
-    isLoading: isSummaryLoading,
-    refetch: fetchSummary,
-  } = useGetSummary(journalId || '', false); // Disable automatic fetching
+  const { isLoading: isSummaryLoading, refetch: fetchSummary } = useGetSummary(
+    journalId || '',
+    false,
+  ); // Disable automatic fetching
 
   const handleSummarise = async () => {
     if (journalId && onSummarise) {
@@ -65,7 +66,18 @@ export const JournalEditor = ({
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-lg font-semibold text-gray-800">Journal Entry</h2>
           <div className="flex space-x-2">
-            {content && journalId && (
+            {isEditing && (
+              <button
+                onClick={onToggleEdit}
+                disabled={isSummaryLoading}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-gray-100 text-gray-600 hover:bg-gray-200 ${
+                  isSummaryLoading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                Cancel
+              </button>
+            )}
+            {content && journalId && snippetCount > 2 && isEditing && (
               <button
                 onClick={handleSummarise}
                 disabled={isSummaryLoading}
@@ -90,17 +102,35 @@ export const JournalEditor = ({
         </div>
 
         {isEditing ? (
-          <textarea
-            value={content}
-            onChange={handleTextareaChange}
-            onKeyDown={handleKeyDown}
-            disabled={isSummaryLoading}
-            className={`w-full h-96 p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none font-mono text-sm ${
-              isSummaryLoading ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''
-            }`}
-            placeholder="Start writing your journal entry..."
-            autoFocus
-          />
+          <div className="relative">
+            {isSummaryLoading && (
+              <div className="absolute inset-0 pointer-events-none z-10">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-teal-400 to-blue-400 opacity-30 animate-pulse rounded-lg"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse rounded-lg"></div>
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                  <div className="flex items-center space-x-2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
+                    <Brain className="w-5 h-5 text-purple-600 animate-pulse" />
+                    <span className="text-sm font-medium text-gray-700">
+                      ZenAI is summarising...
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+            <textarea
+              value={content}
+              onChange={handleTextareaChange}
+              onKeyDown={handleKeyDown}
+              disabled={isSummaryLoading}
+              className={`w-full h-96 p-4 border-2 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none font-mono text-sm transition-all duration-300 ${
+                isSummaryLoading
+                  ? 'opacity-70 cursor-not-allowed bg-gradient-to-br from-purple-50 via-teal-50 to-blue-50 border-gradient-to-r border-purple-300'
+                  : 'border-gray-200 bg-white'
+              }`}
+              placeholder="Start writing your journal entry..."
+              autoFocus={!isSummaryLoading}
+            />
+          </div>
         ) : (
           <div className="prose prose-lg max-w-none">
             <div

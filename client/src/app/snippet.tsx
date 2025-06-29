@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Clock, Mic, Save } from 'lucide-react';
 import { useState } from 'react';
 import { useUser } from '@clerk/clerk-react';
+import { toast } from 'sonner';
 import type { Snippet } from '@/model/snippet';
 import { Button } from '@/components/ui/button';
 import { useCreateSnippet } from '@/api/snippet';
@@ -14,9 +15,9 @@ const CreateSnippet = () => {
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [tags, setTags] = useState<Array<string>>([]);
   const [isRecording, setIsRecording] = useState<boolean>(false);
-
-  const { mutateAsync: createSnippet, error } = useCreateSnippet();
   const navigate = useNavigate();
+
+  const { mutateAsync: createSnippet } = useCreateSnippet();
 
   const moodEmojis = [
     {
@@ -73,14 +74,22 @@ const CreateSnippet = () => {
         timestamp: new Date().toISOString(),
       };
 
-      // TODO: add toast or notification
-      await createSnippet(snippet).catch((error) => {
-        console.error('Error creating snippet:', error);
-      });
-
-      if (!error) {
+      try {
+        await createSnippet(snippet);
+        toast.success('Snippet saved successfully!', {
+          description: 'Your thoughts have been captured.',
+        });
         navigate({ to: '/dashboard' });
+      } catch (err) {
+        console.error('Error creating snippet:', err);
+        toast.error('Failed to save snippet', {
+          description: 'Please try again or check your connection.',
+        });
       }
+    } else {
+      toast.warning('Missing information', {
+        description: 'Please add some content and select your mood.',
+      });
     }
   };
 

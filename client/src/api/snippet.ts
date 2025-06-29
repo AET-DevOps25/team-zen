@@ -49,7 +49,13 @@ export const useGetSnippets = (params: GetSnippetsParams = {}) => {
 
     const urlParams = new URLSearchParams();
     if (params.snippetId) urlParams.append('snippetId', params.snippetId);
-    if (params.date) urlParams.append('date', params.date);
+    if (params.date) {
+      // Ensure date is in YYYY-MM-DD format for the backend
+      const formattedDate = params.date.includes('T')
+        ? params.date.split('T')[0]
+        : params.date;
+      urlParams.append('date', formattedDate);
+    }
 
     const queryString = urlParams.toString();
     const url = `${API_BASE_URL}/api/snippets/${user?.id}${queryString ? `?${queryString}` : ''}`;

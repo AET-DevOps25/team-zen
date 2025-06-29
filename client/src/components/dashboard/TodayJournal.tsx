@@ -12,9 +12,9 @@ import {
   Zap,
 } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '../ui/button';
 import { useGetSnippets } from '@/api/snippet.ts';
-import { useAuth } from '@/lib/auth';
+import { useJournalState } from '@/hooks';
+import { Button } from '@/components/ui/button';
 
 const TodayJournal = () => {
   const [currentStreak] = useState(7);
@@ -22,8 +22,9 @@ const TodayJournal = () => {
   const { snippets, isLoading } = useGetSnippets({
     date: new Date().toISOString().split('T')[0],
   });
-  const { userData } = useAuth();
+
   const navigate = useNavigate();
+  const { journalContent } = useJournalState();
 
   const averageMood =
     !isLoading && snippets.length > 0
@@ -33,16 +34,12 @@ const TodayJournal = () => {
         ).toFixed(1)
       : 0;
 
-  console.log('User Data:', userData);
-
   const handleCreateSnippet = () => {
     // Navigate to snippet creation page
     navigate({ to: '/snippet' });
   };
 
   const handleViewJournal = () => {
-    // TODO: Navigate to journal view with snippets
-    console.log('View journal with snippets:', snippets);
     navigate({
       to: '/journal',
       params: { snippets: JSON.stringify(snippets) },
@@ -87,11 +84,11 @@ const TodayJournal = () => {
                 <Plus className="w-4 h-4" />
                 <span>Add Snippet</span>
               </Button>
-              {snippets.length > 0 && (
+              {journalContent && (
                 <Button
                   onClick={handleViewJournal}
                   variant="blue-animated"
-                  disabled={!isLoading && snippets.length === 0}
+                  disabled={isLoading}
                 >
                   <BookOpen className="w-4 h-4" />
                   <span>View Journal</span>
@@ -123,7 +120,7 @@ const TodayJournal = () => {
           </div>
 
           {/* Action Buttons */}
-          {snippets.length > 2 && (
+          {snippets.length > 2 && !journalContent && (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -134,7 +131,7 @@ const TodayJournal = () => {
                   <Zap className="w-6 h-6 text-purple-600" />
                   <div>
                     <h3 className="font-semibold text-gray-800">
-                      Ready to create your journal?
+                      Ready to journal?
                     </h3>
                     <p className="text-sm text-gray-600">
                       You have {snippets.length} snippets to aggregate
