@@ -73,11 +73,12 @@
 
     - name: Start docker containers with compose
       become_user: ubuntu
-      community.docker.docker_compose:
+      community.docker.docker_compose_v2:
         project_src: /home/ubuntu
         files:
           - docker-compose.yml
-        env_file: /home/ubuntu/.env.prod
+        env_files:
+          - /home/ubuntu/.env.prod
         state: present
-        pull: true
-        restarted: true
+        pull: "always"
+        recreate: "always"
