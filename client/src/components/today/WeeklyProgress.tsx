@@ -42,7 +42,7 @@ export const WeeklyProgress = ({
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Entries</span>
             <span className="font-semibold">
-              {userStats?.weeklyJournalCount ?? 0}/
+              {userStats?.weeklyJournalCount ?? 0} /
               {userStats?.weeklyTarget ?? 7}
             </span>
           </div>

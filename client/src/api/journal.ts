@@ -51,7 +51,9 @@ export const useGetJournal = (journalId?: string) => {
       throw new Error(`Failed to fetch journal: ${response.status}`);
     }
 
-    return response.json();
+    const result = await response.json();
+
+    return result;
   };
 
   const queryKey = journalId

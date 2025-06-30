@@ -100,8 +100,8 @@ public class JournalEntryService {
 
         if (date != null) {
             journalEntries = journalEntries.stream()
-                    .filter(j -> j.getUpdatedAt() != null &&
-                            j.getUpdatedAt().toInstant()
+                    .filter(j -> j.getDate() != null &&
+                            j.getDate().toInstant()
                                     .atZone(ZoneId.systemDefault())
                                     .toLocalDate()
                                     .isEqual(date))
