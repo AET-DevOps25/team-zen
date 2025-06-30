@@ -26,7 +26,6 @@ export const useJournalState = (journalId?: string) => {
   const journalDate = getDateFromJournal(journal?.date);
   const { snippets } = useGetSnippets({ date: journalDate });
 
-
   useEffect(() => {
     if (journal && !isLoading) {
       setJournalContent(journal.summary ?? '');

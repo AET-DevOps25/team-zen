@@ -30,7 +30,6 @@ const JournalHistory = () => {
   const { searchQuery, searchResults, isSearching, setSearchQuery } =
     useJournalSearch(journals);
 
-
   // Filter functionality
   const {
     selectedMood,
