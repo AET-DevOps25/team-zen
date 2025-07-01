@@ -374,6 +374,28 @@ sketch
 .history
 .ionide
 
+# ======================
+# Environment & Security
+# ======================
+# Environment files
+.env
+.env.local
+.env.development
+.env.staging
+.env.production
+
+# Secret files
+secrets/
+*.key
+*.pem
+*.p12
+*.keystore
+
+# Terraform state files (may contain secrets)
+terraform.tfstate
+terraform.tfstate.backup
+*.tfvars
+
 ### Vue ###
 # gitignore template for Vue.js projects
 #

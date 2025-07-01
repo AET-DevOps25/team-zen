@@ -1,14 +1,16 @@
-version: '3.8'
+version: "3.8"
 
 services:
   client:
     build: ./client
     ports:
-      - '3000:80'
+      - "3000:80"
+    env_file:
+      - .env
     environment:
-      - REACT_APP_API_URL=http://localhost:8085
-      - API_HOST=api-gateway
-      - API_PORT=8085
+      - API_URL=${API_URL:-http://localhost:8085}
+      - SERVER_HOST=api-gateway
+      - SERVICE_PORT=8085
     depends_on:
       - api-gateway
     networks:
@@ -18,11 +20,17 @@ services:
   api-gateway:
     build: ./server/api-gateway
     ports:
-      - '8085:8085'
+      - "8085:8085"
+    env_file:
+      - .env
     environment:
+      - SERVER_PORT=8085
       - USER_SERVICE_URL=http://user-microservice:8080
       - JOURNAL_SERVICE_URL=http://journal-microservice:8081
       - GENAI_SERVICE_URL=http://genai-microservice:8082
+      - CLERK_AUTHORIZED_PARTY=${CLERK_AUTHORIZED_PARTY:-http://localhost:3000}
+      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
+      - CLERK_WEBHOOK_SECRET=${CLERK_WEBHOOK_SECRET}
     depends_on:
       - user-microservice
       - journal-microservice
@@ -30,46 +38,60 @@ services:
     networks:
       - backend
 
-
   user-microservice:
     build: ./server/user-microservice
+    env_file:
+      - .env
     environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://user-db:27017/userdb
+      - MONGO_DB_URI_USER=${MONGO_DB_URI_USER:-mongodb://user-db:27017/userdb}
+      - MONGODB_DB=userdb
+      - SERVER_PORT=8080
+    # Uncomment the following lines to use a MongoDB container
     depends_on:
-      - user-db
+       - user-db
     networks:
       - backend
       - user-network
 
+  # Uncomment the following lines to use a MongoDB container
   user-db:
-    image: mongo:6
-    container_name: user-db
-    volumes:
-      - user-data:/data/db
-    networks:
-      - user-network
+     image: mongo:6
+     container_name: user-db
+     volumes:
+       - user-data:/data/db
+     networks:
+       - user-network
 
   journal-microservice:
     build: ./server/journal-microservice
+    env_file:
+      - .env
     environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://journal-db:27017/journaldb
+      - MONGODB_URI=${MONGO_DB_URI_JOURNAL:-mongodb://journal-db:27017/journaldb}
+      - MONGODB_DB=journaldb
+      - SERVER_PORT=8081
+      - LLM_SERVICE_URL=http://genai-microservice:8082
+      - USER_SERVICE_URL=http://user-microservice:8080
+    # Uncomment the following lines to use a MongoDB container
     depends_on:
-      - journal-db
+       - journal-db
     networks:
       - backend
       - journal-network
 
   journal-db:
-    image: mongo:6
-    container_name: journal-db
-    volumes:
-      - journal-data:/data/db
-    networks:
-      - journal-network
+     image: mongo:6
+     container_name: journal-db
+     volumes:
+       - journal-data:/data/db
+     networks:
+       - journal-network
 
   genai-microservice:
     build: ./genai
     environment:
+      - GENAI_API_URL=${GENAI_API_URL:-https://gpu.aet.cit.tum.de/api/chat/completions}
+      - GENAI_API_KEY=${GENAI_API_KEY}
       - WEAVIATE_HOST=http://weaviate:8080
     depends_on:
       - weaviate
@@ -80,12 +102,12 @@ services:
   weaviate:
     image: semitechnologies/weaviate:latest
     ports:
-      - '80:80' # Leave this port open for now
+      - "80:80" # Leave this port open for now
     environment:
-      QUERY_DEFAULTS_LIMIT: '20'
-      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
-      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
-      DEFAULT_VECTORIZER_MODULE: 'none'
+      QUERY_DEFAULTS_LIMIT: "20"
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
+      PERSISTENCE_DATA_PATH: "/var/lib/weaviate"
+      DEFAULT_VECTORIZER_MODULE: "none"
     volumes:
       - weaviate-data:/var/lib/weaviate
     networks:
