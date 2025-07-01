@@ -2,7 +2,7 @@ name: Deploy Kubernetes to AET cluster
 
 on:
   workflow_run:
-    workflows: [ "Build & Push Docker Images" ]
+    workflows: [ "Build Docker Images" ]
     types:
       - completed
   push:
