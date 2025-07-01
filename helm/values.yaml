@@ -11,7 +11,7 @@ namespace:
 client:
   image:
     repository: ghcr.io/aet-devops25/team-zen/client
-    tag: feat-kubernets-config-and-helm-charts
+    tag: latest
     pullPolicy: Always
   service:
     type: ClusterIP
@@ -19,15 +19,15 @@ client:
     targetPort: 80
   replicaCount: 2
   env:
-    - name: API_HOST
+    - name: SERVER_HOST
       value: gateway-service.zenai-team.svc.cluster.local
-    - name: API_PORT
+    - name: SERVER_PORT
       value: "8085"
 
 apiGateway:
   image:
     repository: ghcr.io/aet-devops25/team-zen/api-gateway
-    tag: 7-set-up-terraform-and-ansible-scripts
+    tag: latest
     pullPolicy: Always
   service:
     type: ClusterIP
@@ -38,7 +38,7 @@ apiGateway:
 user:
   image:
     repository: ghcr.io/aet-devops25/team-zen/user-microservice
-    tag: 7-set-up-terraform-and-ansible-scripts
+    tag: latest
     pullPolicy: Always
   service:
     type: ClusterIP
@@ -49,7 +49,7 @@ user:
 journal:
   image:
     repository: ghcr.io/aet-devops25/team-zen/journal-microservice
-    tag: 7-set-up-terraform-and-ansible-scripts
+    tag: latest
     pullPolicy: Always
   service:
     type: ClusterIP
@@ -61,7 +61,7 @@ journal:
 genai:
   image:
     repository: ghcr.io/aet-devops25/team-zen/genai
-    tag: 7-set-up-terraform-and-ansible-scripts
+    tag: latest
     pullPolicy: Always
   service:
     type: ClusterIP

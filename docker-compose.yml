@@ -10,7 +10,7 @@ services:
     environment:
       - API_URL=${API_URL:-http://localhost:8085}
       - SERVER_HOST=api-gateway
-      - SERVICE_PORT=8085
+      - SERVER_PORT=8085
     depends_on:
       - api-gateway
     networks:

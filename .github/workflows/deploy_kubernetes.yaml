@@ -1,6 +1,10 @@
 name: Deploy Kubernetes to AET cluster
 
 on:
+  workflow_run:
+    workflows: [ "Build & Push Docker Images" ]
+    types:
+      - completed
   push:
     branches:
 #      - TODO: Change to main
@@ -29,7 +33,14 @@ jobs:
           echo "$KUBE_CONFIG" > $HOME/.kube/config
 
       - name: Deploy Helm Chart
+        env:
+          IMAGE_TAG: ${{ github.ref_name }} # Use the branch name as the image tag
         run: |
           helm upgrade --install zenai-app ./helm \
           --namespace zenai-team \
-          -f ./helm/values.yaml
+          -f ./helm/values.yaml \
+            --set client.image.tag=$IMAGE_TAG \
+            --set api-gateway.image.tag=$IMAGE_TAG \
+            --set journal-microservice.image.tag=$IMAGE_TAG \
+            --set user-microservice.image.tag=$IMAGE_TAG \
+            --set genai.image.tag=$IMAGE_TAG
