@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Clock, Mic, Save } from 'lucide-react';
 import { useState } from 'react';
 import { useUser } from '@clerk/clerk-react';
+import { toast } from 'sonner';
+import { MOOD_OPTIONS } from '../constants/moods';
 import type { Snippet } from '@/model/snippet';
 import { Button } from '@/components/ui/button';
 import { useCreateSnippet } from '@/api/snippet';
@@ -14,42 +16,9 @@ const CreateSnippet = () => {
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [tags, setTags] = useState<Array<string>>([]);
   const [isRecording, setIsRecording] = useState<boolean>(false);
-
-  const { mutateAsync: createSnippet, error } = useCreateSnippet();
   const navigate = useNavigate();
 
-  const moodEmojis = [
-    {
-      value: 1,
-      emoji: '😢',
-      label: 'Very Low',
-      color: 'bg-red-100 border-red-300',
-    },
-    {
-      value: 2,
-      emoji: '😔',
-      label: 'Low',
-      color: 'bg-orange-100 border-orange-300',
-    },
-    {
-      value: 3,
-      emoji: '😐',
-      label: 'Neutral',
-      color: 'bg-yellow-100 border-yellow-300',
-    },
-    {
-      value: 4,
-      emoji: '😊',
-      label: 'Good',
-      color: 'bg-green-100 border-green-300',
-    },
-    {
-      value: 5,
-      emoji: '😄',
-      label: 'Excellent',
-      color: 'bg-teal-100 border-teal-300',
-    },
-  ];
+  const { mutateAsync: createSnippet } = useCreateSnippet();
 
   const suggestedTags = [
     'work',
@@ -73,14 +42,22 @@ const CreateSnippet = () => {
         timestamp: new Date().toISOString(),
       };
 
-      // TODO: add toast or notification
-      await createSnippet(snippet).catch((error) => {
-        console.error('Error creating snippet:', error);
-      });
-
-      if (!error) {
+      try {
+        await createSnippet(snippet);
+        toast.success('Snippet saved successfully!', {
+          description: 'Your thoughts have been captured.',
+        });
         navigate({ to: '/dashboard' });
+      } catch (err) {
+        console.error('Error creating snippet:', err);
+        toast.error('Failed to save snippet', {
+          description: 'Please try again or check your connection.',
+        });
       }
+    } else {
+      toast.warning('Missing information', {
+        description: 'Please add some content and select your mood.',
+      });
     }
   };
 
@@ -139,13 +116,13 @@ const CreateSnippet = () => {
               How are you feeling right now?
             </h3>
             <div className="flex flex-wrap gap-3">
-              {moodEmojis.map((mood) => (
+              {MOOD_OPTIONS.map((mood) => (
                 <motion.button
                   key={mood.value}
                   onClick={() => setSelectedMood(mood.value)}
                   className={`p-4 rounded-xl border-2 transition-all w-[7rem] lg:w-[9rem] ${
                     selectedMood === mood.value
-                      ? `${mood.color} border-current`
+                      ? `${mood.bgColor} ${mood.borderColor} border-current`
                       : 'border-gray-200 hover:border-gray-300 bg-gray-50'
                   }`}
                   whileHover={{ scale: 1.05 }}

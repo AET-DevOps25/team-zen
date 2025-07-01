@@ -1,180 +1,82 @@
 package com.example.journal_microservice.controller;
 
-import com.example.journal_microservice.model.Snippet;
-import com.example.journal_microservice.repository.SnippetRepository;
-import com.example.journal_microservice.repository.JournalEntryRepository;
-import com.example.journal_microservice.model.User;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestClient;
-import org.springframework.format.annotation.DateTimeFormat;
-import com.example.journal_microservice.model.JournalEntry;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.time.ZoneId;
 import java.time.LocalDate;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.journal_microservice.dto.wrapper.ApiResponse;
+import com.example.journal_microservice.model.Snippet;
+import com.example.journal_microservice.service.SnippetService;
 
 @RestController
 @RequestMapping("/api/snippets")
 public class SnippetController {
 
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SnippetController.class);
-
-    RestClient restClient = RestClient.create();
-
     @Autowired
-    private SnippetRepository snippetRepository;
-    @Autowired
-    private JournalEntryRepository journalEntryRepository;
+    private SnippetService snippetService;
 
     @GetMapping
-    public List<Snippet> getAllSnippets() {
-        return snippetRepository.findAll();
+    public ResponseEntity<List<Snippet>> getAllSnippets() {
+        List<Snippet> snippets = snippetService.getAllSnippets();
+        return ResponseEntity.ok(snippets);
     }
 
     @GetMapping("/{userId}")
     public ResponseEntity<?> getUserSnippets(@PathVariable("userId") String userId,
             @RequestParam(name = "snippetId", required = false) String snippetId,
-            @RequestParam(name = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+            @RequestParam(name = "date", required = false) String dateParam) {
+
         if (snippetId != null) {
-            Snippet snippet = snippetRepository.findByUserIdAndId(userId, snippetId)
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "Snippet not found for user: " + userId + " and snippetId: " + snippetId));
+            Snippet snippet = snippetService.getUserSnippetById(userId, snippetId);
             return ResponseEntity.ok(snippet);
         }
-        List<Snippet> snippets = snippetRepository.findByUserId(userId);
-        if (snippets.isEmpty()) {
-            throw new IllegalArgumentException("No snippets found for user: " + userId);
+
+        LocalDate date = null;
+        if (dateParam != null) {
+            try {
+                // Handle both simple date format (YYYY-MM-DD) and ISO timestamp formats
+                if (dateParam.contains("T")) {
+                    // Extract just the date part from ISO timestamp
+                    dateParam = dateParam.split("T")[0];
+                }
+                date = LocalDate.parse(dateParam);
+            } catch (Exception e) {
+                return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>("Invalid date format. Expected YYYY-MM-DD.", null));
+            }
         }
 
-        if (date != null) {
-            snippets = snippets.stream()
-                    .filter(s -> s.getUpdatedAt() != null &&
-                            s.getUpdatedAt().toInstant()
-                                    .atZone(ZoneId.systemDefault())
-                                    .toLocalDate()
-                                    .isEqual(date))
-                    .toList();
-        }
+        List<Snippet> snippets = snippetService.getUserSnippets(userId, date);
         return ResponseEntity.ok(snippets);
     }
 
     @PostMapping
-    public Snippet createSnippet(@RequestBody Snippet snippet) {
-        if (snippet.getTimestamp() == null) {
-            snippet.setTimestamp(new Date());
-        }
-
-        Date snippetDate = getDateOnly(snippet.getTimestamp());
-
-        JournalEntry entry = journalEntryRepository.findByDateAndUserId(snippetDate, snippet.getUserId());
-
-        if (entry == null) {
-            entry = new JournalEntry();
-            entry.setDate(snippetDate);
-            entry.setSnippetIds(new ArrayList<>());
-            entry.setUpdatedAt(snippetDate);
-            entry.setUserId(snippet.getUserId());
-            entry = journalEntryRepository.save(entry);
-
-            User user = restClient.get()
-                    .uri("http://localhost:8080/api/users/" + entry.getUserId())
-                    .retrieve()
-                    .body(User.class);
-            String[] currentEntries = user.getJournalEntries();
-            logger.debug("Current journal entries: {}", Arrays.toString(currentEntries));
-            String[] updatedEntries = Arrays.copyOf(currentEntries, currentEntries.length + 1);
-            updatedEntries[currentEntries.length] = entry.getId();
-            user.setJournalEntries(updatedEntries);
-            logger.debug("Updated journal entries: {}", Arrays.toString(updatedEntries));
-            User newUser = restClient.put()
-                    .uri("http://localhost:8080/api/users/" + entry.getUserId())
-                    .body(user)
-                    .retrieve()
-                    .body(User.class);
-            logger.debug("User updated with new journal entry: {}", newUser);
-
-        }
-
-        snippet.setJournalEntryId(entry.getId());
-        snippet.setUpdatedAt(snippetDate);
-        Snippet savedSnippet = snippetRepository.save(snippet);
-
-        entry.getSnippetIds().add(savedSnippet.getId());
-        double currentMood = entry.getDailyMood() != null ? entry.getDailyMood() : 0.0;
-        entry.setDailyMood((currentMood + snippet.getMood()) / (entry.getSnippetIds().size()));
-        journalEntryRepository.save(entry);
-
-        User user = restClient.get()
-                .uri("http://localhost:8080/api/users/" + savedSnippet.getUserId())
-                .retrieve()
-                .body(User.class);
-        logger.debug("User retrieved: {}", user);
-        String[] currentSnippets = user.getSnippets();
-        String[] updatedSnippets = Arrays.copyOf(currentSnippets, currentSnippets.length + 1);
-        logger.debug("Current snippets: {}", Arrays.toString(currentSnippets));
-        updatedSnippets[currentSnippets.length] = savedSnippet.getId();
-        logger.debug("Updated snippets: {}", Arrays.toString(updatedSnippets));
-        user.setSnippets(updatedSnippets);
-        User newUser = restClient.put()
-                .uri("http://localhost:8080/api/users/" + savedSnippet.getUserId())
-                .body(user)
-                .retrieve().body(User.class);
-        logger.debug("Snippet created and user updated: {}", newUser);
-        return savedSnippet;
+    public ResponseEntity<Snippet> createSnippet(@RequestBody Snippet snippet) {
+        Snippet savedSnippet = snippetService.createSnippet(snippet);
+        return ResponseEntity.ok(savedSnippet);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteSnippet(@PathVariable String id) {
-
-        Snippet snippet = snippetRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Snippet not found with ID: " + id));
-
-        Date snippetDate = getDateOnly(snippet.getTimestamp());
-
-        JournalEntry entry = journalEntryRepository.findByDateAndUserId(snippetDate, snippet.getUserId());
-        if (entry != null) {
-            List<String> snippetIds = entry.getSnippetIds();
-            entry.setDailyMood(
-                    (entry.getDailyMood() * snippetIds.size() - snippet.getMood()) / (snippetIds.size() - 1));
-
-            if (snippetIds.size() <= 1) {
-                throw new IllegalStateException("Cannot delete the last remaining snippet in a journal entry.");
-            }
-
-            snippetIds.remove(snippet.getId());
-            journalEntryRepository.save(entry);
-        }
-
-        snippetRepository.deleteById(id);
+    public ResponseEntity<ApiResponse<String>> deleteSnippet(@PathVariable String id) {
+        snippetService.deleteSnippet(id);
+        return ResponseEntity.ok(new ApiResponse<>("Snippet deleted successfully.", id));
     }
 
     @PutMapping("/{id}")
-    public void updateSnippet(@PathVariable("id") String id, @RequestBody Snippet updatedSnippet) {
-        Snippet snippet = snippetRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Snippet not found with ID: " + id));
-
-        if (updatedSnippet.getContent() != null) {
-            snippet.setContent(updatedSnippet.getContent());
-        }
-
-        if (updatedSnippet.getTags() != null) {
-            snippet.setTags(updatedSnippet.getTags());
-        }
-
-        snippet.setUpdatedAt(new Date());
-
-        snippetRepository.save(snippet);
-    }
-
-    private Date getDateOnly(Date dateTime) {
-        return Date.from(dateTime.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate()
-                .atStartOfDay(ZoneId.systemDefault())
-                .toInstant());
+    public ResponseEntity<ApiResponse<Snippet>> updateSnippet(@PathVariable("id") String id,
+            @RequestBody Snippet updatedSnippet) {
+        Snippet snippet = snippetService.updateSnippet(id, updatedSnippet);
+        return ResponseEntity.ok(new ApiResponse<>("Snippet updated successfully.", snippet));
     }
 }
