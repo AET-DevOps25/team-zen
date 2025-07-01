@@ -45,20 +45,20 @@ services:
       - MONGODB_DB=userdb
       - SERVER_PORT=8080
     # Uncomment the following lines to use a MongoDB container 
-    # depends_on:
-    #   - user-db
+    depends_on:
+       - user-db
     networks:
       - backend
       - user-network
 
   # Uncomment the following lines to use a MongoDB container 
-  # user-db:
-  #   image: mongo:6
-  #   container_name: user-db
-  #   volumes:
-  #     - user-data:/data/db
-  #   networks:
-  #     - user-network
+  user-db:
+     image: mongo:6
+     container_name: user-db
+     volumes:
+       - user-data:/data/db
+     networks:
+       - user-network
 
   journal-microservice:
     build: ./server/journal-microservice
@@ -71,19 +71,19 @@ services:
       - LLM_SERVICE_URL=http://genai-microservice:8082
       - USER_SERVICE_URL=http://user-microservice:8080
     # Uncomment the following lines to use a MongoDB container 
-    # depends_on:
-    #   - journal-db
+    depends_on:
+       - journal-db
     networks:
       - backend
       - journal-network
 
-  # journal-db:
-  #   image: mongo:6
-  #   container_name: journal-db
-  #   volumes:
-  #     - journal-data:/data/db
-  #   networks:
-  #     - journal-network
+  journal-db:
+     image: mongo:6
+     container_name: journal-db
+     volumes:
+       - journal-data:/data/db
+     networks:
+       - journal-network
 
   genai-microservice:
     build: ./genai
