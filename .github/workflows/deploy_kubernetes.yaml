@@ -1,14 +1,7 @@
 name: Deploy Kubernetes to AET cluster
 
 on:
-  workflow_run:
-    workflows: [ "Build Docker Images" ]
-    types:
-      - completed
-#  push:
-#    branches:
-#      - main
-#      - feat/kubernets-config-and-helm-charts
+  push:
 
 jobs:
   deploy:
@@ -34,7 +27,7 @@ jobs:
 
       - name: Deploy Helm Chart
         env:
-          IMAGE_TAG: feat/kubernets-config-and-helm-charts
+          IMAGE_TAG: latest
         run: |
           helm upgrade --install zenai-app ./helm \
           --namespace zenai-team \
