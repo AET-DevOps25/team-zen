@@ -5,10 +5,10 @@ on:
     workflows: [ "Build Docker Images" ]
     types:
       - completed
-  push:
-    branches:
-#      - TODO: Change to main
-      - feat/kubernets-config-and-helm-charts
+#  push:
+#    branches:
+#      - main
+#      - feat/kubernets-config-and-helm-charts
 
 jobs:
   deploy:
@@ -34,7 +34,7 @@ jobs:
 
       - name: Deploy Helm Chart
         env:
-          IMAGE_TAG: ${{ github.ref_name }} # Use the branch name as the image tag
+          IMAGE_TAG: feat/kubernets-config-and-helm-charts
         run: |
           helm upgrade --install zenai-app ./helm \
           --namespace zenai-team \
