@@ -6,9 +6,9 @@ on:
     types:
       - completed
   push:
-    branches:
-      - main
-      - feat-kubernets-config-and-helm-charts
+#    branches:
+#      - main
+#      - feat-kubernets-config-and-helm-charts
 
 jobs:
   build:
