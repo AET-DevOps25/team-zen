@@ -8,6 +8,7 @@ on:
   push:
     branches:
       - main
+      - feat-kubernets-config-and-helm-charts
 
 jobs:
   build:

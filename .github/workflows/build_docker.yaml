@@ -2,6 +2,8 @@ name: Build Docker Images
 
 on:
   push:
+    branches:
+      - feat-kubernets-config-and-helm-charts
 
 jobs:
   build:

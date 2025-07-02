@@ -11,6 +11,8 @@ services:
       - API_URL=${API_URL:-http://localhost:8085}
       - SERVER_HOST=api-gateway
       - SERVER_PORT=8085
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8085}
+      - VITE_CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY:-pk_test_YWRhcHRlZC1kYW5lLTE2LmNsZXJrLmFjY291bnRzLmRldiQ}
     depends_on:
       - api-gateway
     networks:
