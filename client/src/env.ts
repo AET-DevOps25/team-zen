@@ -25,6 +25,6 @@
 // TODO: Validation is removed because these variables are set at runtime for docker and kubernetes.
 
 export const env = {
-  VITE_CLERK_PUBLISHABLE_KEY: "__VITE_CLERK_PUBLISHABLE_KEY__",
-  VITE_API_URL: "__VITE_API_URL__",
+  VITE_CLERK_PUBLISHABLE_KEY: '__VITE_CLERK_PUBLISHABLE_KEY__',
+  VITE_API_URL: '__VITE_API_URL__',
 };
