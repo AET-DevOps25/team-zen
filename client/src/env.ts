@@ -28,3 +28,9 @@ export const env = {
   VITE_CLERK_PUBLISHABLE_KEY: '__VITE_CLERK_PUBLISHABLE_KEY__',
   VITE_API_URL: '__VITE_API_URL__',
 };
+
+// TODO Remove comment
+// export const API_BASE_URL =
+//   env.VITE_API_URL && env.VITE_API_URL !== '__VITE_API_URL__'
+//     ? env.VITE_API_URL
+//     : 'http://localhost:8087';

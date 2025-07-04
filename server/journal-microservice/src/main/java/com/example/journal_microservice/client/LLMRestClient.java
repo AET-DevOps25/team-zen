@@ -30,6 +30,9 @@ public class LLMRestClient {
         try {
             SnippetContentsRequest request = new SnippetContentsRequest(snippetContents);
 
+            System.out.println("Request to LLM service: " + request);
+
+            // TODO: Fix serialization issues with RestClient/WebClient
             // Using webClient instead of RestClient because of serialization issues
             SnippetContentsResponse response = webClient.post()
                     .uri("/api/genai/summary")
@@ -37,6 +40,8 @@ public class LLMRestClient {
                     .body(request)
                     .retrieve()
                     .body(SnippetContentsResponse.class);
+
+            System.out.println("Response from LLM service: " + response);
 
             return response;
 

@@ -20,7 +20,12 @@ services:
       - backend
 
   api-gateway:
-    build: ./server/api-gateway
+    build:
+      context: ./server/api-gateway
+      args:
+        CLERK_AUTHORIZED_PARTY: ${CLERK_AUTHORIZED_PARTY}
+        CLERK_SECRET_KEY: ${CLERK_SECRET_KEY}
+        CLERK_WEBHOOK_SECRET: ${CLERK_WEBHOOK_SECRET}
     ports:
       - "8085:8085"
     env_file:
@@ -94,31 +99,14 @@ services:
     environment:
       - GENAI_API_URL=${GENAI_API_URL:-https://gpu.aet.cit.tum.de/api/chat/completions}
       - GENAI_API_KEY=${GENAI_API_KEY}
-      - WEAVIATE_HOST=http://weaviate:8080
-    depends_on:
-      - weaviate
     networks:
       - backend
       - genai-network
 
-  weaviate:
-    image: semitechnologies/weaviate:latest
-    ports:
-      - "80:80" # Leave this port open for now
-    environment:
-      QUERY_DEFAULTS_LIMIT: "20"
-      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
-      PERSISTENCE_DATA_PATH: "/var/lib/weaviate"
-      DEFAULT_VECTORIZER_MODULE: "none"
-    volumes:
-      - weaviate-data:/var/lib/weaviate
-    networks:
-      - genai-network
 
 volumes:
   user-data:
   journal-data:
-  weaviate-data:
 
 networks:
   frontend:

@@ -1,6 +1,8 @@
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { API_BASE_URL } from './base';
+// import { API_BASE_URL } from './base';
+// import { API_BASE_URL } from '../../';
+import { env } from '@/env.ts';
 import type { Snippet } from '@/model/snippet';
 
 type SnippetData = {
@@ -8,6 +10,8 @@ type SnippetData = {
   content?: string;
 };
 
+// TODO Chnage so that we dont use the API_BASE_URL
+const API_BASE_URL = env.VITE_API_URL || 'http://localhost:8087';
 export const useCreateSnippet = () => {
   const { getToken } = useAuth();
 
