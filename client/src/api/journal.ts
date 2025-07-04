@@ -3,7 +3,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 // import { API_BASE_URL } from './base';
 import type { ApiResponse } from './base';
 import type { JournalEntry } from '@/model/journal';
-import {env} from "@/env.ts";
+import { env } from '@/env.ts';
 
 // TODO Chnage so that we dont use the API_BASE_URL
 const API_BASE_URL = env.VITE_API_URL || 'http://localhost:8085';

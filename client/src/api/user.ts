@@ -1,6 +1,6 @@
 import { useUser } from '@clerk/clerk-react';
 import { useQuery } from '@tanstack/react-query';
-import {env} from "@/env.ts";
+import { env } from '@/env.ts';
 // import { API_BASE_URL } from './base';
 
 // TODO Chnage so that we dont use the API_BASE_URL

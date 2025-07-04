@@ -2,8 +2,8 @@ import { useAuth, useUser } from '@clerk/clerk-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 // import { API_BASE_URL } from './base';
 // import { API_BASE_URL } from '../../';
-import { env } from '@/env.ts';
 import type { Snippet } from '@/model/snippet';
+import { env } from '@/env.ts';
 
 type SnippetData = {
   title?: string;
