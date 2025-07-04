@@ -6,6 +6,29 @@ on:
     paths:
       - "**/*.tf"
       - "terraform/**"
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: false
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+      action:
+        description: 'Terraform action to perform'
+        required: false
+        default: 'plan'
+        type: choice
+        options:
+          - plan
+          - apply
+          - destroy
 
 permissions:
   contents: read
@@ -13,7 +36,7 @@ permissions:
 
 jobs:
   terraform:
-    name: Terraform Plan & Validate
+    name: ${{ github.event_name == 'push' && 'Terraform Deploy' || github.event_name == 'workflow_dispatch' && 'Terraform Manual' || 'Terraform Plan & Validate' }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -62,15 +85,53 @@ jobs:
 
       - name: Terraform Plan
         id: plan
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'apply' && github.event.inputs.action != 'destroy')
         run: terraform plan -no-color -input=false
         continue-on-error: true
 
+      - name: Terraform Apply (Main Branch)
+        id: apply_main
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve -no-color -input=false
+
+      - name: Terraform Apply (Manual)
+        id: apply_manual
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'
+        run: terraform apply -auto-approve -no-color -input=false
+
+      - name: Terraform Destroy
+        id: destroy
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
+        run: terraform destroy -auto-approve -no-color -input=false
+
       - name: Capture Plan Output
         id: capture_plan
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'apply' && github.event.inputs.action != 'destroy')
         run: |
           terraform plan -no-color -input=false > plan.txt || true
           echo "stdout<<EOF" >> $GITHUB_OUTPUT
           cat plan.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Capture Apply Output
+        id: capture_apply
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply')
+        run: |
+          echo "stdout<<EOF" >> $GITHUB_OUTPUT
+          echo "Terraform apply completed successfully for $(date)" >> $GITHUB_OUTPUT
+          echo "Deployment triggered by: ${{ github.event_name }}" >> $GITHUB_OUTPUT
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "Branch: ${{ github.ref_name }}" >> $GITHUB_OUTPUT
+            echo "Commit: ${{ github.sha }}" >> $GITHUB_OUTPUT
+          fi
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Capture Destroy Output
+        id: capture_destroy
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
+        run: |
+          echo "stdout<<EOF" >> $GITHUB_OUTPUT
+          echo "Terraform destroy completed successfully for $(date)" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - uses: actions/github-script@v7
@@ -130,3 +191,44 @@ jobs:
                 body: output
               })
             }
+
+      - name: Summary for Main Branch Deployment
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          echo "## 🚀 Terraform Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "**Event:** Automatic deployment on merge to main" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Results:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Format Check:** ${{ steps.fmt.outcome }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Initialization:** ${{ steps.init.outcome }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Validation:** ${{ steps.validate.outcome }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Apply:** ${{ steps.apply_main.outcome }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.apply_main.outcome }}" = "success" ]; then
+            echo "✅ **Deployment completed successfully!**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Deployment failed. Please check the logs.**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Summary for Manual Run
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "## Terraform Manual Workflow Summary" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Action:** ${{ github.event.inputs.action }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Results:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Format Check:** ${{ steps.fmt.outcome }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Initialization:** ${{ steps.init.outcome }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Validation:** ${{ steps.validate.outcome }}" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event.inputs.action }}" = "plan" ] || [ "${{ github.event.inputs.action }}" = "" ]; then
+            echo "- **Plan:** ${{ steps.plan.outcome }}" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ github.event.inputs.action }}" = "apply" ]; then
+            echo "- **Apply:** ${{ steps.apply_manual.outcome }}" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ github.event.inputs.action }}" = "destroy" ]; then
+            echo "- **Destroy:** ${{ steps.destroy.outcome }}" >> $GITHUB_STEP_SUMMARY
+          fi
