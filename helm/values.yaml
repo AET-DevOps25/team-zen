@@ -11,7 +11,7 @@ namespace:
 client:
   image:
     repository: ghcr.io/aet-devops25/team-zen/client
-    tag: feat-kubernets-config-and-helm-charts
+    tag: main
     pullPolicy: Always
   service:
     type: ClusterIP
@@ -38,8 +38,8 @@ client:
 
 apiGateway:
   image:
-    repository: ghcr.io/aet-devops25/team-zen/server/api-gateway
-    tag: feat-kubernets-config-and-helm-charts
+    repository: ghcr.io/aet-devops25/team-zen/api-gateway
+    tag: main
     pullPolicy: Always
   service:
     type: ClusterIP
@@ -73,8 +73,8 @@ apiGateway:
 
 user:
   image:
-    repository: ghcr.io/aet-devops25/team-zen/server/user-microservice
-    tag: feat-kubernets-config-and-helm-charts
+    repository: ghcr.io/aet-devops25/team-zen/user-microservice
+    tag: main
     pullPolicy: Always
   service:
     type: ClusterIP
@@ -84,8 +84,8 @@ user:
 
 journal:
   image:
-    repository: ghcr.io/aet-devops25/team-zen/server/journal-microservice
-    tag: feat-kubernets-config-and-helm-charts
+    repository: ghcr.io/aet-devops25/team-zen/journal-microservice
+    tag: main
     pullPolicy: Always
   service:
     type: ClusterIP
@@ -97,7 +97,7 @@ journal:
 genai:
   image:
     repository: ghcr.io/aet-devops25/team-zen/genai
-    tag: feat-kubernets-config-and-helm-charts
+    tag: main
     pullPolicy: Always
   service:
     type: ClusterIP

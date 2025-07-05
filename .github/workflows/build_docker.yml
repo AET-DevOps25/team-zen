@@ -5,10 +5,7 @@ on:
     workflows: ["CI"]
     types:
       - completed
-  push:
-#    branches:
-#      - main
-#      - feat-kubernets-config-and-helm-charts
+
 
 jobs:
   build:
@@ -42,6 +39,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}/${{ matrix.service }}
           tags: |
+            type=raw,value=main
             type=raw,value=latest,enable={{is_default_branch}}
             type=ref,event=branch
             type=ref,event=pr

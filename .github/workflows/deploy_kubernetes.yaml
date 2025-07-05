@@ -1,7 +1,10 @@
 name: Deploy Kubernetes to AET cluster
 
 on:
-  push:
+  workflow_run:
+    workflows: ["Build & Push Docker Images"]
+    types:
+      - completed
 
 jobs:
   deploy:
@@ -27,7 +30,7 @@ jobs:
 
       - name: Show images and tags
         env:
-          IMAGE_TAG: latest
+          IMAGE_TAG: main
         run: |
           echo "Using image repositories and tags:"
           echo "client: ghcr.io/aet-devops25/team-zen/client:$IMAGE_TAG"
@@ -38,13 +41,13 @@ jobs:
 
       - name: Deploy Helm Chart
         env:
-          IMAGE_TAG: latest
+          IMAGE_TAG: main
         run: |
           helm upgrade --install zenai-app ./helm \
           --namespace zenai-team \
           -f ./helm/values.yaml \
             --set client.image.tag=$IMAGE_TAG \
             --set api-gateway.image.tag=$IMAGE_TAG \
-            --set journal-microservice.image.tag=$IMAGE_TAG \
-            --set user-microservice.image.tag=$IMAGE_TAG \
+            --set journal.image.tag=$IMAGE_TAG \
+            --set user.image.tag=$IMAGE_TAG \
             --set genai.image.tag=$IMAGE_TAG
