@@ -19,19 +19,35 @@ spec:
           imagePullPolicy: {{ .Values.apiGateway.image.pullPolicy }}
           resources:
             limits:
-              cpu: "500m"
-              memory: "256Mi"
+{{/*              TODO: Delete comment if needed*/}}
+{{/*              cpu: "500m"*/}}
+{{/*              memory: "256Mi"*/}}
+              cpu: "1"
+              memory: "1Gi"
             requests:
-              cpu: "50m"
-              memory: "50Mi"
+{{/*              cpu: "50m"*/}}
+{{/*              memory: "50Mi"*/}}
+              cpu: "500m"
+              memory: "512Mi"
           ports:
             - containerPort: {{ .Values.apiGateway.service.targetPort }}
           env:
-            - name: USER_SERVICE_URL
-              value: "http://user-service:8080"
-            - name: JOURNAL_SERVICE_URL
-              value: "http://journal-service:8081"
-            - name: GENAI_SERVICE_URL
-              value: "http://genai-service:8082"
+          {{- if .Values.apiGateway.env }}
+            {{- range .Values.apiGateway.env }}
+            - name: {{ .name }}
+              {{- if .value }}
+              value: "{{ .value }}"
+              {{- end }}
+              {{- if .valueFrom }}
+              valueFrom:
+{{ toYaml .valueFrom | indent 16 }}
+              {{- end }}
+            {{- end }}
+          {{- end }}
+      {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
-        - name: ghcr-secret
+        {{- range .Values.imagePullSecrets }}
+        - name: {{ .name }}
+        {{- end }}
+      {{- end }}
+

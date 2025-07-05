@@ -19,15 +19,23 @@ spec:
           imagePullPolicy: {{ .Values.user.image.pullPolicy }}
           resources:
             limits:
-              cpu: "500m"
-              memory: "256Mi"
+{{/*              cpu: "500m"*/}}
+{{/*              memory: "256Mi"*/}}
+              cpu: "1"
+              memory: "1Gi"
             requests:
-              cpu: "50m"
-              memory: "50Mi"
+{{/*              cpu: "50m"*/}}
+{{/*              memory: "50Mi"*/}}
+              cpu: "500m"
+              memory: "512Mi"
           ports:
             - containerPort: {{ .Values.user.service.targetPort }}
           env:
             - name: SPRING_DATA_MONGODB_URI
               value: mongodb://user-db:27017/userdb
+      {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
-        - name: ghcr-secret
+        {{- range .Values.imagePullSecrets }}
+        - name: {{ .name }}
+        {{- end }}
+      {{- end }}

@@ -19,12 +19,20 @@ spec:
           imagePullPolicy: {{ .Values.genai.image.pullPolicy }}
           resources:
             limits:
-              cpu: "500m"
-              memory: "256Mi"
+{{/*              cpu: "500m"*/}}
+{{/*              memory: "256Mi"*/}}
+              cpu: "1"
+              memory: "1Gi"
             requests:
-              cpu: "50m"
-              memory: "50Mi"
+{{/*              cpu: "50m"*/}}
+{{/*              memory: "50Mi"*/}}
+              cpu: "500m"
+              memory: "512Mi"
           ports:
             - containerPort: {{ .Values.genai.service.targetPort }}
+      {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
-        - name: ghcr-secret
+        {{- range .Values.imagePullSecrets }}
+        - name: {{ .name }}
+        {{- end }}
+      {{- end }}

@@ -1,14 +1,14 @@
-{{- if .Values.ingress.enabled -}}
+{{- if .Values.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: zenai-ingress
   namespace: {{ .Values.namespaceId }}
-   {{- $annotations := .Values.ingress.annotations | default dict }}
-  {{- if $annotations }}
+{{- $annotations := .Values.ingress.annotations | default dict }}
+{{- if $annotations }}
   annotations:
-    {{- toYaml $annotations | nindent 4 }}
-  {{- end }}
+{{ toYaml $annotations | indent 4 }}
+{{- end }}
 spec:
   {{- if .Values.ingress.tls }}
   tls:
@@ -34,4 +34,4 @@ spec:
                 name: gateway-service
                 port:
                   number: {{ .Values.apiGateway.service.port }}
-                  {{- end }}
+{{- end }}

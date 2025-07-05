@@ -19,15 +19,27 @@ spec:
           imagePullPolicy: {{ .Values.journal.image.pullPolicy }}
           resources:
             limits:
-              cpu: "500m"
-              memory: "256Mi"
+{{/*              cpu: "500m"*/}}
+{{/*              memory: "256Mi"*/}}
+              cpu: "1"
+              memory: "1Gi"
             requests:
-              cpu: "50m"
-              memory: "50Mi"
+{{/*              cpu: "50m"*/}}
+{{/*              memory: "50Mi"*/}}
+              cpu: "500m"
+              memory: "512Mi"
           ports:
             - containerPort: {{ .Values.journal.service.targetPort }}
           env:
             - name: SPRING_DATA_MONGODB_URI
               value: mongodb://journal-db:27017/journaldb
+            - name: LLM_SERVICE_URL
+              value: http://genai-service:8082
+            - name: USER_SERVICE_URL
+              value: http://user-service:8081
+      {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
-        - name: ghcr-secret
+        {{- range .Values.imagePullSecrets }}
+        - name: {{ .name }}
+        {{- end }}
+      {{- end }}
