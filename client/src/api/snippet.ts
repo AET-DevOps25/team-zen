@@ -63,8 +63,8 @@ export const useGetSnippets = (params: GetSnippetsParams = {}) => {
 
     const queryString = urlParams.toString();
 
-    console.log("VITE_API_URL in fetchSnippets:", env.VITE_API_URL);
-    console.log("API_BASE_URL in fetchSnippets:", API_BASE_URL);
+    console.log('VITE_API_URL in fetchSnippets:', env.VITE_API_URL);
+    console.log('API_BASE_URL in fetchSnippets:', API_BASE_URL);
     const url = `${API_BASE_URL}/api/snippets/${user?.id}${queryString ? `?${queryString}` : ''}`;
 
     const response = await fetch(url, {
