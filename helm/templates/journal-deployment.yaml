@@ -36,7 +36,7 @@ spec:
             - name: LLM_SERVICE_URL
               value: http://genai-service:8082
             - name: USER_SERVICE_URL
-              value: http://user-service:8081
+              value: http://user-service:8080
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- range .Values.imagePullSecrets }}
