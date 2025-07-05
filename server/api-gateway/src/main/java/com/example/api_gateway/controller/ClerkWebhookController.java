@@ -24,6 +24,9 @@ public class ClerkWebhookController {
   @Value("${clerk.webhook.secret}")
   private String clerkWebhookSecret;
 
+  @Value("${user-service-url}")
+  private String userServiceUrl;
+
   private final ClerkWebhookVerifier webhookVerifier;
   private final Logger logger = org.slf4j.LoggerFactory.getLogger(ClerkWebhookController.class);
 
@@ -182,8 +185,7 @@ public class ClerkWebhookController {
 
           // Send http request to user microservice to create user (blocking)
           User responseUser = restClient.post()
-              // .uri("http://localhost:8080/api/users")
-              .uri("http://user-microservice:8080/api/users")
+              .uri(userServiceUrl + "/api/users")
               .body(user)
               .retrieve()
               .body(User.class);
@@ -199,8 +201,7 @@ public class ClerkWebhookController {
 
           // Send http request to user microservice to create user (blocking)
           restClient.delete()
-              // .uri("http://localhost:8080/api/users/" + userId)
-              .uri("http://user-microservice:8080/api/users/" + userId)
+              .uri(userServiceUrl + "/api/users/" + userId)
               .retrieve()
               .toBodilessEntity();
 
@@ -226,8 +227,7 @@ public class ClerkWebhookController {
 
           // Send http request to user microservice to create user (blocking)
           User responseUser = restClient.put()
-              // .uri("http://localhost:8080/api/users/" + userId)
-              .uri("http://user-microservice:8080/api/users/" + userId)
+              .uri(userServiceUrl + "/api/users/" + userId)
               .body(user)
               .retrieve()
               .body(User.class);
