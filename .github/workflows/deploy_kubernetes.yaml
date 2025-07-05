@@ -1,0 +1,53 @@
+name: Deploy Kubernetes to AET cluster
+
+on:
+  workflow_run:
+    workflows: ["Build & Push Docker Images"]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Kubernetes
+        uses: azure/setup-kubectl@v4
+
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4.3.0
+
+      - name: Configure kubeconfig
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        run: |
+          mkdir -p $HOME/.kube
+          echo "$KUBE_CONFIG" > $HOME/.kube/config
+
+      - name: Show images and tags
+        env:
+          IMAGE_TAG: main
+        run: |
+          echo "Using image repositories and tags:"
+          echo "client: ghcr.io/aet-devops25/team-zen/client:$IMAGE_TAG"
+          echo "api-gateway: ghcr.io/aet-devops25/team-zen/api-gateway:$IMAGE_TAG"
+          echo "journal-microservice: ghcr.io/aet-devops25/team-zen/journal-microservice:$IMAGE_TAG"
+          echo "user-microservice: ghcr.io/aet-devops25/team-zen/user-microservice:$IMAGE_TAG"
+          echo "genai: ghcr.io/aet-devops25/team-zen/genai:$IMAGE_TAG"
+
+      - name: Deploy Helm Chart
+        env:
+          IMAGE_TAG: main
+        run: |
+          helm upgrade --install zenai-app ./helm \
+          --namespace zenai-team \
+          -f ./helm/values.yaml \
+            --set client.image.tag=$IMAGE_TAG \
+            --set api-gateway.image.tag=$IMAGE_TAG \
+            --set journal.image.tag=$IMAGE_TAG \
+            --set user.image.tag=$IMAGE_TAG \
+            --set genai.image.tag=$IMAGE_TAG

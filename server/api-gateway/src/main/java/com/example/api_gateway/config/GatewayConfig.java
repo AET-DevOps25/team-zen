@@ -31,19 +31,19 @@ public class GatewayConfig {
             // User Service (with auth filter)
             .route("user-service", r -> r
                 .path("/api/users/**")
-                .filters(f -> f.filter(clerkAuthenticationFilter))
+//                .filters(f -> f.filter(clerkAuthenticationFilter))
                 .uri(userServiceUri))
 
             // Journal Service (with auth filter)
             .route("journal-service", r -> r
                 .path("/api/journalEntry/**", "/api/snippets/**", "/api/summary/**")
-                .filters(f -> f.filter(clerkAuthenticationFilter))
+//                .filters(f -> f.filter(clerkAuthenticationFilter))
                 .uri(journalServiceUri))
 
             // GenAI Service (with auth filter)
             .route("genai-service", r -> r
                 .path("/api/genai/**")
-                .filters(f -> f.filter(clerkAuthenticationFilter))
+//                .filters(f -> f.filter(clerkAuthenticationFilter))
                 .uri(genaiServiceUri))
           
             .build();

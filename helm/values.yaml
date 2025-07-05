@@ -1,0 +1,128 @@
+# This file contains the default values for the Canteen App Helm chart.
+
+# Add your tumid here
+namespaceId: zenai-team
+
+##################################################################################################################
+# No changes needed below this line
+namespace:
+  create: false
+
+client:
+  image:
+    repository: ghcr.io/aet-devops25/team-zen/client
+    tag: main
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 3000
+    targetPort: 80
+  replicaCount: 2
+  env:
+    - name: API_URL
+      value: http://gateway-service.zenai-team.svc.cluster.local:8085
+    - name: SERVER_HOST
+      value: gateway-service.zenai-team.svc.cluster.local
+    - name: SERVER_PORT
+      value: "8085"
+    - name: VITE_API_URL
+      valueFrom:
+        secretKeyRef:
+          name: zenai-client-env
+          key: VITE_API_URL
+    - name: VITE_CLERK_PUBLISHABLE_KEY
+      valueFrom:
+        secretKeyRef:
+          name: zenai-client-env
+          key: VITE_CLERK_PUBLISHABLE_KEY
+
+apiGateway:
+  image:
+    repository: ghcr.io/aet-devops25/team-zen/api-gateway
+    tag: main
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8085
+    targetPort: 8085
+  replicaCount: 2
+  env:
+    - name: CLERK_SECRET_KEY
+      valueFrom:
+        secretKeyRef:
+          name: zenai-gateway-env
+          key: CLERK_SECRET_KEY
+    - name: CLERK_WEBHOOK_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: zenai-gateway-env
+          key: CLERK_WEBHOOK_SECRET
+    - name: CLERK_AUTHORIZED_PARTY
+      valueFrom:
+        secretKeyRef:
+          name: zenai-gateway-env
+          key: CLERK_AUTHORIZED_PARTY
+    - name: USER_SERVICE_URL
+      value: "http://user-service:8080"
+    - name: JOURNAL_SERVICE_URL
+      value: "http://journal-service:8081"
+    - name: GENAI_SERVICE_URL
+      value: "http://genai-service:8082"
+    - name: SERVER_PORT
+      value: "8085"
+
+user:
+  image:
+    repository: ghcr.io/aet-devops25/team-zen/user-microservice
+    tag: main
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8080
+    targetPort: 8080
+  replicaCount: 2
+
+journal:
+  image:
+    repository: ghcr.io/aet-devops25/team-zen/journal-microservice
+    tag: main
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8081
+    targetPort: 8081
+  replicaCount: 2
+
+
+genai:
+  image:
+    repository: ghcr.io/aet-devops25/team-zen/genai
+    tag: main
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8082
+    targetPort: 8082
+  replicaCount: 2
+
+mongodb:
+  storageSize: 1Gi
+  replicaCount: 1
+
+
+ingress:
+  enabled: true
+  className: "nginx"
+  tls: true
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+#    TODO: Check and delete if not needed
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
+    nginx.ingress.kubernetes.io/client-body-buffer-size: "10m"
+
+# TODO: You have to create the secret for your self like this and add ghcr-secret-<username> below:
+#  kubectl create secret docker-registry ghcr-secret-<username> --docker-server=ghcr.io --docker-username=<username> --docker-password=<github-pat> --docker-email=<email> -n zenai-team*/}}
+imagePullSecrets:
+  - name: ghcr-secret-milanova-n

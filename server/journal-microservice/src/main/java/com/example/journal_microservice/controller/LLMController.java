@@ -43,7 +43,9 @@ public class LLMController {
                 .map(snippet -> snippet.getContent())
                 .collect(Collectors.toList());
 
+        System.out.println("Snippets content: " + snippetsContent);
         SnippetContentsResponse llmResult = llmRestClient.generateJournalSummaryAndInsight(snippetsContent);
+        System.out.println("LLM Result: " + llmResult);
         if (llmResult != null) {
             journalEntry.setSummary(llmResult.summary());
             

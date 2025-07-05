@@ -1,4 +1,5 @@
-export const API_BASE_URL = import.meta.env.API_URL || 'http://localhost:8085';
+// const rawUrl = '__VITE_API_URL__';
+// TODO: Remove comments
 
 export type ApiResponse<T> = {
   data: T;
