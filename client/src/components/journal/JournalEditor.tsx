@@ -77,7 +77,7 @@ export const JournalEditor = ({
                 Cancel
               </button>
             )}
-            {content && journalId && snippetCount > 2 && isEditing && (
+            {journalId && snippetCount > 2 && isEditing && (
               <button
                 onClick={handleSummarise}
                 disabled={isSummaryLoading}
