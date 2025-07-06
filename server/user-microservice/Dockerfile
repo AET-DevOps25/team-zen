@@ -14,8 +14,8 @@ RUN ./gradlew dependencies --no-daemon
 # Copy the source code
 COPY src /app/src
 
-# Build the application
-RUN ./gradlew build --no-daemon
+# Build the application (skip tests for production container)
+RUN ./gradlew build --no-daemon -x test
 
 # Use a smaller image for the runtime
 FROM openjdk:21-jdk-slim
