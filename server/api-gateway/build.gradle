@@ -50,4 +50,18 @@ dependencyManagement {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	
+	// Allow excluding e2e tests when building in Docker
+	if (project.hasProperty('skipE2ETests')) {
+		exclude '**/e2e/**'
+	}
+}
+
+// Separate task for e2e tests
+task e2eTest(type: Test) {
+	description = 'Runs e2e tests'
+	group = 'verification'
+	useJUnitPlatform()
+	include '**/e2e/**'
+	shouldRunAfter test
 }
