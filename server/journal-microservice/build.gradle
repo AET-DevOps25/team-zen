@@ -42,4 +42,20 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	
+	// Allow excluding integration tests when building in Docker
+	if (project.hasProperty('skipIntegrationTests')) {
+		exclude '**/integration/**'
+		exclude '**/e2e/**'
+	}
+}
+
+// Separate task for integration tests
+task integrationTest(type: Test) {
+	description = 'Runs integration tests'
+	group = 'verification'
+	useJUnitPlatform()
+	include '**/integration/**'
+	include '**/e2e/**'
+	shouldRunAfter test
 }
