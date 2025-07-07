@@ -104,6 +104,12 @@ genai:
     port: 8082
     targetPort: 8082
   replicaCount: 2
+  env:
+    - name: GENAI_API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: zenai-genai-env
+          key: GENAI_API_KEY
 
 mongodb:
   storageSize: 1Gi
@@ -116,11 +122,6 @@ ingress:
   tls: true
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
-#    TODO: Check and delete if not needed
-    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
-    nginx.ingress.kubernetes.io/client-body-buffer-size: "10m"
 
 # TODO: You have to create the secret for your self like this and add ghcr-secret-<username> below:
 #  kubectl create secret docker-registry ghcr-secret-<username> --docker-server=ghcr.io --docker-username=<username> --docker-password=<github-pat> --docker-email=<email> -n zenai-team*/}}

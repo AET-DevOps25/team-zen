@@ -19,13 +19,9 @@ spec:
           imagePullPolicy: {{ .Values.client.image.pullPolicy }}
           resources:
             limits:
-{{/*              cpu: "500m"*/}}
-{{/*              memory: "256Mi"*/}}
               cpu: "1"
               memory: "1Gi"
             requests:
-{{/*              cpu: "50m"*/}}
-{{/*              memory: "50Mi"*/}}
               cpu: "500m"
               memory: "512Mi"
           env:
