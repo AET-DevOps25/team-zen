@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: api-gateway
+  profiles:
+    active: test
+  cloud:
+    gateway:
+      httpclient:
+        connect-timeout: 5000
+        response-timeout: 10s
+      discovery:
+        locator:
+          enabled: false
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+      globalcors:
+        cors-configurations:
+          "[/**]":
+            allowed-origins: "*"
+            allowed-methods: "*"
+            allowed-headers: "*"
+            allow-credentials: false
+
+server:
+  port: 0  # Random port for tests
+
+# Test service URLs (will be overridden by WireMock)
+user-service-url: http://localhost:8080
+journal-service-url: http://localhost:8081
+genai-service-url: http://localhost:8082
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    "[org.springframework.cloud.gateway]": WARN
+    "[com.example.api_gateway]": INFO
+    "[reactor.netty.http.client]": WARN
+    "[root]": WARN
+
+# Clerk configuration for tests
+clerk:
+  publishable-key: ${CLERK_PUBLISHABLE_KEY:fake_pk}
+  secret-key: ${CLERK_SECRET_KEY:fake_sk}
