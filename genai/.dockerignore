@@ -1,0 +1,26 @@
+# Test files and directories
+tests/
+test_requirements.txt
+pytest.ini
+run_tests.sh
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Development files
+.venv/
+.github/
+
+# IDE files
+.idea/
+.vscode/
+__pycache__/
+*.pyc
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation
+README.md
+*.md

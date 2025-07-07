@@ -5,9 +5,7 @@ on:
     workflows: ["CI"]
     types:
       - completed
-  push:
-    branches:
-      - main
+
 
 jobs:
   build:
@@ -41,15 +39,16 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}/${{ matrix.service }}
           tags: |
+            type=raw,value=main
             type=raw,value=latest,enable={{is_default_branch}}
             type=ref,event=branch
             type=ref,event=pr
 
       - name: Build & push Docker image
-        if:
-          (contains(join(github.event.head_commit.modified, ','), 'client/') && matrix.service == 'client') ||
-          (contains(join(github.event.head_commit.modified, ','), 'genai/') && matrix.service == 'genai') ||
-          (contains(join(github.event.head_commit.modified, ','), format('server/{0}/', matrix.service)))
+#        if:
+#          (contains(join(github.event.head_commit.modified, ','), 'client/') && matrix.service == 'client') ||
+#          (contains(join(github.event.head_commit.modified, ','), 'genai/') && matrix.service == 'genai') ||
+#          (contains(join(github.event.head_commit.modified, ','), format('server/{0}/', matrix.service)))
         uses: docker/build-push-action@v5
         with:
           platforms: linux/amd64,linux/arm64

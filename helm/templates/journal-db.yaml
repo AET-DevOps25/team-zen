@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: journal-db-pvc
+  namespace: {{ .Values.namespaceId }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.mongodb.storageSize }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: journal-db
+  namespace: {{ .Values.namespaceId }}
+spec:
+  selector:
+    app: journal-db
+  ports:
+    - port: 27017
+      targetPort: 27017
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: journal-db-deployment
+  namespace: {{ .Values.namespaceId }}
+spec:
+  replicas: {{ .Values.mongodb.replicaCount }}
+  selector:
+    matchLabels:
+      app: journal-db
+  template:
+    metadata:
+      labels:
+        app: journal-db
+    spec:
+      containers:
+        - name: journal-db
+          image: mongo
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: storage
+              mountPath: /data/db
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: journal-db-pvc

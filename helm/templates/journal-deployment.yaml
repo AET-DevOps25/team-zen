@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zenai-journal
+  namespace: {{ .Values.namespaceId }}
+spec:
+  replicas: {{ .Values.journal.replicaCount }}
+  selector:
+    matchLabels:
+      app: zenai-journal-selector
+  template:
+    metadata:
+      labels:
+        app: zenai-journal-selector
+    spec:
+      containers:
+        - name: journal-microservice
+          image: "{{ .Values.journal.image.repository }}:{{ .Values.journal.image.tag }}"
+          imagePullPolicy: {{ .Values.journal.image.pullPolicy }}
+          resources:
+            limits:
+{{/*              cpu: "500m"*/}}
+{{/*              memory: "256Mi"*/}}
+              cpu: "1"
+              memory: "1Gi"
+            requests:
+{{/*              cpu: "50m"*/}}
+{{/*              memory: "50Mi"*/}}
+              cpu: "500m"
+              memory: "512Mi"
+          ports:
+            - containerPort: {{ .Values.journal.service.targetPort }}
+          env:
+            - name: SPRING_DATA_MONGODB_URI
+              value: mongodb://journal-db:27017/journaldb
+            - name: LLM_SERVICE_URL
+              value: http://genai-service:8082
+            - name: USER_SERVICE_URL
+              value: http://user-service:8080
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- range .Values.imagePullSecrets }}
+        - name: {{ .name }}
+        {{- end }}
+      {{- end }}

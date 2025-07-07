@@ -41,6 +41,24 @@ export default function Header() {
       } else {
         console.log('No users data returned.');
       }
+
+      const journalsResponse = await fetch(
+        `http://localhost:8085/api/journalEntry/${user?.id}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
+          },
+        },
+      );
+
+      if (!journalsResponse.ok) {
+        throw new Error('Failed to fetch journals');
+      }
+
+      const journalsData = await journalsResponse.json();
+      console.log('User Journals:', journalsData);
     } catch (error) {
       console.error('Error fetching users:', error);
     }

@@ -1,6 +1,10 @@
 import { useUser } from '@clerk/clerk-react';
 import { useQuery } from '@tanstack/react-query';
-import { API_BASE_URL } from './base';
+import { env } from '@/env.ts';
+// import { API_BASE_URL } from './base';
+
+// TODO Chnage so that we dont use the API_BASE_URL
+const API_BASE_URL = env.VITE_API_URL || 'http://localhost:8087';
 
 type GetUser = {
   id?: string;

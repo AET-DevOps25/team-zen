@@ -1,0 +1,23 @@
+# Test files and directories
+src/test/
+build/test-results/
+build/reports/
+build/jacoco/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+
+# Build cache
+.gradle/
+build/classes/
+build/tmp/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation
+README.md
+*.md
