@@ -1,24 +1,9 @@
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { API_BASE_URL } from './base';
-import type { ApiResponse } from './base';
 import type { JournalEntry } from '@/model/journal';
-
-// Types for enhanced user statistics
-export interface UserStatistics {
-  // Overall statistics
-  totalJournals: number;
-  totalWords: number;
-  avgMood: number;
-
-  // Weekly statistics
-  weeklyJournalCount: number;
-  weeklyAvgMood: number;
-  weeklyTarget: number;
-
-  // Streak statistics
-  currentStreak: number;
-}
+import type { UserStatistics } from '@/model/user';
+import type { ApiResponse } from './base';
 
 // Get today's journal entry for the user, or a specific journal by ID
 export const useGetJournal = (journalId?: string) => {

@@ -10,7 +10,7 @@ interface EditTabProps {
   journalId?: string;
   onContentChange: (content: string) => void;
   onToggleEdit: () => void;
-  onSummarise?: (summary: string) => void;
+  onSummarize?: (summary: string) => void;
 }
 
 export const EditTab = ({
@@ -20,7 +20,7 @@ export const EditTab = ({
   journalId,
   onContentChange,
   onToggleEdit,
-  onSummarise,
+  onSummarize,
 }: EditTabProps) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -32,7 +32,7 @@ export const EditTab = ({
           snippetCount={snippets.length}
           onContentChange={onContentChange}
           onToggleEdit={onToggleEdit}
-          onSummarise={onSummarise}
+          onSummarize={onSummarize}
         />
       </div>
 

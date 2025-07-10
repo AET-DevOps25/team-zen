@@ -9,7 +9,7 @@ interface JournalEditorProps {
   snippetCount: number;
   onContentChange: (content: string) => void;
   onToggleEdit: () => void;
-  onSummarise?: (summary: string) => void;
+  onSummarize?: (summary: string) => void;
 }
 
 export const JournalEditor = ({
@@ -19,7 +19,7 @@ export const JournalEditor = ({
   snippetCount,
   onContentChange,
   onToggleEdit,
-  onSummarise,
+  onSummarize,
 }: JournalEditorProps) => {
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onContentChange(e.target.value);
@@ -43,12 +43,12 @@ export const JournalEditor = ({
     false,
   ); // Disable automatic fetching
 
-  const handleSummarise = async () => {
-    if (journalId && onSummarise) {
+  const handleSummarize = async () => {
+    if (journalId && onSummarize) {
       try {
         const result = await fetchSummary();
         if (result.data) {
-          onSummarise(result.data);
+          onSummarize(result.data);
         }
       } catch (error) {
         console.error('Failed to fetch summary:', error);
@@ -79,12 +79,12 @@ export const JournalEditor = ({
             )}
             {journalId && snippetCount > 2 && isEditing && (
               <button
-                onClick={handleSummarise}
+                onClick={handleSummarize}
                 disabled={isSummaryLoading}
                 className="px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-purple-100 text-purple-700 hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
                 <Brain className="w-4 h-4" />
-                <span>{isSummaryLoading ? 'Summarising...' : 'Summarise'}</span>
+                <span>{isSummaryLoading ? 'Summarising...' : 'Summarize'}</span>
               </button>
             )}
             <button

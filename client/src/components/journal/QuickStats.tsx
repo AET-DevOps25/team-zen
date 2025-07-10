@@ -11,7 +11,6 @@ interface QuickStatsProps {
 }
 
 export const QuickStats = ({ snippets, journalContent }: QuickStatsProps) => {
-  console.log(snippets);
   const calculateAverageMood = () => {
     if (snippets.length === 0) return 'N/A';
     const average =
