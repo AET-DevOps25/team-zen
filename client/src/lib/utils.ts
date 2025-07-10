@@ -18,7 +18,9 @@ export interface ExtendedJournalEntry extends JournalEntry {
 
 // Utility function to convert dailyMood to valid Mood enum value
 export const getMoodValue = (dailyMood: number | undefined): Mood => {
-  if (!dailyMood) return 3 as Mood; // Default to neutral
+  if (!dailyMood || dailyMood < 1 || dailyMood > 5) {
+    return 3 as Mood; // Default to neutral for out-of-range values
+  }
   return Math.floor(dailyMood) as Mood;
 };
 

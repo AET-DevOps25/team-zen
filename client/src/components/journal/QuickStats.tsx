@@ -4,9 +4,14 @@ import type { Snippet } from '@/model/snippet';
 interface QuickStatsProps {
   snippets: Array<Snippet>;
   journalContent: string;
+  isLoading?: boolean;
+  averageMood?: string;
+  currentStreak?: number;
+  statsLoading?: boolean;
 }
 
 export const QuickStats = ({ snippets, journalContent }: QuickStatsProps) => {
+  console.log(snippets);
   const calculateAverageMood = () => {
     if (snippets.length === 0) return 'N/A';
     const average =

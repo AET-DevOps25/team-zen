@@ -37,12 +37,13 @@ public class SnippetService {
 
     public Snippet getUserSnippetById(String userId, String snippetId) {
         return snippetRepository.findByUserIdAndId(userId, snippetId)
-                .orElseThrow(() -> new SnippetNotFoundException("Snippet not found for user: " + userId + " and snippetId: " + snippetId));
+                .orElseThrow(() -> new SnippetNotFoundException(
+                        "Snippet not found for user: " + userId + " and snippetId: " + snippetId));
     }
 
     public List<Snippet> getUserSnippets(String userId, LocalDate date) {
         List<Snippet> snippets = snippetRepository.findByUserId(userId);
-        
+
         if (snippets.isEmpty()) {
             logger.debug("No snippets found for user: {}", userId);
             throw new SnippetNotFoundException("No snippets found for user: " + userId);
@@ -57,7 +58,7 @@ public class SnippetService {
                                     .isEqual(date))
                     .toList();
         }
-        
+
         return snippets;
     }
 
@@ -70,12 +71,12 @@ public class SnippetService {
 
         JournalEntry entry = journalEntryRepository.findByDateAndUserId(snippetDate, snippet.getUserId());
         logger.debug("Found journal entry: {}", entry);
-        
+
         if (entry == null) {
-            logger.debug("No journal entry found for date: {} and userId: {}, creating a new one.", snippetDate, snippet.getUserId());
+            logger.debug("No journal entry found for date: {} and userId: {}, creating a new one.", snippetDate,
+                    snippet.getUserId());
             entry = createNewJournalEntry(snippetDate, snippet.getUserId());
         }
-
 
         snippet.setJournalEntryId(entry.getId());
         snippet.setUpdatedAt(snippetDate);
@@ -106,9 +107,13 @@ public class SnippetService {
     }
 
     private void updateJournalEntryWithSnippet(JournalEntry entry, Snippet snippet) {
+        int previousSnippetCount = entry.getSnippetIds().size();
         entry.getSnippetIds().add(snippet.getId());
+
         double currentMood = entry.getDailyMood() != null ? entry.getDailyMood() : 0.0;
-        entry.setDailyMood((currentMood + snippet.getMood()) / entry.getSnippetIds().size());
+        double totalMoodSum = currentMood * previousSnippetCount + snippet.getMood();
+        entry.setDailyMood(totalMoodSum / entry.getSnippetIds().size());
+
         journalEntryRepository.save(entry);
     }
 
@@ -129,10 +134,11 @@ public class SnippetService {
         JournalEntry entry = journalEntryRepository.findByDateAndUserId(snippetDate, snippet.getUserId());
         if (entry != null) {
             List<String> snippetIds = entry.getSnippetIds();
-            
+
             if (snippetIds.size() <= 1) {
                 logger.debug("Cannot delete the last remaining snippet in a journal entry.");
-                throw new InvalidSnippetOperationException("Cannot delete the last remaining snippet in a journal entry.");
+                throw new InvalidSnippetOperationException(
+                        "Cannot delete the last remaining snippet in a journal entry.");
             }
 
             entry.setDailyMood(

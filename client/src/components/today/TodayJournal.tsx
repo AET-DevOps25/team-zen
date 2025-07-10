@@ -1,16 +1,14 @@
 import { useNavigate } from '@tanstack/react-router';
 import { motion } from 'framer-motion';
-import {
-  AIInsights,
-  JournalActions,
-  MoodTracker,
-  QuickStats,
-  SnippetsList,
-  WeeklyProgress,
-} from './index';
+import { JournalActions } from './JournalActions';
+import { MoodTracker } from './MoodTracker';
+import { QuickStats } from './QuickStats';
+import { SnippetsList } from './SnippetsList';
+import { WeeklyProgress } from './WeeklyProgress';
+import { AiInsights } from './AiInsights';
+import { useJournalState } from '@/hooks';
 import { useGetSnippets } from '@/api/snippet.ts';
 import { useGetUserStatistics } from '@/api/journal';
-import { useJournalState } from '@/hooks';
 
 const TodayJournal = () => {
   const { snippets, isLoading } = useGetSnippets({
@@ -79,7 +77,7 @@ const TodayJournal = () => {
       {/* Sidebar */}
       <div className="space-y-6">
         <MoodTracker snippets={snippets} todaysMood={todaysMood} />
-        <AIInsights />
+        <AiInsights />
         <WeeklyProgress userStats={userStats} statsLoading={statsLoading} />
       </div>
     </div>
