@@ -84,7 +84,7 @@ export const JournalEditor = ({
                 className="px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-purple-100 text-purple-700 hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
                 <Brain className="w-4 h-4" />
-                <span>{isSummaryLoading ? 'Summarising...' : 'Summarize'}</span>
+                <span>{isSummaryLoading ? 'Summarizing...' : 'Summarize'}</span>
               </button>
             )}
             <button
@@ -111,7 +111,7 @@ export const JournalEditor = ({
                   <div className="flex items-center space-x-2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
                     <Brain className="w-5 h-5 text-purple-600 animate-pulse" />
                     <span className="text-sm font-medium text-gray-700">
-                      ZenAI is summarising...
+                      ZenAI is summarizing...
                     </span>
                   </div>
                 </div>

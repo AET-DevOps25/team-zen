@@ -1,7 +1,7 @@
 import { BarChart3, Calendar, Target, TrendingUp } from 'lucide-react';
 import WeeklyMoodChart from './WeeklyMoodChart';
 import WeeklyStatCard from './WeeklyStatCard';
-import type { UserStatistics } from '@/api/journal';
+import type { UserStatistics } from '@/model/user';
 
 interface WeeklyStatsProps {
   userStatistics: UserStatistics;
