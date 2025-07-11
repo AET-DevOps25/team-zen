@@ -31,15 +31,20 @@ spec:
               mountPath: /etc/prometheus
             - name: prometheus-data
               mountPath: /prometheus
+            - name: alert-rules
+              mountPath: /etc/prometheus/rules
       volumes:
         - name: config
           configMap:
             name: prometheus-config
-{{- if .Values.prometheus.persistence.enabled }}
+        - name: alert-rules
+          configMap:
+            name: prometheus-alert-rules
+        {{- if .Values.prometheus.persistence.enabled }}
         - name: prometheus-data
           persistentVolumeClaim:
             claimName: prometheus-data
-{{- else }}
+        {{- else }}
         - name: prometheus-data
           emptyDir: {}
-{{- end }}
+        {{- end }}
