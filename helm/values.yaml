@@ -115,6 +115,42 @@ mongodb:
   storageSize: 1Gi
   replicaCount: 1
 
+prometheus:
+  image:
+    repository: prom/prometheus
+    tag: v2.45.0
+  service:
+    port: 9090
+  resources: {}
+  persistence:
+    enabled: false
+    size: 5Gi
+    storageClassName: ""
+
+grafana:
+  image:
+    repository: grafana/grafana
+    tag: 10.1.5
+  service:
+    port: 3000
+  resources: {}
+  adminUser: admin
+  persistence:
+    enabled: false
+    size: 5Gi
+    storageClassName: ""
+  datasources:
+    - name: Prometheus
+      type: prometheus
+      access: proxy
+      url: http://prometheus.zenai-team.svc.cluster.local:9090
+      isDefault: true
+  grafana.ini:
+    server:
+      root_url: "%(protocol)s://%(domain)s/grafana/"
+      serve_from_sub_path: true
+
+#TODO: Check datasources and grafana.ini usage
 
 ingress:
   enabled: true
