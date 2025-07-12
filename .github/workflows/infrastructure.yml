@@ -1,5 +1,5 @@
-# This workflow runs Terraform commands to validate and plan infrastructure changes
-name: CI-Terraform
+# This workflow manages Terraform infrastructure deployment and validation
+name: Infrastructure
 
 on:
   pull_request:
@@ -9,21 +9,15 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "**/*.tf"
+      - "terraform/**"
   workflow_dispatch:
     inputs:
-      environment:
-        description: 'Environment to deploy to'
-        required: false
-        default: 'dev'
-        type: choice
-        options:
-          - dev
-          - staging
-          - prod
       action:
-        description: 'Terraform action to perform'
+        description: "Terraform action to perform"
         required: false
-        default: 'plan'
+        default: "plan"
         type: choice
         options:
           - plan
@@ -47,6 +41,11 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
       AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
+
+    outputs:
+      ec2_public_ip: ${{ steps.terraform_outputs.outputs.ec2_public_ip }}
+      ec2_instance_id: ${{ steps.terraform_outputs.outputs.ec2_instance_id }}
+      infrastructure_deployed: ${{ steps.terraform_outputs.outputs.infrastructure_deployed }}
 
     steps:
       - name: Checkout repository
@@ -106,6 +105,61 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
         run: terraform destroy -auto-approve -no-color -input=false
 
+      - name: Get Terraform Outputs
+        id: terraform_outputs
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply')
+        run: |
+          # Get EC2 public IP
+          EC2_PUBLIC_IP=$(terraform output -raw ec2_public_ip 2>/dev/null || echo "")
+          if [ -n "$EC2_PUBLIC_IP" ]; then
+            echo "ec2_public_ip=$EC2_PUBLIC_IP" >> $GITHUB_OUTPUT
+            echo "✅ EC2 Public IP: $EC2_PUBLIC_IP"
+          else
+            echo "⚠️ Could not retrieve EC2 public IP"
+          fi
+
+          # Get EC2 instance ID
+          EC2_INSTANCE_ID=$(terraform output -raw ec2_instance_id 2>/dev/null || echo "")
+          if [ -n "$EC2_INSTANCE_ID" ]; then
+            echo "ec2_instance_id=$EC2_INSTANCE_ID" >> $GITHUB_OUTPUT
+            echo "✅ EC2 Instance ID: $EC2_INSTANCE_ID"
+          else
+            echo "⚠️ Could not retrieve EC2 instance ID"
+          fi
+
+          # Check if infrastructure is properly deployed
+          if [ -n "$EC2_PUBLIC_IP" ] && [ -n "$EC2_INSTANCE_ID" ]; then
+            echo "infrastructure_deployed=true" >> $GITHUB_OUTPUT
+            echo "✅ Infrastructure deployment verified"
+          else
+            echo "infrastructure_deployed=false" >> $GITHUB_OUTPUT
+            echo "❌ Infrastructure deployment incomplete"
+          fi
+
+      - name: Verify EC2 Instance State
+        id: verify_instance
+        if: steps.terraform_outputs.outputs.ec2_instance_id != ''
+        run: |
+          INSTANCE_ID="${{ steps.terraform_outputs.outputs.ec2_instance_id }}"
+          echo "Checking state of instance: $INSTANCE_ID"
+
+          # Get instance state
+          INSTANCE_STATE=$(aws ec2 describe-instances \
+            --instance-ids $INSTANCE_ID \
+            --query 'Reservations[0].Instances[0].State.Name' \
+            --output text 2>/dev/null || echo "unknown")
+
+          echo "Instance state: $INSTANCE_STATE"
+          echo "instance_state=$INSTANCE_STATE" >> $GITHUB_OUTPUT
+
+          if [ "$INSTANCE_STATE" = "running" ]; then
+            echo "✅ EC2 instance is running"
+          elif [ "$INSTANCE_STATE" = "pending" ]; then
+            echo "⏳ EC2 instance is starting up"
+          else
+            echo "⚠️ EC2 instance state: $INSTANCE_STATE"
+          fi
+
       - name: Capture Plan Output
         id: capture_plan
         if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'apply' && github.event.inputs.action != 'destroy')
@@ -125,6 +179,12 @@ jobs:
           if [ "${{ github.event_name }}" = "push" ]; then
             echo "Branch: ${{ github.ref_name }}" >> $GITHUB_OUTPUT
             echo "Commit: ${{ github.sha }}" >> $GITHUB_OUTPUT
+          fi
+          if [ -n "${{ steps.terraform_outputs.outputs.ec2_public_ip }}" ]; then
+            echo "EC2 Public IP: ${{ steps.terraform_outputs.outputs.ec2_public_ip }}" >> $GITHUB_OUTPUT
+          fi
+          if [ -n "${{ steps.terraform_outputs.outputs.ec2_instance_id }}" ]; then
+            echo "EC2 Instance ID: ${{ steps.terraform_outputs.outputs.ec2_instance_id }}" >> $GITHUB_OUTPUT
           fi
           echo "EOF" >> $GITHUB_OUTPUT
 
@@ -208,18 +268,27 @@ jobs:
           echo "- **Initialization:** ${{ steps.init.outcome }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Validation:** ${{ steps.validate.outcome }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Apply:** ${{ steps.apply_main.outcome }}" >> $GITHUB_STEP_SUMMARY
+          if [ -n "${{ steps.terraform_outputs.outputs.ec2_public_ip }}" ]; then
+            echo "- **EC2 Public IP:** ${{ steps.terraform_outputs.outputs.ec2_public_ip }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ -n "${{ steps.terraform_outputs.outputs.ec2_instance_id }}" ]; then
+            echo "- **EC2 Instance ID:** ${{ steps.terraform_outputs.outputs.ec2_instance_id }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ -n "${{ steps.verify_instance.outputs.instance_state }}" ]; then
+            echo "- **Instance State:** ${{ steps.verify_instance.outputs.instance_state }}" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ steps.apply_main.outcome }}" = "success" ]; then
-            echo "✅ **Deployment completed successfully!**" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.apply_main.outcome }}" = "success" ] && [ "${{ steps.terraform_outputs.outputs.infrastructure_deployed }}" = "true" ]; then
+            echo "✅ **Infrastructure deployment completed successfully!**" >> $GITHUB_STEP_SUMMARY
+            echo "🚀 **Ready for application deployment**" >> $GITHUB_STEP_SUMMARY
           else
-            echo "❌ **Deployment failed. Please check the logs.**" >> $GITHUB_STEP_SUMMARY
+            echo "❌ **Infrastructure deployment failed or incomplete. Please check the logs.**" >> $GITHUB_STEP_SUMMARY
           fi
 
       - name: Summary for Manual Run
         if: github.event_name == 'workflow_dispatch'
         run: |
           echo "## Terraform Manual Workflow Summary" >> $GITHUB_STEP_SUMMARY
-          echo "**Environment:** ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
           echo "**Action:** ${{ github.event.inputs.action }}" >> $GITHUB_STEP_SUMMARY
           echo "**Triggered by:** @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -231,6 +300,52 @@ jobs:
             echo "- **Plan:** ${{ steps.plan.outcome }}" >> $GITHUB_STEP_SUMMARY
           elif [ "${{ github.event.inputs.action }}" = "apply" ]; then
             echo "- **Apply:** ${{ steps.apply_manual.outcome }}" >> $GITHUB_STEP_SUMMARY
+            if [ -n "${{ steps.terraform_outputs.outputs.ec2_public_ip }}" ]; then
+              echo "- **EC2 Public IP:** ${{ steps.terraform_outputs.outputs.ec2_public_ip }}" >> $GITHUB_STEP_SUMMARY
+            fi
+            if [ -n "${{ steps.terraform_outputs.outputs.ec2_instance_id }}" ]; then
+              echo "- **EC2 Instance ID:** ${{ steps.terraform_outputs.outputs.ec2_instance_id }}" >> $GITHUB_STEP_SUMMARY
+            fi
+            if [ -n "${{ steps.verify_instance.outputs.instance_state }}" ]; then
+              echo "- **Instance State:** ${{ steps.verify_instance.outputs.instance_state }}" >> $GITHUB_STEP_SUMMARY
+            fi
           elif [ "${{ github.event.inputs.action }}" = "destroy" ]; then
             echo "- **Destroy:** ${{ steps.destroy.outcome }}" >> $GITHUB_STEP_SUMMARY
           fi
+
+  # Optional: Trigger deployment workflow after successful infrastructure deployment
+  trigger_deployment:
+    name: Trigger Application Deployment
+    runs-on: ubuntu-latest
+    needs: terraform
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.terraform.outputs.infrastructure_deployed == 'true') || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply' && needs.terraform.outputs.infrastructure_deployed == 'true')
+
+    steps:
+      - name: Trigger Deployment Workflow
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const result = await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'deploy.yml',
+              ref: 'main',
+              inputs: {
+                force_deploy: 'true'
+              }
+            });
+
+            console.log('Triggered deployment workflow');
+            console.log('Infrastructure outputs available:');
+            console.log('- EC2 Public IP: ${{ needs.terraform.outputs.ec2_public_ip }}');
+            console.log('- EC2 Instance ID: ${{ needs.terraform.outputs.ec2_instance_id }}');
+
+      - name: Deployment Trigger Summary
+        run: |
+          echo "## 🚀 Deployment Trigger Summary" >> $GITHUB_STEP_SUMMARY
+          echo "**Automatically triggered application deployment**" >> $GITHUB_STEP_SUMMARY
+          echo "**Target IP:** ${{ needs.terraform.outputs.ec2_public_ip }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Instance ID:** ${{ needs.terraform.outputs.ec2_instance_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check the [Actions tab](../../actions) for deployment progress." >> $GITHUB_STEP_SUMMARY
