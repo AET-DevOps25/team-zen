@@ -119,11 +119,13 @@
         password: "{{ github_token }}"
       when: github_actor != '' and github_token != ''
       register: docker_login_result
-      failed_when: false # Don't fail if login fails - we can still deploy with public images
+      failed_when: false  # Don't fail if login fails - we can still deploy with public images
 
     - name: Display login result
       ansible.builtin.debug:
-        msg: "GitHub Container Registry login {{ 'succeeded' if docker_login_result.failed is defined and not docker_login_result.failed else 'failed or skipped' }}"
+        msg: >-
+          GitHub Container Registry login
+          {{ 'succeeded' if docker_login_result.failed is defined and not docker_login_result.failed else 'failed or skipped' }}
       when: github_actor != '' and github_token != ''
 
     - name: Stop existing containers
@@ -133,11 +135,13 @@
           - docker-compose.yml
         state: absent
       register: docker_stop_result
-      failed_when: false # Don't fail if no containers exist to stop
+      failed_when: false  # Don't fail if no containers exist to stop
 
     - name: Display stop result
       ansible.builtin.debug:
-        msg: "Container stop {{ 'completed' if not docker_stop_result.failed else 'failed (containers may not have existed)' }}"
+        msg: >-
+          Container stop
+          {{ 'completed' if not docker_stop_result.failed else 'failed (containers may not have existed)' }}
 
     - name: Pull latest images
       community.docker.docker_compose_v2:
