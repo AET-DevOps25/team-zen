@@ -53,6 +53,7 @@
     </li>
     <li><a href="#usage">Usage</a></li>
     <li><a href="#monitoring">Monitoring</a></li>
+    <li><a href="#api-specifications">API Specifications</a></li>
   </ol>
 </details>
 
@@ -228,6 +229,19 @@ Alert rules can be seen in Prometheus web interface under Status -> Rules or und
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+
+<!-- API-SPECIFICATION -->
+## API Specifications
+
+ZenAI's APIs for every single micro service (user, journal, genai and api-gateway) are documented using Swagger, and are accessible by:
+
+* Locally using Docker
+   
+   ```http://localhost:8085/swagger-ui.html```
+* Deployed
+   TODO!!!!!
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
 <!-- MARKDOWN LINKS & IMAGES -->
