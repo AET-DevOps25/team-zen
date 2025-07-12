@@ -1,0 +1,71 @@
+{
+  "id": null,
+  "title": "API Gateway Metrics",
+  "tags": ["api-gateway", "prometheus"],
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Total Request Count",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(http_server_requests_seconds_count{job=\"api-gateway\"})",
+          "legendFormat": "Total Requests"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 6 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Request Rate (req/sec)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum by (uri, method) (rate(http_server_requests_seconds_count{job=\"api-gateway\"}[1m]))",
+          "legendFormat": "{{uri}} {{method}}"
+        }
+      ],
+      "gridPos": { "x": 8, "y": 0, "w": 16, "h": 6 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Request Latency (avg, seconds)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_sum{job=\"api-gateway\"}[1m])) / sum(rate(http_server_requests_seconds_count{job=\"api-gateway\"}[1m]))",
+          "legendFormat": "Average Latency"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 6, "w": 12, "h": 6 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Request Latency (max, seconds)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "max(http_server_requests_seconds_max{job=\"api-gateway\"})",
+          "legendFormat": "Max Latency"
+        }
+      ],
+      "gridPos": { "x": 12, "y": 6, "w": 12, "h": 6 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Error Rate (non-2xx, req/sec)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"api-gateway\", status!~\"2..\"}[1m]))",
+          "legendFormat": "Error Rate"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 12, "w": 24, "h": 6 }
+    }
+  ]
+}

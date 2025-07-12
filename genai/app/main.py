@@ -1,5 +1,6 @@
 from fastapi import FastAPI, APIRouter, HTTPException
 import os
+import logging
 from pydantic import BaseModel
 from typing import List, Optional, Any
 import requests
@@ -8,6 +9,7 @@ from langchain.chains import LLMChain   # Used to run prompt chain
 from langchain.prompts import PromptTemplate  # For prompt creation
 from langchain.callbacks.manager import CallbackManagerForLLMRun  # Used in _call
 import traceback
+from prometheus_fastapi_instrumentator import Instrumentator
 
 router = APIRouter(prefix="/api/genai")
 
@@ -157,6 +159,11 @@ async def health_check():
 
 @router.post("/summary", response_model=SummaryResponse)
 async def summarize(request: SummaryRequest):
+    # Debug logging
+    print(f"=== REQUEST DEBUG ===")
+    print(f"Received request: {request}")
+    print(f"Snippet contents: {request.snippetContents}")
+    
     if not request.snippetContents:
         raise HTTPException(status_code=400, detail="snippetContents list cannot be empty.")
 
@@ -237,3 +244,6 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=port
     )
+
+# Instrumentation for Prometheus metrics
+Instrumentator().instrument(app).expose(app)
