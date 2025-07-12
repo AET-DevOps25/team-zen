@@ -9,6 +9,7 @@ from langchain.chains import LLMChain   # Used to run prompt chain
 from langchain.prompts import PromptTemplate  # For prompt creation
 from langchain.callbacks.manager import CallbackManagerForLLMRun  # Used in _call
 import traceback
+from prometheus_fastapi_instrumentator import Instrumentator
 
 router = APIRouter(prefix="/api/genai")
 
@@ -243,3 +244,6 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=port
     )
+
+# Instrumentation for Prometheus metrics
+Instrumentator().instrument(app).expose(app)

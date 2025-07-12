@@ -9,6 +9,10 @@ services:
       - .env
     environment:
       - API_URL=${API_URL:-http://localhost:8085}
+      - SERVER_HOST=api-gateway
+      - SERVER_PORT=8085
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8085}
+      - VITE_CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY}
     depends_on:
       - api-gateway
     networks:
@@ -16,7 +20,12 @@ services:
       - backend
 
   api-gateway:
-    build: ./server/api-gateway
+    build:
+      context: ./server/api-gateway
+      args:
+        CLERK_AUTHORIZED_PARTY: ${CLERK_AUTHORIZED_PARTY}
+        CLERK_SECRET_KEY: ${CLERK_SECRET_KEY}
+        CLERK_WEBHOOK_SECRET: ${CLERK_WEBHOOK_SECRET}
     ports:
       - "8085:8085"
     env_file:
@@ -70,7 +79,7 @@ services:
       - SERVER_PORT=8081
       - LLM_SERVICE_URL=http://genai-microservice:8082
       - USER_SERVICE_URL=http://user-microservice:8080
-    # Uncomment the following lines to use a MongoDB container 
+    # Uncomment the following lines to use a MongoDB container
     depends_on:
        - journal-db
     networks:
@@ -90,16 +99,45 @@ services:
     environment:
       - GENAI_API_URL=${GENAI_API_URL:-https://gpu.aet.cit.tum.de/api/chat/completions}
       - GENAI_API_KEY=${GENAI_API_KEY}
-      - WEAVIATE_HOST=http://weaviate:8080
     networks:
       - backend
       - genai-network
       - journal-network
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - "9090:9090"
+    networks:
+      - backend
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+    depends_on:
+      - prometheus
+    networks:
+      - backend
+
 volumes:
   user-data:
   journal-data:
-  weaviate-data:
+  prometheus_data:
+  grafana-storage:
 
 networks:
   frontend:

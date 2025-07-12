@@ -1,4 +1,3 @@
-
 export interface UserStatistics {
   // Overall statistics
   totalJournals: number;

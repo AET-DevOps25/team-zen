@@ -5,7 +5,7 @@ import { MoodTracker } from './MoodTracker';
 import { QuickStats } from './QuickStats';
 import { SnippetsList } from './SnippetsList';
 import { WeeklyProgress } from './WeeklyProgress';
-import { AiInsights } from './AiInsights';
+import { AiInsights } from './AIInsights';
 import { useJournalState } from '@/hooks';
 import { useGetSnippets } from '@/api/snippet.ts';
 import { useGetUserStatistics } from '@/api/journal';

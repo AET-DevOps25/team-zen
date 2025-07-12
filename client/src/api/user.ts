@@ -1,6 +1,6 @@
 import { useUser } from '@clerk/clerk-react';
 import { useQuery } from '@tanstack/react-query';
-import { API_BASE_URL } from './base';
+import { env } from '@/env.ts';
 
 type GetUser = {
   id?: string;
@@ -28,7 +28,7 @@ export const useGetUser = (
     if (params.id) urlParams.append('id', params.id);
 
     const queryString = urlParams.toString();
-    const url = `${API_BASE_URL}/api/users/${user?.id}${queryString ? `?${queryString}` : ''}`;
+    const url = `${env.VITE_API_URL}/api/users/${user?.id}${queryString ? `?${queryString}` : ''}`;
 
     const response = await fetch(url, {
       method: 'GET',

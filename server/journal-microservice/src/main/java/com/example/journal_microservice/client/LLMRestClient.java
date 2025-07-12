@@ -35,7 +35,7 @@ public class LLMRestClient {
         try {
             String url = baseUrl + "/api/genai/health";
             String response = restTemplate.getForObject(url, String.class);
-            
+
             logger.info("Health check response: {}", response);
             return true;
         } catch (Exception e) {
@@ -43,7 +43,7 @@ public class LLMRestClient {
             return false;
         }
     }
-    
+
     /**
      * Generate journal summary and insights using the REST LLM service
      * 
@@ -57,26 +57,26 @@ public class LLMRestClient {
                 logger.error("Cannot connect to LLM service");
                 return null;
             }
-            
+
             SnippetContentsRequest request = new SnippetContentsRequest(snippetContents);
-            
+
             // Debug logging
             logger.info("Sending request with {} snippet contents", snippetContents.size());
             logger.info("Request object: {}", request);
             logger.info("Snippet contents: {}", snippetContents);
-            
+
             // Create headers
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("Connection", "close");
             headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
-            
+
             // Create the request entity
             HttpEntity<SnippetContentsRequest> requestEntity = new HttpEntity<>(request, headers);
-            
+
             String url = baseUrl + "/api/genai/summary";
             logger.info("Sending POST request to: {}", url);
-            
+
             ResponseEntity<SnippetContentsResponse> responseEntity = restTemplate.exchange(
                 url,
                 HttpMethod.POST,

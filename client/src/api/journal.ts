@@ -1,9 +1,9 @@
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { API_BASE_URL } from './base';
 import type { JournalEntry } from '@/model/journal';
 import type { UserStatistics } from '@/model/user';
 import type { ApiResponse } from './base';
+import { env } from '@/env.ts';
 
 // Get today's journal entry for the user, or a specific journal by ID
 export const useGetJournal = (journalId?: string) => {
@@ -17,11 +17,11 @@ export const useGetJournal = (journalId?: string) => {
 
     let url: string;
     if (journalId) {
-      url = `${API_BASE_URL}/api/journalEntry/${user?.id}?journalId=${journalId}`;
+      url = `${env.VITE_API_URL}/api/journalEntry/${user?.id}?journalId=${journalId}`;
     } else {
       // Fetch today's journal
       const today = new Date().toISOString().split('T')[0];
-      url = `${API_BASE_URL}/api/journalEntry/${user?.id}?date=${today}`;
+      url = `${env.VITE_API_URL}/api/journalEntry/${user?.id}?date=${today}`;
     }
 
     const response = await fetch(url, {
@@ -77,7 +77,7 @@ export const useGetAllJournals = () => {
     const token = await getToken();
 
     const response = await fetch(
-      `${API_BASE_URL}/api/journalEntry/${user?.id}`,
+      `${env.VITE_API_URL}/api/journalEntry/${user?.id}`,
       {
         method: 'GET',
         headers: {
@@ -115,7 +115,7 @@ export const useUpdateJournal = () => {
   const updateJournal = async (updatedJournal: JournalEntry) => {
     const token = await getToken();
     const response = await fetch(
-      `${API_BASE_URL}/api/journalEntry/${updatedJournal.id}`,
+      `${env.VITE_API_URL}/api/journalEntry/${updatedJournal.id}`,
       {
         method: 'PUT',
         headers: {
@@ -145,13 +145,16 @@ export const useGetSummary = (journalId: string, enabled: boolean = true) => {
 
   const fetchSummary = async (): Promise<string> => {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/summary/${journalId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
+    const response = await fetch(
+      `${env.VITE_API_URL}/api/summary/${journalId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
       },
-    });
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to fetch summary: ${response.status}`);
@@ -177,7 +180,7 @@ export const useGetUserStatistics = () => {
   const fetchUserStatistics = async (): Promise<UserStatistics> => {
     const token = await getToken();
     const response = await fetch(
-      `${API_BASE_URL}/api/journalEntry/${user?.id}/statistics`,
+      `${env.VITE_API_URL}/api/journalEntry/${user?.id}/statistics`,
       {
         method: 'GET',
         headers: {

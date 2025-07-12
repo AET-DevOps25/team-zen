@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { BlendIcon } from 'lucide-react';
-import { AiInsights } from '../today/AiInsights';
+import { AiInsights } from '../today/AIInsights';
 import { MoodTimeline } from './MoodTimeline';
 import { ThemesAndTags } from './ThemesAndTags';
 import type { Snippet } from '@/model/snippet';
