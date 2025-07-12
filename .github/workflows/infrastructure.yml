@@ -6,10 +6,10 @@ on:
     paths:
       - "**/*.tf"
       - "terraform/**"
+      - github/workflows/infrastructure.yml
   push:
     branches:
       - main
-      - feat/aws-deployment
     paths:
       - "**/*.tf"
       - "terraform/**"
