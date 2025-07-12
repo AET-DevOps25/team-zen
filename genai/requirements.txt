@@ -3,3 +3,4 @@ uvicorn
 pydantic
 requests
 langchain
+prometheus_fastapi_instrumentator
