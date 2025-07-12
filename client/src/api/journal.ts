@@ -160,13 +160,16 @@ export const useGetSummary = (journalId: string, enabled: boolean = true) => {
 
   const fetchSummary = async (): Promise<string> => {
     const token = await getToken();
-    const response = await fetch(`${env.VITE_API_URL}/api/summary/${journalId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
+    const response = await fetch(
+      `${env.VITE_API_URL}/api/summary/${journalId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
       },
-    });
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to fetch summary: ${response.status}`);
