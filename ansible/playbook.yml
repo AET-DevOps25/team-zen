@@ -1,66 +1,113 @@
 ---
-- name: Install Docker, Docker-compose
+- name: Install Docker and Docker Compose
   hosts: docker_server
   become: true
   tasks:
-    - name: Install Docker
-      ansible.builtin.dnf:
-        name: docker
+    - name: Update apt cache
+      ansible.builtin.apt:
         update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install required packages
+      ansible.builtin.apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - python3-pip
         state: present
-    - name: Install docker-compose
-      ansible.builtin.get_url:
-        url: https://github.com/docker/compose/releases/download/1.27.4/docker-compose-Linux-{{ lookup('pipe', 'uname -m') }}
-        dest: /usr/local/bin/docker-compose
-        mode: +x
-    - name: Start docker daemon
+
+    - name: Add Docker GPG key
+      ansible.builtin.apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+
+    - name: Install Docker CE
+      ansible.builtin.apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+        update_cache: true
+
+    - name: Start and enable Docker service
       ansible.builtin.systemd:
         name: docker
         state: started
-    - name: Install docker python module
+        enabled: true
+
+    - name: Install Docker Python modules
       ansible.builtin.pip:
         name:
           - docker
           - docker-compose
+        state: present
 
-- name: Add ubuntu user to docker group
+- name: Configure Docker user permissions
   hosts: docker_server
   become: true
   tasks:
-    - name: Add ubuntu to docker group
+    - name: Add ubuntu user to docker group
       ansible.builtin.user:
         name: ubuntu
         groups: docker
         append: true
-    - name: Reconnect to server session
+
+    - name: Reset connection to apply group changes
       ansible.builtin.meta: reset_connection
 
-- name: Prepare and start docker containers
+- name: Deploy application
   hosts: docker_server
-  become: true
+  become: false
   vars:
-    ec2_public_ip: "{{ lookup('env', 'EC2_PUBLIC_IP') }}"
+    ec2_public_ip: "{{ ansible_host }}"
+    github_actor: "{{ github_actor | default('') }}"
+    github_token: "{{ github_token | default('') }}"
+    deployment_timestamp: "{{ deployment_timestamp | default(ansible_date_time.iso8601) }}"
+    git_commit: "{{ git_commit | default('unknown') }}"
+    git_branch: "{{ git_branch | default('main') }}"
   tasks:
+    - name: Create application directory
+      ansible.builtin.file:
+        path: /home/ubuntu/app
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: "0755"
+
     - name: Remove existing .env.prod if exists
       ansible.builtin.file:
-        path: /home/ubuntu/.env.prod
+        path: /home/ubuntu/app/.env.prod
         state: absent
 
     - name: Create .env.prod file with environment variables
       ansible.builtin.copy:
-        dest: /home/ubuntu/.env.prod
+        dest: /home/ubuntu/app/.env.prod
         content: |
           CLIENT_HOST=client.{{ ec2_public_ip }}.nip.io
           SERVER_HOST=api.{{ ec2_public_ip }}.nip.io
           PUBLIC_API_URL=https://api.{{ ec2_public_ip }}.nip.io
+          DEPLOYMENT_TIMESTAMP={{ deployment_timestamp }}
+          GIT_COMMIT={{ git_commit }}
+          GIT_BRANCH={{ git_branch }}
         owner: ubuntu
         group: ubuntu
         mode: "0644"
 
-    - name: Copy docker compose file
+    - name: Copy docker-compose file
       ansible.builtin.copy:
         src: ../docker-compose.yml
-        dest: /home/ubuntu/docker-compose.yml
+        dest: /home/ubuntu/app/docker-compose.yml
         owner: ubuntu
         group: ubuntu
         mode: "0644"
@@ -68,18 +115,63 @@
     - name: Log in to GitHub Container Registry
       community.docker.docker_login:
         registry_url: ghcr.io
-        username: "{{ lookup('env', 'GITHUB_ACTOR') }}"
-        password: "{{ lookup('env', 'GITHUB_TOKEN') }}"
+        username: "{{ github_actor }}"
+        password: "{{ github_token }}"
+      when: github_actor != '' and github_token != ''
+      ignore_errors: true
 
-    - name: Start docker containers with compose
-      become: true
-      become_user: ubuntu
+    - name: Stop existing containers
       community.docker.docker_compose_v2:
-        project_src: /home/ubuntu
+        project_src: /home/ubuntu/app
+        files:
+          - docker-compose.yml
+        state: absent
+      ignore_errors: true
+
+    - name: Pull latest images
+      community.docker.docker_compose_v2:
+        project_src: /home/ubuntu/app
         files:
           - docker-compose.yml
         env_files:
-          - /home/ubuntu/.env.prod
-        state: present
+          - /home/ubuntu/app/.env.prod
         pull: "always"
+        state: present
+        recreate: "never"
+      register: docker_pull_result
+
+    - name: Start docker containers with compose
+      community.docker.docker_compose_v2:
+        project_src: /home/ubuntu/app
+        files:
+          - docker-compose.yml
+        env_files:
+          - /home/ubuntu/app/.env.prod
+        state: present
         recreate: "always"
+        remove_orphans: true
+      register: docker_compose_result
+
+    - name: Wait for containers to be ready
+      ansible.builtin.pause:
+        seconds: 10
+
+    - name: Check container status
+      community.docker.docker_compose_v2:
+        project_src: /home/ubuntu/app
+        files:
+          - docker-compose.yml
+        state: present
+      register: container_status
+
+    - name: Display deployment information
+      ansible.builtin.debug:
+        msg:
+          - "Deployment completed successfully!"
+          - "Timestamp: {{ deployment_timestamp }}"
+          - "Git Commit: {{ git_commit }}"
+          - "Git Branch: {{ git_branch }}"
+          - "EC2 Public IP: {{ ec2_public_ip }}"
+          - "Application URLs:"
+          - "  - Client: http://client.{{ ec2_public_ip }}.nip.io"
+          - "  - API: http://api.{{ ec2_public_ip }}.nip.io"
