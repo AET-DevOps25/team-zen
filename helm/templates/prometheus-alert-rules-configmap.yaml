@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: prometheus-alert-rules
-  namespace: zenai-team
+  namespace: {{ .Values.namespaceId }}
   labels:
     app: prometheus
 data:
