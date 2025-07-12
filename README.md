@@ -42,6 +42,7 @@
       <a href="#about-the-project">About The Project</a>
       <ul>
         <li><a href="#built-with">Built With</a></li>
+        <li><a href="#architecture-overview">Architecture Overview</a></li>
       </ul>
     </li>
     <li>
@@ -54,6 +55,7 @@
     <li><a href="#usage">Usage</a></li>
     <li><a href="#monitoring">Monitoring</a></li>
     <li><a href="#api-specifications">API Specifications</a></li>
+    <li><a href="#contributors">Contributors</a></li>
   </ol>
 </details>
 
@@ -81,6 +83,16 @@ Your personal AI-powered journal that helps you track, understand, and improve y
 * [![JQuery][JQuery.com]][JQuery-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+### Architecture Overview
+
+* Subsystem decomposition
+
+   ![Subsystem decomposition](./docs/diagrams/Component%20diagram%20(1).png)
+* Analysis object diagram
+
+   ![Analysis object diagram](./docs/diagrams/Analysis%20object%20model%20(1).png)
 
 
 
@@ -242,6 +254,20 @@ ZenAI's APIs for every single micro service (user, journal, genai and api-gatewa
    TODO!!!!!
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+<!-- Contributors -->
+## Contributors
+
+| Contributor  | Responsibilities |
+| --- | --- |
+| Natalia Milanova  | Backend CRUD operations, Kubernetes deployment, Monitoring  |
+| Evan Christopher  | Frontend, EC2 deployment, Client testing  |
+| Zexin Gong  | API gateway and authentication, Service testing, Documentation  |
+
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 
 
 <!-- MARKDOWN LINKS & IMAGES -->
