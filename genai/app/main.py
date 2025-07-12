@@ -1,6 +1,5 @@
 from fastapi import FastAPI, APIRouter, HTTPException
 import os
-import logging
 from pydantic import BaseModel
 from typing import List, Optional, Any
 import requests
@@ -158,10 +157,6 @@ async def health_check():
 
 @router.post("/summary", response_model=SummaryResponse)
 async def summarize(request: SummaryRequest):
-    # Debug logging
-    print(f"=== REQUEST DEBUG ===")
-    print(f"Received request: {request}")
-    print(f"Snippet contents: {request.snippetContents}")
     
     if not request.snippetContents:
         raise HTTPException(status_code=400, detail="snippetContents list cannot be empty.")
