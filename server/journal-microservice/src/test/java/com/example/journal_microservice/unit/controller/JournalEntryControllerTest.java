@@ -186,7 +186,7 @@ class JournalEntryControllerTest {
         // Given
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalEntries", 10);
-        stats.put("averageMood", 7.5);
+        stats.put("averageMood", 3.5);
         stats.put("entriesThisWeek", 3);
         stats.put("entriesThisMonth", 8);
         when(journalEntryService.getUserStatistics(userId)).thenReturn(stats);
@@ -195,7 +195,7 @@ class JournalEntryControllerTest {
         mockMvc.perform(get("/api/journalEntry/{userId}/statistics", userId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalEntries").value(10))
-                .andExpect(jsonPath("$.averageMood").value(7.5))
+                .andExpect(jsonPath("$.averageMood").value(3.5))
                 .andExpect(jsonPath("$.entriesThisWeek").value(3))
                 .andExpect(jsonPath("$.entriesThisMonth").value(8));
 

@@ -227,7 +227,7 @@ class JournalEntryServiceTest {
   void shouldGetUserStatistics() {
     // Given
     List<JournalEntry> entries = TestDataFactory.createMultipleJournalEntries(userId, 5);
-    entries.forEach(entry -> entry.setDailyMood(8.0));
+    entries.forEach(entry -> entry.setDailyMood(3.0));
     when(journalEntryRepository.findByUserId(userId)).thenReturn(entries);
     when(snippetRepository.findByUserId(userId)).thenReturn(new ArrayList<>());
 
@@ -237,7 +237,7 @@ class JournalEntryServiceTest {
     // Then
     assertNotNull(statistics);
     assertEquals(5, statistics.get("totalJournals"));
-    assertEquals(8.0, statistics.get("avgMood"));
+    assertEquals(3.0, statistics.get("avgMood"));
     assertTrue(statistics.containsKey("weeklyJournalCount"));
     assertTrue(statistics.containsKey("currentStreak"));
     verify(journalEntryRepository).findByUserId(userId);
