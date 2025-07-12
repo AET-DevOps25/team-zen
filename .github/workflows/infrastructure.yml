@@ -6,7 +6,7 @@ on:
     paths:
       - "**/*.tf"
       - "terraform/**"
-      - github/workflows/infrastructure.yml
+      - .github/workflows/infrastructure.yml
   push:
     branches:
       - main
