@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zenai-api-gateway
+  namespace: {{ .Values.namespaceId }}
+spec:
+  replicas: {{ .Values.apiGateway.replicaCount }}
+  selector:
+    matchLabels:
+      app: zenai-api-gateway-selector
+  template:
+    metadata:
+      labels:
+        app: zenai-api-gateway-selector
+    spec:
+      containers:
+        - name: api-gateway
+          image: "{{ .Values.apiGateway.image.repository }}:{{ .Values.apiGateway.image.tag }}"
+          imagePullPolicy: {{ .Values.apiGateway.image.pullPolicy }}
+          resources:
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+          ports:
+            - containerPort: {{ .Values.apiGateway.service.targetPort }}
+          env:
+          {{- if .Values.apiGateway.env }}
+            {{- range .Values.apiGateway.env }}
+            - name: {{ .name }}
+              {{- if .value }}
+              value: "{{ .value }}"
+              {{- end }}
+              {{- if .valueFrom }}
+              valueFrom:
+{{ toYaml .valueFrom | indent 16 }}
+              {{- end }}
+            {{- end }}
+          {{- end }}
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- range .Values.imagePullSecrets }}
+        - name: {{ .name }}
+        {{- end }}
+      {{- end }}
+

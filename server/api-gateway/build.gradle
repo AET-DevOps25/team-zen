@@ -28,6 +28,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'com.clerk:backend-api:2.4.0'
 	implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.2.0'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'io.micrometer:micrometer-registry-prometheus'
 	
 	// Test dependencies
 	testImplementation 'org.springframework.security:spring-security-test'

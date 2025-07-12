@@ -24,6 +24,9 @@ public class ClerkWebhookController {
   @Value("${clerk.webhook.secret}")
   private String clerkWebhookSecret;
 
+  @Value("${user-service-url}")
+  private String userServiceUrl;
+
   private final ClerkWebhookVerifier webhookVerifier;
   private final Logger logger = org.slf4j.LoggerFactory.getLogger(ClerkWebhookController.class);
 
@@ -47,6 +50,21 @@ public class ClerkWebhookController {
   @GetMapping()
   public ResponseEntity<String> getMethodName() {
     return ResponseEntity.ok("get working");
+  }
+
+  @GetMapping("/health")
+  public ResponseEntity<String> healthCheck() {
+    try {
+      RestClient restClient = RestClient.create();
+      String response = restClient.get()
+          .uri(userServiceUrl + "/api/users")
+          .retrieve()
+          .body(String.class);
+      return ResponseEntity.ok("User service is reachable. Response: " + response.substring(0, Math.min(100, response.length())));
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+          .body("User service is not reachable. Error: " + e.getMessage());
+    }
   }
 
   @PostMapping
@@ -180,15 +198,22 @@ public class ClerkWebhookController {
               "journalEntries", new String[0],
               "snippets", new String[0]);
 
-          // Send http request to user microservice to create user (blocking)
-          User responseUser = restClient.post()
-              // .uri("http://localhost:8080/api/users")
-              .uri("http://user-microservice:8080/api/users")
-              .body(user)
-              .retrieve()
-              .body(User.class);
+          logger.info("Attempting to create user in user service at URL: {}", userServiceUrl);
+          logger.info("User data to send: {}", user);
 
-          logger.info("User created in user microservice: {}", responseUser);
+          // Send http request to user microservice to create user (blocking)
+          try {
+            User responseUser = restClient.post()
+                .uri(userServiceUrl + "/api/users")
+                .body(user)
+                .retrieve()
+                .body(User.class);
+
+            logger.info("User created successfully in user microservice: {}", responseUser);
+          } catch (Exception e) {
+            logger.error("Failed to create user in user service. URL: {}, Error: {}", userServiceUrl, e.getMessage(), e);
+            throw e;
+          }
 
         } else if (event.containsKey("type") && event.get("type").equals("user.deleted")) {
 
@@ -197,14 +222,20 @@ public class ClerkWebhookController {
           Map<String, Object> data = (Map<String, Object>) event.get("data");
           String userId = (String) data.get("id");
 
-          // Send http request to user microservice to create user (blocking)
-          restClient.delete()
-              // .uri("http://localhost:8080/api/users/" + userId)
-              .uri("http://user-microservice:8080/api/users/" + userId)
-              .retrieve()
-              .toBodilessEntity();
+          logger.info("Attempting to delete user in user service at URL: {}", userServiceUrl + "/api/users/" + userId);
 
-          logger.info("User deleted in user microservice");
+          // Send http request to user microservice to create user (blocking)
+          try {
+            restClient.delete()
+                .uri(userServiceUrl + "/api/users/" + userId)
+                .retrieve()
+                .toBodilessEntity();
+
+            logger.info("User deleted successfully in user microservice");
+          } catch (Exception e) {
+            logger.error("Failed to delete user in user service. URL: {}, Error: {}", userServiceUrl + "/api/users/" + userId, e.getMessage(), e);
+            throw e;
+          }
 
         } else if (event.containsKey("type") && event.get("type").equals("user.updated")) {
 
@@ -224,15 +255,22 @@ public class ClerkWebhookController {
               "journalEntries", new String[0],
               "snippets", new String[0]);
 
-          // Send http request to user microservice to create user (blocking)
-          User responseUser = restClient.put()
-              // .uri("http://localhost:8080/api/users/" + userId)
-              .uri("http://user-microservice:8080/api/users/" + userId)
-              .body(user)
-              .retrieve()
-              .body(User.class);
+          logger.info("Attempting to update user in user service at URL: {}", userServiceUrl + "/api/users/" + userId);
+          logger.info("User data to send: {}", user);
 
-          logger.info("User updated in user microservice: {}", responseUser);
+          // Send http request to user microservice to create user (blocking)
+          try {
+            User responseUser = restClient.put()
+                .uri(userServiceUrl + "/api/users/" + userId)
+                .body(user)
+                .retrieve()
+                .body(User.class);
+
+            logger.info("User updated successfully in user microservice: {}", responseUser);
+          } catch (Exception e) {
+            logger.error("Failed to update user in user service. URL: {}, Error: {}", userServiceUrl + "/api/users/" + userId, e.getMessage(), e);
+            throw e;
+          }
 
         } else {
           logger.warn("Unhandled event type: {}", event.get("type"));
