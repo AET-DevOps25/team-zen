@@ -31,11 +31,13 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
-	testImplementation 'org.testcontainers:junit-jupiter'
-	testImplementation 'org.testcontainers:mongodb'
-	testImplementation 'io.rest-assured:rest-assured'
 	testImplementation 'de.flapdoodle.embed:de.flapdoodle.embed.mongo:4.7.0'
+	testImplementation 'org.testcontainers:testcontainers:1.19.3'
+	testImplementation 'org.testcontainers:junit-jupiter:1.19.3'
+	testImplementation 'org.testcontainers:mongodb:1.19.3'
+	testImplementation 'org.mockito:mockito-core'
+	testImplementation 'org.mockito:mockito-junit-jupiter'
+	testImplementation 'io.rest-assured:rest-assured'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
@@ -45,4 +47,20 @@ tasks.withType(JavaCompile) {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	
+	// Allow excluding integration tests when building in Docker
+	if (project.hasProperty('skipIntegrationTests')) {
+		exclude '**/integration/**'
+		exclude '**/e2e/**'
+	}
+}
+
+// Separate task for integration tests
+task integrationTest(type: Test) {
+	description = 'Runs integration tests'
+	group = 'verification'
+	useJUnitPlatform()
+	include '**/integration/**'
+	include '**/e2e/**'
+	shouldRunAfter test
 }

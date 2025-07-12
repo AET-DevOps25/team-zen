@@ -4,15 +4,34 @@ import com.example.user_microservice.model.User;
 import com.example.user_microservice.repository.UserRepository;
 import com.example.user_microservice.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class UserServiceIntegrationTest extends BaseIntegrationTest {
+@SpringBootTest
+@Testcontainers
+@DisplayName("UserService Integration Tests")
+class UserServiceIntegrationTest {
+
+    @Container
+    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6.0.2");
+
+    @DynamicPropertySource
+    static void setProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
+        registry.add("spring.data.mongodb.database", () -> "testdb");
+    }
 
     @Autowired
     private UserService userService;
@@ -24,12 +43,14 @@ class UserServiceIntegrationTest extends BaseIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        // Clean up database before each test
         userRepository.deleteAll();
         testUser = new User(null, "John Doe", "john@example.com", 
                            new String[]{"journal1"}, new String[]{"snippet1"});
     }
 
     @Test
+    @DisplayName("Should create and persist user successfully")
     void createUser_ShouldPersistUserSuccessfully() {
         // When
         User createdUser = userService.createUser(testUser);
@@ -46,6 +67,7 @@ class UserServiceIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
+    @DisplayName("Should return all persisted users")
     void getAllUsers_ShouldReturnAllPersistedUsers() {
         // Given
         userService.createUser(testUser);
@@ -61,6 +83,7 @@ class UserServiceIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
+    @DisplayName("Should return user by valid ID")
     void getUserById_WithValidId_ShouldReturnUser() {
         // Given
         User createdUser = userService.createUser(testUser);
@@ -75,6 +98,7 @@ class UserServiceIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
+    @DisplayName("Should update user with valid data")
     void updateUser_WithValidData_ShouldPersistChanges() {
         // Given
         User createdUser = userService.createUser(testUser);
@@ -99,6 +123,7 @@ class UserServiceIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
+    @DisplayName("Should remove user from database")
     void deleteUser_WithValidId_ShouldRemoveFromDatabase() {
         // Given
         User createdUser = userService.createUser(testUser);
@@ -113,6 +138,7 @@ class UserServiceIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
+    @DisplayName("Should persist new journal entry")
     void addJournalEntry_ShouldPersistNewEntry() {
         // Given
         User createdUser = userService.createUser(testUser);
@@ -133,6 +159,7 @@ class UserServiceIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
+    @DisplayName("Should persist new snippet")
     void addSnippet_ShouldPersistNewSnippet() {
         // Given
         User createdUser = userService.createUser(testUser);
@@ -153,6 +180,7 @@ class UserServiceIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
+    @DisplayName("Should create new array for user without entries")
     void addJournalEntry_ToUserWithoutEntries_ShouldCreateNewArray() {
         // Given
         User userWithoutEntries = new User(null, "Test User", "test@example.com", null, null);
@@ -168,6 +196,7 @@ class UserServiceIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
+    @DisplayName("Should create new array for user without snippets")
     void addSnippet_ToUserWithoutSnippets_ShouldCreateNewArray() {
         // Given
         User userWithoutSnippets = new User(null, "Test User", "test@example.com", null, null);
@@ -183,6 +212,7 @@ class UserServiceIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
+    @DisplayName("Should handle operations on non-existent user gracefully")
     void operationsOnNonExistentUser_ShouldHandleGracefully() {
         // When/Then
         Optional<User> nonExistentUser = userService.getUserById("nonexistent");
