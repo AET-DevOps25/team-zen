@@ -52,6 +52,7 @@
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
+    <li><a href="#monitoring">Monitoring</a></li>
   </ol>
 </details>
 
@@ -155,6 +156,76 @@ To get a local copy up and running follow these simple example steps.
   * If you have used the summarization function, you can click "Insights" on the top right to view the analysis of your day based on your snippets.
 * You can search for and view old journals in the tab "Previous Journals".
 * In the "Overview" tab, you can see statistics of your journaling habit.
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+
+<!-- MONITORING -->
+## Monitoring
+
+ZenAI includes comprehensive monitoring with Prometheus and Grafana to track request time, request latency and error rate.
+
+### Docker Compose Monitoring
+
+When running the application with Docker Compose, monitoring services are automatically started:
+
+1. **Prometheus** - Available at `http://localhost:9090`
+   - Collects metrics from all microservices (the microservices can be seen under status -> targets)
+   - Provides a web interface to view metrics and create queries (under graph queries like `sum(http_server_requests_seconds_count{job="api-gateway"})` can be executed)
+   - Stores time-series data for historical analysis
+
+2. **Grafana** - Available at `http://localhost:3001`
+   - Credentials: username is `admin` / password - contact us via Artemis
+   - Pre-configured dashboards (request count, request rate, request latency, max request latency and error rate) for all microservices:
+     - API Gateway metrics 
+     - Journal Microservice metrics
+     - User Microservice metrics
+     - GenAI Service metrics
+
+### Kubernetes Monitoring
+
+1. **Access Grafana Dashboard**:
+   Access to grafana can be found in our rancher project: 
+   `https://zenai-team.student.k8s.aet.cit.tum.de/grafana`
+   Credentials: username is `admin` / password - contact us via Artemis 
+
+2. **Access Prometheus**:
+   ```sh
+   kubectl port-forward -n zenai-team deploy/prometheus 9090:9090
+   ```
+   If the port is already allocated, try another one:
+   ```sh
+   kubectl port-forward -n zenai-team deploy/prometheus 9091:9090
+   ```
+   Then visit `http://localhost:9090` in your browser.
+   The available targets can be found under status -> targets
+   Under Graph queries like `sum(http_server_requests_seconds_count{job="api-gateway"})` can be executed.
+
+
+3. **View Application Logs**:
+   ```sh 
+   # View logs from specific service
+   kubectl logs -l app=zenai-api-gateway-selector -n zenai-team
+   kubectl logs -l app=zenai-journal-selector -n zenai-team
+   kubectl logs -l app=zenai-user-selector -n zenai-team
+   kubectl logs -l app=zenai-genai-selector -n zenai-team
+   ```
+
+### Custom Dashboards
+
+Grafana comes pre-configured with custom dashboards located in:
+- `grafana/provisioning/dashboards/` (Docker setup)
+- `helm/files/grafana/dashboards/` (Kubernetes setup)
+
+You can import additional dashboards or modify existing ones through the Grafana web interface (Dashboards -> new Dashboard).
+
+### Alerting
+
+Prometheus is configured with alert rules for:
+- Service unavailability
+Alert rules can be seen in Prometheus web interface under Status -> Rules or under Alerts(firing means the service was down for at least 1 min)
+
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
