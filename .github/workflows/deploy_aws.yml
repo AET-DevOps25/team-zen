@@ -16,7 +16,7 @@ on:
   workflow_dispatch:
     inputs:
       force_deploy:
-        description: 'Force deployment even if infrastructure check fails'
+        description: "Force deployment even if infrastructure check fails"
         required: false
         default: false
         type: boolean
@@ -29,8 +29,10 @@ jobs:
     name: Deploy to EC2
     runs-on: ubuntu-latest
     env:
+      tf_actions_working_dir: ./terraform
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
       AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
 
     steps:
@@ -42,6 +44,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ vars.AWS_DEFAULT_REGION }}
 
       - name: Setup Terraform (for outputs)
@@ -87,13 +90,13 @@ jobs:
             exit 1
           fi
           echo "ip=$PUBLIC_IP" >> $GITHUB_OUTPUT
-          
+
           # Get instance ID for health check
           INSTANCE_ID=$(terraform output -raw ec2_instance_id 2>/dev/null || echo "")
           if [ -n "$INSTANCE_ID" ]; then
             echo "instance_id=$INSTANCE_ID" >> $GITHUB_OUTPUT
           fi
-          
+
           echo "EC2 Public IP: $PUBLIC_IP"
 
       - name: Verify EC2 Instance is Running
@@ -103,7 +106,7 @@ jobs:
             --instance-ids ${{ steps.ec2_info.outputs.instance_id }} \
             --query 'Reservations[0].Instances[0].State.Name' \
             --output text)
-          
+
           if [ "$INSTANCE_STATE" != "running" ]; then
             echo "❌ EC2 instance is not running. Current state: $INSTANCE_STATE"
             exit 1
@@ -127,7 +130,7 @@ jobs:
           cat > ansible/inventory.ini << EOF
           [docker_server]
           ${{ steps.ec2_info.outputs.ip }}
-          
+
           [docker_server:vars]
           ansible_user=ubuntu
           ansible_ssh_private_key_file=~/.ssh/private_key.pem
@@ -166,7 +169,7 @@ jobs:
         run: |
           # Wait a moment for services to start
           sleep 10
-          
+
           # Check if the application is responding
           if curl -f -s --max-time 30 http://${{ steps.ec2_info.outputs.ip }}:80 > /dev/null 2>&1; then
             echo "✅ Application is responding on port 80"
