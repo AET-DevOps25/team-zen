@@ -1,7 +1,8 @@
-package com.example.api_gateway.controller;
+package com.example.journal_microservice.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,8 +17,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Health check controller for the API Gateway
- * This endpoint is publicly accessible and does not require authentication
+ * Health check controller for the Journal Microservice
+ * Provides health status including database and external service connectivity
  */
 @RestController
 @RequestMapping("/health")
@@ -26,40 +27,50 @@ public class HealthController {
     private static final Logger logger = LoggerFactory.getLogger(HealthController.class);
 
     @Autowired
+    private MongoTemplate mongoTemplate;
+
+    @Autowired
     private RestTemplate restTemplate;
 
-    @Value("${spring.application.name:api-gateway}")
+    @Value("${spring.application.name:journal-microservice}")
     private String applicationName;
 
-    @Value("${server.port:8085}")
+    @Value("${server.port:8081}")
     private String serverPort;
 
-    // Service URLs - using existing application.properties variables
-    @Value("${user-service-url:http://localhost:8080}")
-    private String userServiceBaseUrl;
+    @Value("${spring.data.mongodb.database:journaldb}")
+    private String databaseName;
 
-    @Value("${journal-service-url:http://localhost:8081}")
-    private String journalServiceBaseUrl;
+    @Value("${user.service.base-url:http://user-microservice:8080}")
+    private String userServiceUrl;
 
-    @Value("${genai-service-url:http://localhost:8082}")
-    private String genaiServiceBaseUrl;
-
-    // Configuration flags - simplified for application.properties setup
-    @Value("${server.port:8085}")
-    private String configuredPort;
-
-    @Value("${clerk.secret-key:}")
-    private String clerkSecretKey;
+    @Value("${llm.service.url:http://genai-microservice:8082}")
+    private String llmServiceUrl;
 
     /**
-     * Check if a service is healthy by making a health check request
-     * @param serviceUrl The health endpoint URL of the service
-     * @return "UP" if service is healthy, "DOWN" if not
+     * Check database connectivity
+     * @return "UP" if database is accessible, "DOWN" if not
+     */
+    private String checkDatabaseHealth() {
+        try {
+            mongoTemplate.getCollection("journalEntries").estimatedDocumentCount();
+            logger.debug("Database connection is healthy");
+            return "UP";
+        } catch (Exception e) {
+            logger.error("Database connection failed: {}", e.getMessage());
+            return "DOWN";
+        }
+    }
+
+    /**
+     * Check external service connectivity
+     * @param serviceUrl The service URL to check
+     * @return "UP" if service is accessible, "DOWN" if not
      */
     private String checkServiceHealth(String serviceUrl) {
         try {
             logger.debug("Checking health for service: {}", serviceUrl);
-            ResponseEntity<String> response = restTemplate.getForEntity(serviceUrl, String.class);
+            ResponseEntity<String> response = restTemplate.getForEntity(serviceUrl + "/health", String.class);
             if (response.getStatusCode().is2xxSuccessful()) {
                 logger.debug("Service {} is UP", serviceUrl);
                 return "UP";
@@ -68,26 +79,12 @@ public class HealthController {
                 return "DOWN";
             }
         } catch (ResourceAccessException e) {
-            // Service is not reachable
             logger.warn("Service {} is not reachable: {}", serviceUrl, e.getMessage());
             return "DOWN";
         } catch (Exception e) {
-            // Any other error
             logger.error("Error checking health for service {}: {}", serviceUrl, e.getMessage());
             return "ERROR";
         }
-    }
-
-    /**
-     * Get overall system status based on critical services
-     * @param dependencies Map of service statuses
-     * @return "UP" if all critical services are up, "DOWN" otherwise
-     */
-    private String getOverallStatus(Map<String, String> dependencies) {
-        // Check if any critical service is down
-        boolean allUp = dependencies.values().stream()
-                .allMatch(status -> "UP".equals(status) || "configured".equals(status));
-        return allUp ? "UP" : "DEGRADED";
     }
 
     /**
@@ -96,10 +93,8 @@ public class HealthController {
      */
     @GetMapping
     public ResponseEntity<Map<String, Object>> health() {
-        // For basic health, we just check if the service itself is running
-        // But we could also do a quick check of critical dependencies
         Map<String, Object> healthInfo = new HashMap<>();
-        healthInfo.put("status", "UP"); // Gateway itself is up if responding
+        healthInfo.put("status", "UP");
         healthInfo.put("service", applicationName);
         healthInfo.put("port", serverPort);
         healthInfo.put("timestamp", LocalDateTime.now().toString());
@@ -109,19 +104,18 @@ public class HealthController {
     }
 
     /**
-     * Detailed health check with service dependencies
+     * Detailed health check with dependencies
      * @return Detailed health status
      */
     @GetMapping("/detailed")
     public ResponseEntity<Map<String, Object>> detailedHealth() {
-        // Check service dependencies dynamically by constructing health URLs
-        Map<String, String> dependencies = new HashMap<>();
-        dependencies.put("user-service", checkServiceHealth(userServiceBaseUrl + "/health"));
-        dependencies.put("journal-service", checkServiceHealth(journalServiceBaseUrl + "/health"));
-        dependencies.put("genai-service", checkServiceHealth(genaiServiceBaseUrl + "/health"));
-
-        // Get overall status based on dependencies
-        String overallStatus = getOverallStatus(dependencies);
+        String dbStatus = checkDatabaseHealth();
+        String userServiceStatus = checkServiceHealth(userServiceUrl);
+        String llmServiceStatus = checkServiceHealth(llmServiceUrl);
+        
+        // Determine overall status
+        boolean allHealthy = "UP".equals(dbStatus) && "UP".equals(userServiceStatus) && "UP".equals(llmServiceStatus);
+        String overallStatus = allHealthy ? "UP" : "DEGRADED";
 
         Map<String, Object> healthInfo = new HashMap<>();
         healthInfo.put("status", overallStatus);
@@ -129,13 +123,22 @@ public class HealthController {
         healthInfo.put("port", serverPort);
         healthInfo.put("timestamp", LocalDateTime.now().toString());
         healthInfo.put("version", "1.0.0");
+        
+        // Dependencies status
+        Map<String, String> dependencies = new HashMap<>();
+        dependencies.put("mongodb", dbStatus);
+        dependencies.put("user-service", userServiceStatus);
+        dependencies.put("genai-service", llmServiceStatus);
+        dependencies.put("database-name", databaseName);
         healthInfo.put("dependencies", dependencies);
         
-        // Add dynamic configuration status based on existing application.properties
-        Map<String, Object> config = new HashMap<>();
-        config.put("authentication", clerkSecretKey != null && !clerkSecretKey.isEmpty() && !clerkSecretKey.contains("dummy") ? "enabled" : "disabled");
-        config.put("microservices", "configured"); // Since service URLs are configured
-        config.put("port-binding", configuredPort.equals(serverPort) ? "enabled" : "custom");
+        // Configuration status
+        Map<String, String> config = new HashMap<>();
+        config.put("mongodb-connection", dbStatus.equals("UP") ? "enabled" : "disabled");
+        config.put("user-service-integration", userServiceStatus.equals("UP") ? "enabled" : "disabled");
+        config.put("genai-service-integration", llmServiceStatus.equals("UP") ? "enabled" : "disabled");
+        config.put("management-endpoints", "enabled");
+        config.put("prometheus-metrics", "enabled");
         healthInfo.put("configuration", config);
         
         return ResponseEntity.ok(healthInfo);

@@ -159,13 +159,6 @@ const CreateSnippet = () => {
                   >
                     <Mic className="w-4 h-4" />
                   </motion.button>
-                  {/* <motion.button
-                    className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Camera className="w-4 h-4" />
-                  </motion.button> */}
                 </div>
               </div>
               <textarea

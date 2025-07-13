@@ -47,11 +47,6 @@ public class ClerkWebhookController {
     }
   }
 
-  @GetMapping()
-  public ResponseEntity<String> getMethodName() {
-    return ResponseEntity.ok("get working");
-  }
-
   @GetMapping("/health")
   public ResponseEntity<String> healthCheck() {
     try {

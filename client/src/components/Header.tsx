@@ -3,67 +3,13 @@ import {
   SignedIn,
   SignedOut,
   UserButton,
-  useAuth,
-  useUser,
 } from '@clerk/clerk-react';
 import { Link } from '@tanstack/react-router';
-import { NotebookPenIcon, TreeDeciduousIcon } from 'lucide-react';
+import { Activity, NotebookPenIcon, TreeDeciduousIcon } from 'lucide-react';
 import { Button } from './ui/button';
+import ApiDemo from './ApiDemo';
 
 export default function Header() {
-  const { getToken } = useAuth();
-  const { user } = useUser();
-
-  // TODO: to be removed, this is just for testing the API
-  const getUsers = async () => {
-    try {
-      const token = await getToken();
-      console.log('Token:', token);
-      const response = await fetch('http://localhost:8085/api/users', {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/json',
-        },
-      });
-
-      if (response.status == 401) {
-        alert('Authentication failed. Please sign in.');
-        return;
-      } else if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      console.log('User ID: ', user?.id);
-      const data = await response.json();
-      if (data) {
-        console.log('Users:', data);
-      } else {
-        console.log('No users data returned.');
-      }
-
-      const journalsResponse = await fetch(
-        `http://localhost:8085/api/journalEntry/${user?.id}`,
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/json',
-          },
-        },
-      );
-
-      if (!journalsResponse.ok) {
-        throw new Error('Failed to fetch journals');
-      }
-
-      const journalsData = await journalsResponse.json();
-      console.log('User Journals:', journalsData);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-    }
-  };
-
   return (
     <header className="container mx-auto py-4 flex bg-white text-black justify-between">
       <nav className="flex flex-row">
@@ -78,9 +24,7 @@ export default function Header() {
         </div>
       </nav>
       <div className="flex items-center gap-4">
-        <Button variant="outline" onClick={getUsers}>
-          Test API
-        </Button>
+        <ApiDemo />
         <SignedOut>
           <Button asChild>
             <SignInButton />

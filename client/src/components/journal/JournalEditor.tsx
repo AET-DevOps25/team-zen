@@ -111,7 +111,7 @@ export const JournalEditor = ({
                   <div className="flex items-center space-x-2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
                     <Brain className="w-5 h-5 text-purple-600 animate-pulse" />
                     <span className="text-sm font-medium text-gray-700">
-                      ZenAI is summarizing...
+                      ZenAI is thinking...
                     </span>
                   </div>
                 </div>
