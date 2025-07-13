@@ -130,6 +130,9 @@ export const MOOD_BORDER_COLORS: Record<MoodValue, string> = {
  * Helper function to get mood emoji by value
  */
 export const getMoodEmoji = (mood: MoodValue | number): string => {
+  if (isNaN(mood) || mood < 1 || mood > 5) {
+    return '😐'; // Default to neutral emoji for invalid mood values
+  }
   const moodValue = Math.round(Math.max(1, Math.min(5, mood))) as MoodValue;
   return MOOD_EMOJIS[moodValue];
 };

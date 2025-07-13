@@ -1,6 +1,6 @@
 import { useNavigate } from '@tanstack/react-router';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Clock, Mic, Save } from 'lucide-react';
+import { ArrowLeft, Clock, Save } from 'lucide-react';
 import { useState } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { toast } from 'sonner';
@@ -15,7 +15,6 @@ const CreateSnippet = () => {
   const [content, setContent] = useState<string>('');
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [tags, setTags] = useState<Array<string>>([]);
-  const [isRecording, setIsRecording] = useState<boolean>(false);
   const navigate = useNavigate();
 
   const { mutateAsync: createSnippet } = useCreateSnippet();
@@ -146,27 +145,6 @@ const CreateSnippet = () => {
                 <label className="text-lg font-semibold text-gray-800">
                   What's on your mind?
                 </label>
-                <div className="flex space-x-2">
-                  <motion.button
-                    onClick={() => setIsRecording(!isRecording)}
-                    className={`p-2 rounded-lg transition-colors ${
-                      isRecording
-                        ? 'bg-red-100 text-red-600'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Mic className="w-4 h-4" />
-                  </motion.button>
-                  {/* <motion.button
-                    className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Camera className="w-4 h-4" />
-                  </motion.button> */}
-                </div>
               </div>
               <textarea
                 value={content}
@@ -180,12 +158,6 @@ const CreateSnippet = () => {
                 <span className="text-sm text-gray-500">
                   {content.length} characters
                 </span>
-                {isRecording && (
-                  <div className="flex items-center text-red-600 text-sm">
-                    <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse mr-2"></div>
-                    Recording...
-                  </div>
-                )}
               </div>
             </div>
 

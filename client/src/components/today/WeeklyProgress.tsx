@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { BarChart3 } from 'lucide-react';
-import type { UserStatistics } from '@/api/journal';
+import type { UserStatistics } from '@/model/user';
 
 interface WeeklyProgressProps {
   userStats?: UserStatistics;

@@ -1,6 +1,6 @@
 import { BookOpen, Flame, MessageSquare, TrendingUp } from 'lucide-react';
 import StatCard from './StatCard';
-import type { UserStatistics } from '@/api/journal';
+import type { UserStatistics } from '@/model/user';
 
 interface OverallStatsProps {
   userStatistics: UserStatistics;

@@ -162,7 +162,7 @@ class JournalEntryServiceSimpleTest {
     void shouldGetUserStatistics() {
         // Given
         List<JournalEntry> entries = TestDataFactory.createMultipleJournalEntries(userId, 3);
-        entries.forEach(entry -> entry.setDailyMood(8.0));
+        entries.forEach(entry -> entry.setDailyMood(3.0));
         when(journalEntryRepository.findByUserId(userId)).thenReturn(entries);
         when(snippetRepository.findByUserId(userId)).thenReturn(new ArrayList<>());
 

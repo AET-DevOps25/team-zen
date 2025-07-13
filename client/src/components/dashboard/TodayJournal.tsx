@@ -1,16 +1,13 @@
 import { useNavigate } from '@tanstack/react-router';
 import { motion } from 'framer-motion';
-import {
-  AIInsights,
-  JournalActions,
-  MoodTracker,
-  QuickStats,
-  SnippetsList,
-  WeeklyProgress,
-} from '../today';
-import { useGetSnippets } from '@/api/snippet.ts';
-import { useGetUserStatistics } from '@/api/journal';
+import { QuickStats } from '../journal/QuickStats';
+import { JournalActions } from '../today/JournalActions';
+import { MoodTracker } from '../today/MoodTracker';
+import { SnippetsList } from '../today/SnippetsList';
+import { WeeklyProgress } from '../today/WeeklyProgress';
 import { useJournalState } from '@/hooks';
+import { useGetUserStatistics } from '@/api/journal';
+import { useGetSnippets } from '@/api/snippet.ts';
 
 const TodayJournal = () => {
   const { snippets, isLoading } = useGetSnippets({
@@ -62,9 +59,10 @@ const TodayJournal = () => {
           <QuickStats
             snippets={snippets}
             isLoading={isLoading}
-            averageMood={averageMood}
+            averageMood={averageMood as string}
             currentStreak={userStats?.currentStreak ?? 0}
             statsLoading={statsLoading}
+            journalContent={journalContent}
           />
 
           <SnippetsList
@@ -79,7 +77,6 @@ const TodayJournal = () => {
       {/* Sidebar */}
       <div className="space-y-6">
         <MoodTracker snippets={snippets} todaysMood={todaysMood} />
-        <AIInsights />
         <WeeklyProgress userStats={userStats} statsLoading={statsLoading} />
       </div>
     </div>

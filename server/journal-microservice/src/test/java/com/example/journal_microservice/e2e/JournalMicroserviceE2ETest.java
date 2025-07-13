@@ -105,7 +105,7 @@ class JournalMicroserviceE2ETest {
     JournalEntry updateData = new JournalEntry();
     updateData.setTitle("My Updated Entry");
     updateData.setSummary("Today was an amazing day!");
-    updateData.setDailyMood(9.5);
+    updateData.setDailyMood(4.5);
 
     mockMvc.perform(put("/api/journalEntry/{id}", entryId)
         .contentType(MediaType.APPLICATION_JSON)
@@ -113,7 +113,7 @@ class JournalMicroserviceE2ETest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.data.title").value("My Updated Entry"))
         .andExpect(jsonPath("$.data.summary").value("Today was an amazing day!"))
-        .andExpect(jsonPath("$.data.dailyMood").value(9.5));
+        .andExpect(jsonPath("$.data.dailyMood").value(4.5));
 
     // Step 4: Verify the update persisted
     mockMvc.perform(get("/api/journalEntry/{userId}", userId)
@@ -141,7 +141,7 @@ class JournalMicroserviceE2ETest {
     for (int i = 1; i <= 3; i++) {
       JournalEntry entry = TestDataFactory.createJournalEntry(userId,
           "Entry " + i, "Summary for entry " + i);
-      entry.setDailyMood(7.0 + i);
+      entry.setDailyMood(2.0 + i);
 
       String response = mockMvc.perform(post("/api/journalEntry")
           .contentType(MediaType.APPLICATION_JSON)
@@ -180,7 +180,7 @@ class JournalMicroserviceE2ETest {
     mockMvc.perform(get("/api/journalEntry/{userId}/statistics", userId))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.totalJournals").value(3))
-        .andExpect(jsonPath("$.avgMood").value(9.0)); // (8+9+10)/3
+        .andExpect(jsonPath("$.avgMood").value(4.0));
 
     // Step 6: Delete entry with snippets
     mockMvc.perform(delete("/api/journalEntry/{id}", entryIds.get(0)))
@@ -201,15 +201,15 @@ class JournalMicroserviceE2ETest {
 
     JournalEntry entry1 = TestDataFactory.createJournalEntry(userId, "Monday Entry", "Monday summary");
     entry1.setDate(java.sql.Date.valueOf(date1));
-    entry1.setDailyMood(7.0);
+    entry1.setDailyMood(1.0);
 
     JournalEntry entry2 = TestDataFactory.createJournalEntry(userId, "Tuesday Entry", "Tuesday summary");
     entry2.setDate(java.sql.Date.valueOf(date2));
-    entry2.setDailyMood(8.5);
+    entry2.setDailyMood(2.0);
 
     JournalEntry entry3 = TestDataFactory.createJournalEntry(userId, "Another Monday", "Another Monday summary");
     entry3.setDate(java.sql.Date.valueOf(date1));
-    entry3.setDailyMood(6.5);
+    entry3.setDailyMood(3.0);
 
     // Create entries
     journalEntryRepository.save(entry1);
@@ -237,7 +237,7 @@ class JournalMicroserviceE2ETest {
     mockMvc.perform(get("/api/journalEntry/{userId}/statistics", userId))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.totalJournals").value(3))
-        .andExpect(jsonPath("$.avgMood").value(7.333333333333333)); // (7.0+8.5+6.5)/3
+        .andExpect(jsonPath("$.avgMood").value(2.0)); // (7.0+8.5+6.5)/3
   }
 
   @Test
@@ -282,7 +282,7 @@ class JournalMicroserviceE2ETest {
     for (int i = 0; i < 10; i++) {
       JournalEntry entry = TestDataFactory.createJournalEntry(userId,
           "Performance Test " + i, "Summary " + i);
-      entry.setDailyMood(5.0 + (i % 5));
+      entry.setDailyMood(0.0 + (i % 5));
 
       String response = mockMvc.perform(post("/api/journalEntry")
           .contentType(MediaType.APPLICATION_JSON)

@@ -6,7 +6,8 @@ COPY ./requirements.txt /code/requirements.txt
 
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
-# Copy only the application code, excluding tests and development files
+# Copy the application code and the entry point
 COPY ./app /code/app
+COPY ./run.py /code/run.py
 
-CMD ["fastapi", "run", "app/main.py", "--port", "8082"]
+CMD ["python", "run.py"]
