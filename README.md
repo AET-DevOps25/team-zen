@@ -306,14 +306,12 @@ Alert rules can be seen in Prometheus web interface under Status -> Rules or und
 <!-- API-SPECIFICATION -->
 ## API Specifications
 
-ZenAI's APIs for every single microservice (user, journal, genai and api-gateway) are documented using Swagger, and are accessible by:
+ZenAI's APIs for every single microservice (user, journal, genai and api-gateway) are documented using Swagger, and are accessible by visiting
 
-* Locally using Docker
-   
-   ```http://localhost:8085/swagger-ui.html```
-* Deployed
-   TODO!!!!!
+* Locally using Docker: ```http://localhost:8085/swagger-ui.html``` 
+* Deployed: ```https://zenai-team.student.k8s.aet.cit.tum.de/api/swagger-ui.html```
 
+in your browser and select the microservice for which you would like to see the API documentation in the dropdown list in the top-right corner.
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
@@ -324,7 +322,7 @@ ZenAI's APIs for every single microservice (user, journal, genai and api-gateway
 | ---------------- | ------------------------------------------------------------------------------------------ |
 | Natalia Milanova | Backend CRUD operations, AI summarization functionality, Kubernetes deployment, Monitoring |
 | Evan Christopher | Client implementation and testing, CI pipelines, AWS EC2 deployment, Overall code refactoring|
-| Zexin Gong       | API gateway and authentication, Service testing, Bug fixing, Documentation                 |
+| Zexin Gong       | API gateway and authentication, Backend service tests, Overall testing & Bug fixes, Documentation                 |
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
