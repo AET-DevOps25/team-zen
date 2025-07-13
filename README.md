@@ -53,6 +53,7 @@
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
+    <li><a href="#cicd-pipeline">CI/CD Pipeline</a></li>
     <li><a href="#monitoring">Monitoring</a></li>
     <li><a href="#api-specifications">API Specifications</a></li>
     <li><a href="#contributors">Contributors</a></li>
@@ -171,7 +172,67 @@ To get a local copy up and running follow these simple example steps.
 * In the "Overview" tab, you can see statistics of your journaling habit.
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+<!-- CI/CD -->
+## CI/CD Pipeline
 
+ZenAI uses GitHub Actions for continuous integration and deployment for automated testing, building, and deployment workflows.
+
+### Continuous Integration (CI)
+
+The main CI workflow validates code quality (linting) and runs tests across all services:
+
+1. **Client Testing** (`ci.yml`)
+   - Node.js setup and dependency installation
+   - ESLint code linting
+   - Build verification
+
+2. **Server Testing** (`ci.yml`)
+   - Java 21 setup with Gradle
+   - Unit tests for all microservices (API Gateway, Journal, User)
+   - Build verification
+
+3. **GenAI Service Testing** (`ci.yml`)
+   - Python 3.11 setup
+   - Ruff linting
+   - FastAPI health checks
+   - Comprehensive test suite with coverage reporting
+
+4. **Ansible Validation** (`ansible_lint.yml`)
+   - Ansible syntax validation
+   - Best practices enforcement
+
+5. **Terraform Validation** (`ci-terraform.yml`)
+   - Infrastructure code formatting and validation
+   - Terraform plan generation for pull requests
+   - Automated deployment on main branch
+
+### Continuous Deployment (CD)
+
+#### Docker Image Building (`build_docker.yml`)
+- Triggered after successful CI completion
+- Multi-architecture builds (linux/amd64, linux/arm64)
+- Pushes images to GitHub Container Registry (ghcr.io)
+- Services built: client, api-gateway, journal-microservice, user-microservice, genai
+
+#### Kubernetes Deployment (`deploy_kubernetes.yaml`)
+- Triggered after successful Docker image builds
+- Deploys to AET Kubernetes cluster using Helm
+- Updates all services with latest images
+- Namespace: `zenai-team`
+
+#### Infrastructure Provisioning (`infra.yml`)
+- Terraform-based EC2 instance provisioning on AWS
+- Ansible configuration management
+- Triggered on infrastructure code changes
+
+### Workflow Triggers
+
+- **Pull Requests**: Run CI tests and Terraform validation
+- **Main Branch Push**: Full CI/CD pipeline with automatic deployment
+- **Manual Dispatch**: Terraform operations (plan/apply/destroy)
+- **Path-based Triggers**: Only affected services are rebuilt and tested
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- MONITORING -->
 ## Monitoring
