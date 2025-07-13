@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-import os
 from prometheus_fastapi_instrumentator import Instrumentator
 
 # Import routers using absolute imports
