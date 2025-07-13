@@ -5,9 +5,9 @@ import {
   UserButton,
 } from '@clerk/clerk-react';
 import { Link } from '@tanstack/react-router';
-import { Activity, NotebookPenIcon, TreeDeciduousIcon } from 'lucide-react';
-import { Button } from './ui/button';
+import { NotebookPenIcon, TreeDeciduousIcon } from 'lucide-react';
 import ApiDemo from './ApiDemo';
+import { Button } from './ui/button';
 
 export default function Header() {
   return (
