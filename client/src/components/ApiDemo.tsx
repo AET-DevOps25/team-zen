@@ -35,17 +35,17 @@ import {
 } from '@/hooks/useApiGatewayHealth';
 
 interface ApiDemoProps {
+  children?: React.ReactNode;
   open?: boolean;
 }
 
-export const ApiDemo = ({ open = false }: ApiDemoProps) => {
+export const ApiDemo = ({ children, open = false }: ApiDemoProps) => {
   const [isOpen, setIsOpen] = useState(open);
   const [showDetailed, setShowDetailed] = useState(false);
 
-  // Use both basic and detailed health checks
-  const basicHealth = useApiGatewayHealth(false);
-  const detailedHealth = useApiGatewayHealth(true);
-  const status = useApiGatewayStatus();
+  const basicHealth = useApiGatewayHealth(false, isOpen);
+  const detailedHealth = useApiGatewayHealth(true, isOpen);
+  const status = useApiGatewayStatus(isOpen);
 
   // Choose which health data to display
   const currentHealth = showDetailed ? detailedHealth : basicHealth;
@@ -75,13 +75,15 @@ export const ApiDemo = ({ open = false }: ApiDemoProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white"
-        >
-          <Activity className="size-4 mr-2" />
-          API Health Monitor
-        </Button>
+        {children || (
+          <Button
+            variant="outline"
+            className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white"
+          >
+            <Activity className="size-4 mr-2" />
+            API Health Monitor
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="min-w-4xl max-w-5xl max-h-[90vh] overflow-auto">
         <DialogHeader>

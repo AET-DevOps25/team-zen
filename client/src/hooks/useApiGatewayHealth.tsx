@@ -26,9 +26,13 @@ export interface DetailedHealthStatus extends HealthStatus {
 /**
  * Hook to get health status from API Gateway
  * @param detailed - If true, fetches detailed health info including dependencies and configuration
+ * @param enabled - If false, disables the query (useful for conditional fetching)
  * @returns Health status information with loading states and helper booleans
  */
-export const useApiGatewayHealth = (detailed: boolean = false) => {
+export const useApiGatewayHealth = (
+  detailed: boolean = false,
+  enabled: boolean = true,
+) => {
   const fetchHealth = async (): Promise<
     HealthStatus | DetailedHealthStatus
   > => {
@@ -53,6 +57,7 @@ export const useApiGatewayHealth = (detailed: boolean = false) => {
   const { data, isLoading, error, isError, refetch } = useQuery({
     queryKey: ['api-gateway-health', detailed],
     queryFn: fetchHealth,
+    enabled, // Only fetch when enabled
     refetchInterval: detailed ? 60000 : 30000, // 60s for detailed, 30s for basic
     staleTime: detailed ? 30000 : 20000, // 30s for detailed, 20s for basic
     retry: detailed ? 2 : 3, // Fewer retries for detailed
@@ -78,8 +83,9 @@ export const useApiGatewayHealth = (detailed: boolean = false) => {
  * Hook to get simple status from API Gateway
  * Corresponds to GET /health/status endpoint
  * Returns simple "OK" string - useful for quick health checks
+ * @param enabled - If false, disables the query (useful for conditional fetching)
  */
-export const useApiGatewayStatus = () => {
+export const useApiGatewayStatus = (enabled: boolean = true) => {
   const fetchStatus = async (): Promise<string> => {
     const response = await fetch(`${env.VITE_API_URL}/health/status`, {
       method: 'GET',
@@ -95,6 +101,7 @@ export const useApiGatewayStatus = () => {
   const { data, isLoading, error, isError, refetch } = useQuery({
     queryKey: ['api-gateway-status'],
     queryFn: fetchStatus,
+    enabled, // Only fetch when enabled
     refetchInterval: 15000, // Refetch every 15 seconds (frequent for quick checks)
     staleTime: 10000, // Consider data stale after 10 seconds
     retry: 5, // More retries for simple status check
