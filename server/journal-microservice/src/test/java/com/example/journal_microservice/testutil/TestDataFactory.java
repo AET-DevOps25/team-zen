@@ -22,7 +22,7 @@ public class TestDataFactory {
         entry.setTitle(title);
         entry.setSummary(summary);
         entry.setDate(new Date());
-        entry.setDailyMood(7.5);
+        entry.setDailyMood(3.5);
         entry.setSnippetIds(new ArrayList<>());
         entry.setUpdatedAt(new Date());
         
@@ -53,7 +53,7 @@ public class TestDataFactory {
         snippet.setContent(content);
         snippet.setJournalEntryId(journalEntryId);
         snippet.setTimestamp(new Date());
-        snippet.setMood(7.0);
+        snippet.setMood(3.0);
         snippet.setTags(List.of("test", "sample"));
         snippet.setUpdatedAt(new Date());
         return snippet;

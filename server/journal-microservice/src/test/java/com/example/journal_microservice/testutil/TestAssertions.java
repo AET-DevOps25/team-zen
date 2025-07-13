@@ -81,8 +81,8 @@ public class TestAssertions {
 
     public static void assertMoodInValidRange(Double mood) {
         if (mood != null) {
-            Assertions.assertTrue(mood >= 0.0 && mood <= 10.0, 
-                "Mood should be between 0.0 and 10.0, but was: " + mood);
+            Assertions.assertTrue(mood >= 0.0 && mood <= 5.0, 
+                "Mood should be between 0.0 and 5.0, but was: " + mood);
         }
     }
 }

@@ -145,7 +145,7 @@ const Hero = () => {
                       duration: 2,
                     }}
                   ></motion.div>
-                  <p className="text-sm font-medium">Mood improved by 37%</p>
+                  <p className="text-sm font-medium">AI-powered journalling</p>
                 </div>
               </motion.div>
               <motion.div

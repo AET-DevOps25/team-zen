@@ -1,32 +1,69 @@
-import { motion } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
+import { Heart, Lightbulb, Target, TrendingUp } from 'lucide-react';
+import { InsightCard } from '../journal/InsightCard';
+import type { LucideIcon } from 'lucide-react';
+import type { JournalEntry } from '@/model/journal';
 
-export const AIInsights = () => {
+interface AiInsight {
+  type: string;
+  icon: LucideIcon;
+  title: string;
+  content: string;
+  color: string;
+}
+
+interface AiInsightsProps {
+  journal?: JournalEntry;
+}
+
+export const AiInsights = ({ journal }: AiInsightsProps) => {
+  const insights: Array<AiInsight> = [
+    {
+      type: 'pattern',
+      icon: TrendingUp,
+      title: 'Mood Pattern',
+      content:
+        journal?.insights?.moodPattern ||
+        'No mood pattern analysis available yet.',
+      color: 'text-green-600 bg-green-50',
+    },
+    {
+      type: 'suggestion',
+      icon: Lightbulb,
+      title: 'Suggestion',
+      content: journal?.insights?.suggestion || 'No suggestions available yet.',
+      color: 'text-yellow-600 bg-yellow-50',
+    },
+    {
+      type: 'achievement',
+      icon: Target,
+      title: 'Achievement',
+      content:
+        journal?.insights?.achievement || 'No achievements identified yet.',
+      color: 'text-cyan-600 bg-cyan-50',
+    },
+    {
+      type: 'wellness',
+      icon: Heart,
+      title: 'Wellness Tip',
+      content:
+        journal?.insights?.wellnessTip || 'No wellness tips available yet.',
+      color: 'text-purple-600 bg-purple-50',
+    },
+  ];
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3 }}
-      className="bg-gradient-to-br from-teal-500 to-blue-600 rounded-2xl p-6 text-white"
-    >
-      <h3 className="font-semibold mb-4 flex items-center">
-        <Sparkles className="w-5 h-5 mr-2" />
-        AI Insights
-      </h3>
-      <div className="space-y-3">
-        <div className="bg-white/20 rounded-lg p-3">
-          <p className="text-sm">
-            Your mood tends to improve after physical activities. Consider a
-            short walk!
-          </p>
-        </div>
-        <div className="bg-white/20 rounded-lg p-3">
-          <p className="text-sm">
-            Morning entries show 40% higher positivity. Great start to your
-            days!
-          </p>
-        </div>
-      </div>
-    </motion.div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {insights.map((insight, index) => (
+        <InsightCard
+          key={insight.type}
+          type={insight.type}
+          icon={insight.icon}
+          title={insight.title}
+          content={insight.content}
+          color={insight.color}
+          index={index}
+        />
+      ))}
+    </div>
   );
 };

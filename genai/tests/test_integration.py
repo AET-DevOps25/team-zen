@@ -1,15 +1,10 @@
-import pytest
-import asyncio
 import os
 import sys
-from unittest.mock import patch, MagicMock
-import requests
-import responses
 
 # Add the app directory to the path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'app'))
 
-from app.main import OpenWebUILLM, app, summary_chain
+from app.main import OpenWebUILLM, app
 from fastapi.testclient import TestClient
 
 
