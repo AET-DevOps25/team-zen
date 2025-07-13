@@ -259,11 +259,11 @@ ZenAI's APIs for every single micro service (user, journal, genai and api-gatewa
 <!-- Contributors -->
 ## Contributors
 
-| Contributor  | Responsibilities |
-| --- | --- |
-| Natalia Milanova  | Backend CRUD operations, Kubernetes deployment, Monitoring  |
-| Evan Christopher  | Frontend, EC2 deployment, Client testing  |
-| Zexin Gong  | API gateway and authentication, Service testing, Documentation  |
+| Contributor  | Responsibilities                                                                           |
+| --- |--------------------------------------------------------------------------------------------|
+| Natalia Milanova  | Backend CRUD operations, AI summarization functionality, Kubernetes deployment, Monitoring |
+| Evan Christopher  | Frontend, Code refactoring, EC2 deployment, Client testing                                 |
+| Zexin Gong  | API gateway and authentication, Service testing, Bug fixing, Documentation                 |
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
