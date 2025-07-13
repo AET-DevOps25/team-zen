@@ -1,5 +1,5 @@
 import { useAuth, useUser } from '@clerk/clerk-react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { JournalEntry } from '@/model/journal';
 import type { UserStatistics } from '@/model/user';
 import type { ApiResponse } from './base';
@@ -111,6 +111,8 @@ export const useGetAllJournals = () => {
 
 export const useUpdateJournal = () => {
   const { getToken } = useAuth();
+  const { user } = useUser();
+  const queryClient = useQueryClient();
 
   const updateJournal = async (updatedJournal: JournalEntry) => {
     const token = await getToken();
@@ -137,6 +139,36 @@ export const useUpdateJournal = () => {
     mutationKey: ['updateJournal'],
     mutationFn: updateJournal,
     retry: 1,
+    onSuccess: (_data, variables) => {
+      // Invalidate and refetch journal queries
+      queryClient.invalidateQueries({
+        queryKey: ['journal', user?.id],
+      });
+
+      // Invalidate all journals list
+      queryClient.invalidateQueries({
+        queryKey: ['allJournals', user?.id],
+      });
+
+      // Invalidate user statistics as they might have changed
+      queryClient.invalidateQueries({
+        queryKey: ['userStatistics', user?.id],
+      });
+
+      // Invalidate specific journal entry cache if date is available
+      if (variables.date) {
+        queryClient.invalidateQueries({
+          queryKey: ['journal', user?.id, variables.date],
+        });
+      }
+
+      // Invalidate any summary data for this journal
+      if (variables.id) {
+        queryClient.invalidateQueries({
+          queryKey: ['summary', variables.id],
+        });
+      }
+    },
   });
 };
 
