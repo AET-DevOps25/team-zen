@@ -45,31 +45,30 @@ public class GatewayConfig {
                                                 .path("/api/genai/**")
                                                 .filters(f -> f.filter(clerkAuthenticationFilter))
                                                 .uri(genaiServiceUri))
-                                
-                                // TODO: Uncomment and configure if you want a docs entry point
-                                // .route("docs-entry-point", r -> r
-                                //                 .path("/api/docs/**")
-                                //                 .filters(f -> f.rewritePath("/api/docs/?(.*)", "/swagger-ui.html"))
-                                //                 .uri(""))
+
+                                .route("gateway-api-docs", r -> r
+                                                .path("/api/v3/api-docs/**")
+                                                .filters(f -> f.redirect(302, "/v3/api-docs"))
+                                                .uri("no://op"))
 
                                 // User Service (api docs)
                                 .route("user-service-docs", r -> r
                                                 .path("/api/user-service/swagger-ui/**",
                                                                 "/api/user-service/v3/api-docs/**")
-                                                .filters(f -> f.rewritePath("/api/user-service/?(.*)", "/api/$1"))
+                                                .filters(f -> f.rewritePath("/api/user-service/?(.*)", "/$1"))
                                                 .uri(userServiceUri))
 
                                 // Journal Service (api docs)
                                 .route("journal-service-docs", r -> r
                                                 .path("/api/journal-service/swagger-ui/**",
                                                                 "/api/journal-service/v3/api-docs/**")
-                                                .filters(f -> f.rewritePath("/journal-service/(.*)", "/api/$1"))
+                                                .filters(f -> f.rewritePath("/api/journal-service/(.*)", "/$1"))
                                                 .uri(journalServiceUri))
 
                                 // GenAI Service (api docs)
                                 .route("genai-service-docs", r -> r
                                                 .path("/api/genai-service/docs/**", "/api/genai-service/openapi.json")
-                                                .filters(f -> f.rewritePath("/genai-service/?(.*)", "/api/$1"))
+                                                .filters(f -> f.rewritePath("/api/genai-service/?(.*)", "/$1"))
                                                 .uri(genaiServiceUri))
 
                                 .build();
