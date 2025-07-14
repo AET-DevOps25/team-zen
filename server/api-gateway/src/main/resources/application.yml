@@ -25,11 +25,11 @@ server:
 # Service URLs for health checks
 services:
   user-service:
-    url: http://localhost:8081/health
+    url: http://localhost:8081/api/health
   journal-service:
-    url: http://localhost:8082/health
+    url: http://localhost:8082/api/health
   genai-service:
-    url: http://localhost:8083/health
+    url: http://localhost:8083/api/health
 
 # Circuit Breaker Configuration
 resilience4j:

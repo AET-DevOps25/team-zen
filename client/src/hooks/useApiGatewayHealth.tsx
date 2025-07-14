@@ -37,7 +37,7 @@ export const useApiGatewayHealth = (
     HealthStatus | DetailedHealthStatus
   > => {
     const endpoint = detailed ? '/health/detailed' : '/health';
-    const response = await fetch(`${env.VITE_API_URL}${endpoint}`, {
+    const response = await fetch(`${env.VITE_API_URL}/api${endpoint}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -87,7 +87,7 @@ export const useApiGatewayHealth = (
  */
 export const useApiGatewayStatus = (enabled: boolean = true) => {
   const fetchStatus = async (): Promise<string> => {
-    const response = await fetch(`${env.VITE_API_URL}/health/status`, {
+    const response = await fetch(`${env.VITE_API_URL}/api/health/status`, {
       method: 'GET',
     });
 
