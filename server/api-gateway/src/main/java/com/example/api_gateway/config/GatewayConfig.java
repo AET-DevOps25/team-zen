@@ -46,6 +46,24 @@ public class GatewayConfig {
                         .filters(f -> f.filter(clerkAuthenticationFilter))
                         .uri(genaiServiceUri))
 
+                // User Service (api docs)
+                .route("user-service-docs", r -> r
+                        .path("/user-service/swagger-ui/**", "/user-service/v3/api-docs/**")
+                        .filters(f -> f.rewritePath("/user-service/?(.*)", "/$1"))
+                        .uri(userServiceUri))
+
+                // Journal Service (api docs)
+                .route("journal-service-docs", r -> r
+                        .path("/journal-service/swagger-ui/**", "/journal-service/v3/api-docs/**")
+                        .filters(f -> f.rewritePath("/journal-service/(.*)", "/$1"))
+                        .uri(journalServiceUri))
+
+                // GenAI Service (api docs)
+                .route("genai-service-docs", r -> r
+                        .path("/genai-service/docs/**", "/genai-service/openapi.json")
+                        .filters(f -> f.rewritePath("/genai-service/?(.*)", "/$1"))
+                        .uri(genaiServiceUri))
+
                 .build();
     }
 }
