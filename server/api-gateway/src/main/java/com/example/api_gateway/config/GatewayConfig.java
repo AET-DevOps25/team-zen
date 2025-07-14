@@ -45,11 +45,12 @@ public class GatewayConfig {
                                                 .path("/api/genai/**")
                                                 .filters(f -> f.filter(clerkAuthenticationFilter))
                                                 .uri(genaiServiceUri))
-
-                                .route("docs-entry-point", r -> r
-                                                .path("/api/docs/**")
-                                                .filters(f -> f.rewritePath("/api/docs/?(.*)", "/swagger-ui.html"))
-                                                .uri(""))
+                                
+                                // TODO: Uncomment and configure if you want a docs entry point
+                                // .route("docs-entry-point", r -> r
+                                //                 .path("/api/docs/**")
+                                //                 .filters(f -> f.rewritePath("/api/docs/?(.*)", "/swagger-ui.html"))
+                                //                 .uri(""))
 
                                 // User Service (api docs)
                                 .route("user-service-docs", r -> r
