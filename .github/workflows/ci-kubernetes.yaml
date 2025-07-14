@@ -1,0 +1,30 @@
+name: Validates Kubernetes' chart structure and templates
+
+on:
+  push:
+    paths:
+      - 'helm/**'
+  pull_request:
+    paths:
+      - 'helm/**'
+
+jobs:
+  helm-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4.3.0
+
+      - name: Lint Helm charts
+        run: helm lint ./helm
+
+      - name: Dry-run Helm install
+        run: |
+            helm install zenai-app ./helm \
+              --dry-run --debug \
+              --namespace zenai-team \
+              --values ./helm/values.yaml
