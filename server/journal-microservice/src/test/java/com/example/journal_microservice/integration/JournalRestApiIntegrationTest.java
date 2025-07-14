@@ -109,7 +109,7 @@ class JournalRestApiIntegrationTest {
         JournalEntry updateData = new JournalEntry();
         updateData.setTitle("Updated Title");
         updateData.setSummary("Updated Summary");
-        updateData.setDailyMood(9.5);
+        updateData.setDailyMood(3.5);
 
         // When & Then
         mockMvc.perform(put("/api/journalEntry/{id}", savedEntry.getId())
@@ -119,7 +119,7 @@ class JournalRestApiIntegrationTest {
                 .andExpect(jsonPath("$.message").value("Journal entry updated successfully."))
                 .andExpect(jsonPath("$.data.title").value("Updated Title"))
                 .andExpect(jsonPath("$.data.summary").value("Updated Summary"))
-                .andExpect(jsonPath("$.data.dailyMood").value(9.5));
+                .andExpect(jsonPath("$.data.dailyMood").value(3.5));
     }
 
     @Test
@@ -182,9 +182,9 @@ class JournalRestApiIntegrationTest {
     void shouldGetUserStatisticsViaRestApi() throws Exception {
         // Given
         JournalEntry entry1 = TestDataFactory.createJournalEntry(userId, "Entry 1", "Summary 1");
-        entry1.setDailyMood(7.0);
+        entry1.setDailyMood(2.0);
         JournalEntry entry2 = TestDataFactory.createJournalEntry(userId, "Entry 2", "Summary 2");
-        entry2.setDailyMood(9.0);
+        entry2.setDailyMood(4.0);
         journalEntryRepository.save(entry1);
         journalEntryRepository.save(entry2);
 
@@ -192,7 +192,7 @@ class JournalRestApiIntegrationTest {
         mockMvc.perform(get("/api/journalEntry/{userId}/statistics", userId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalJournals").value(2))
-                .andExpect(jsonPath("$.avgMood").value(8.0))
+                .andExpect(jsonPath("$.avgMood").value(3.0))
                 .andExpect(jsonPath("$.weeklyAvgMood").exists())
                 .andExpect(jsonPath("$.currentStreak").exists());
     }

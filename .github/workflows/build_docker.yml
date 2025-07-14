@@ -6,11 +6,11 @@ on:
     types:
       - completed
 
-
 jobs:
   build:
     name: Build & Push Docker Images
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
     strategy:
       matrix:
         service:
@@ -45,10 +45,6 @@ jobs:
             type=ref,event=pr
 
       - name: Build & push Docker image
-        if:
-          (contains(join(github.event.head_commit.modified, ','), 'client/') && matrix.service == 'client') ||
-          (contains(join(github.event.head_commit.modified, ','), 'genai/') && matrix.service == 'genai') ||
-          (contains(join(github.event.head_commit.modified, ','), format('server/{0}/', matrix.service)))
         uses: docker/build-push-action@v5
         with:
           platforms: linux/amd64,linux/arm64

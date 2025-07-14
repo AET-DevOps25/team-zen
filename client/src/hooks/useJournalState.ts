@@ -70,7 +70,7 @@ export const useJournalState = (journalId?: string) => {
     }
   }, [navigate]);
 
-  const handleSummarise = useCallback((summary: string) => {
+  const handleSummarize = useCallback((summary: string) => {
     setJournalContent(summary);
   }, []);
 
@@ -91,6 +91,6 @@ export const useJournalState = (journalId?: string) => {
     handleToggleEdit,
     handleTitleEditEnd,
     handleBackToDashboard: handleGoBack,
-    handleSummarise,
+    handleSummarize,
   };
 };
