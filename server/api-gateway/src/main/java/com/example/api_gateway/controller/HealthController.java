@@ -116,7 +116,7 @@ public class HealthController {
         Map<String, String> dependencies = new HashMap<>();
         dependencies.put("user-service", checkServiceHealth(userServiceBaseUrl + "/api/health"));
         dependencies.put("journal-service", checkServiceHealth(journalServiceBaseUrl + "/api/health"));
-        dependencies.put("genai-service", checkServiceHealth(genaiServiceBaseUrl + "/api/health"));
+        dependencies.put("genai-service", checkServiceHealth(genaiServiceBaseUrl + "/api/genai/health"));
 
         // Get overall status based on dependencies
         String overallStatus = getOverallStatus(dependencies);
