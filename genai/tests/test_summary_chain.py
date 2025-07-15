@@ -1,6 +1,4 @@
-import pytest
-from unittest.mock import patch, MagicMock
-from app.main import summary_chain, SummaryRequest, SummaryResponse, InsightsResponse
+from app.main import SummaryResponse, InsightsResponse
 
 
 class TestSummaryChain:
@@ -111,12 +109,12 @@ You had a positive experience today."""
         # Parse using same logic as main.py
         output = mock_llm_output
         summary_text = ""
-        insights_dict = {
-            "mood": "",
-            "suggestion": "",
-            "achievement": "",
-            "wellness": ""
-        }
+        # insights_dict = {
+        #     "mood": "",
+        #     "suggestion": "",
+        #     "achievement": "",
+        #     "wellness": ""
+        # }
 
         sections = output.split("Analysis:")
         if len(sections) < 2:

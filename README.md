@@ -42,6 +42,7 @@
       <a href="#about-the-project">About The Project</a>
       <ul>
         <li><a href="#built-with">Built With</a></li>
+        <li><a href="#architecture-overview">Architecture Overview</a></li>
       </ul>
     </li>
     <li>
@@ -52,7 +53,10 @@
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
+    <li><a href="#cicd-pipeline">CI/CD Pipeline</a></li>
     <li><a href="#monitoring">Monitoring</a></li>
+    <li><a href="#api-specifications">API Specifications</a></li>
+    <li><a href="#contributors">Contributors</a></li>
   </ol>
 </details>
 
@@ -82,6 +86,16 @@ Your personal AI-powered journal that helps you track, understand, and improve y
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
+### Architecture Overview
+
+* Subsystem decomposition
+
+   ![Subsystem decomposition](./docs/diagrams/Component%20diagram%20(1).png)
+* Analysis object diagram
+
+   ![Analysis object diagram](./docs/diagrams/Analysis%20object%20model%20(1).png)
+
+
 
 <!-- GETTING STARTED -->
 ## Getting Started
@@ -104,13 +118,13 @@ To get a local copy up and running follow these simple example steps.
   Or follow the official instructions for [installation](https://ngrok.com/downloads/mac-os) and [signup](https://dashboard.ngrok.com/signup).
 * Clerk
 
-  We use Clerk for user athentication and session management. Create a Clerk account on the [official website](https://clerk.com/).
+  We use Clerk for user authentication and session management. Create a Clerk account on the [official website](https://clerk.com/).
 
 
 
 ### Installation
 
-1. Setup a static domain for ngrok by following the [official insturctions](https://ngrok.com/blog-post/free-static-domains-ngrok-users).
+1. Setup a static domain for ngrok by following the [official instructions](https://ngrok.com/blog-post/free-static-domains-ngrok-users).
    
    Then, run
    ```sh
@@ -122,14 +136,14 @@ To get a local copy up and running follow these simple example steps.
 
    In order to sync users from Clerk to the local user DB, Clerk needs a way to communicate with the application. This is done through webhooks - every time a new user registers using Clerk, Clerk sends a request to our application containing the user's detailed information.
 
-   Sign in to your Clerk dashboard. Go to Configure -> Webhooks(under Developers). Click on "Add Endpoint". Under endpoint URL, enter ```<YOUR_STATIC_DOMAIN>/api/webhooks```. Below, subscribe to all ```user``` events: ```user.created```, ```user.deleted```, and ```user.updated```. Finally, click "Create".
+   Sign in to your Clerk dashboard. Go to Configure -> Webhooks (under Developers). Click on "Add Endpoint". Under endpoint URL, enter ```<YOUR_STATIC_DOMAIN>/api/webhooks```. Below, subscribe to all ```user``` events: ```user.created```, ```user.deleted```, and ```user.updated```. Finally, click "Create".
 
    Click into the webhook endpoint you just created. On the right side of the page, there should be a field "Signing Secret" with a value that starts with ```whesc_...```. Copy that value and paste it into ```/server/.env```'s ```CLERK_WEBHOOK_SECRET``` variable.
 4. Set up Clerk key pair
    
    Under Configure -> API keys (under Developers), select "React" in the top-right dropdown menu of "Quick Copy". Then, copy over the ```VITE_CLERK_PUBLISHABLE_KEY``` to ```client/.env```.
 
-   Finally, on the same page, under "Secrete keys", add a new key and copy the value of the secret key over to ```/server/.env```'s ```CLERK_SECRET_KEY```.
+   Finally, on the same page, under "Secret keys", add a new key and copy the value of the secret key over to ```/server/.env```'s ```CLERK_SECRET_KEY```.
 5. Build and run using Docker
    In the root folder, run
    ```sh
@@ -146,19 +160,79 @@ To get a local copy up and running follow these simple example steps.
 
 * Sign in. If you don't have an account yet, sign up first.
 * Click on "My Journal" on the top right.
-* Click on "Add Snippet". Select your current moode, write some short sentences about what's on your mind, and save it. 
+* Click on "Add Snippet". Select your current mood, write some short sentences about what's on your mind, and save it. 
 * After you have written at least three snippets, click on "Create Journal". In the journal editor, you can:
   
   * Click on "Today's Journal" in the top bar to change the title of the journal.
   * Click on "Edit" or directly click the journal content to write your daily journal.
-    * When in the editing view, you can click "Summarise" to let the LLM summarize your snippets. You can use the result as a starting point.
+    * When in the editing view, you can click "Summarize" to let the LLM summarize your snippets. You can use the result as a starting point.
   * Don't forget to save your changes!
   * If you have used the summarization function, you can click "Insights" on the top right to view the analysis of your day based on your snippets.
 * You can search for and view old journals in the tab "Previous Journals".
 * In the "Overview" tab, you can see statistics of your journaling habit.
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+<!-- CI/CD -->
+## CI/CD Pipeline
 
+ZenAI uses GitHub Actions for continuous integration and deployment for automated testing, building, and deployment workflows.
+
+### Continuous Integration (CI)
+
+The main CI workflow validates code quality (linting) and runs tests across all services:
+
+1. **Client Testing** (`ci.yml`)
+   - Node.js setup and dependency installation
+   - ESLint code linting
+   - Build verification
+
+2. **Server Testing** (`ci.yml`)
+   - Java 21 setup with Gradle
+   - Unit tests for all microservices (API Gateway, Journal, User)
+   - Build verification
+
+3. **GenAI Service Testing** (`ci.yml`)
+   - Python 3.11 setup
+   - Ruff linting
+   - FastAPI health checks
+   - Comprehensive test suite with coverage reporting
+
+4. **Ansible Validation** (`ansible_lint.yml`)
+   - Ansible syntax validation
+   - Best practices enforcement
+
+5. **Terraform Validation** (`ci-terraform.yml`)
+   - Infrastructure code formatting and validation
+   - Terraform plan generation for pull requests
+   - Automated deployment on main branch
+
+### Continuous Deployment (CD)
+
+#### Docker Image Building (`build_docker.yml`)
+- Triggered after successful CI completion
+- Multi-architecture builds (linux/amd64, linux/arm64)
+- Pushes images to GitHub Container Registry (ghcr.io)
+- Services built: client, api-gateway, journal-microservice, user-microservice, genai
+
+#### Kubernetes Deployment (`deploy_kubernetes.yaml`)
+- Triggered after successful Docker image builds
+- Deploys to AET Kubernetes cluster using Helm
+- Updates all services with latest images
+- Namespace: `zenai-team`
+
+#### Infrastructure Provisioning (`infra.yml`)
+- Terraform-based EC2 instance provisioning on AWS
+- Ansible configuration management
+- Triggered on infrastructure code changes
+
+### Workflow Triggers
+
+- **Pull Requests**: Run CI tests and Terraform validation
+- **Main Branch Push**: Full CI/CD pipeline with automatic deployment
+- **Manual Dispatch**: Terraform operations (plan/apply/destroy)
+- **Path-based Triggers**: Only affected services are rebuilt and tested
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- MONITORING -->
 ## Monitoring
@@ -170,8 +244,8 @@ ZenAI includes comprehensive monitoring with Prometheus and Grafana to track req
 When running the application with Docker Compose, monitoring services are automatically started:
 
 1. **Prometheus** - Available at `http://localhost:9090`
-   - Collects metrics from all microservices (the microservices can be seen under status -> targets)
-   - Provides a web interface to view metrics and create queries (under graph queries like `sum(http_server_requests_seconds_count{job="api-gateway"})` can be executed)
+   - Collects metrics from all microservices (the microservices can be seen under Status -> Targets)
+   - Provides a web interface to view metrics and create queries (under Graph queries like `sum(http_server_requests_seconds_count{job="api-gateway"})` can be executed)
    - Stores time-series data for historical analysis
 
 2. **Grafana** - Available at `http://localhost:3001`
@@ -185,7 +259,7 @@ When running the application with Docker Compose, monitoring services are automa
 ### Kubernetes Monitoring
 
 1. **Access Grafana Dashboard**:
-   Access to grafana can be found in our rancher project: 
+   Access to Grafana can be found in our Rancher project: 
    `https://zenai-team.student.k8s.aet.cit.tum.de/grafana`
    Credentials: username is `admin` / password - contact us via Artemis 
 
@@ -198,7 +272,7 @@ When running the application with Docker Compose, monitoring services are automa
    kubectl port-forward -n zenai-team deploy/prometheus 9091:9090
    ```
    Then visit `http://localhost:9090` in your browser.
-   The available targets can be found under status -> targets
+   The available targets can be found under Status -> Targets
    Under Graph queries like `sum(http_server_requests_seconds_count{job="api-gateway"})` can be executed.
 
 
@@ -217,13 +291,38 @@ Grafana comes pre-configured with custom dashboards located in:
 - `grafana/provisioning/dashboards/` (Docker setup)
 - `helm/files/grafana/dashboards/` (Kubernetes setup)
 
-You can import additional dashboards or modify existing ones through the Grafana web interface (Dashboards -> new Dashboard).
+You can import additional dashboards or modify existing ones through the Grafana web interface (Dashboards -> New Dashboard).
 
 ### Alerting
 
 Prometheus is configured with alert rules for:
 - Service unavailability
-Alert rules can be seen in Prometheus web interface under Status -> Rules or under Alerts(firing means the service was down for at least 1 min)
+Alert rules can be seen in Prometheus web interface under Status -> Rules or under Alerts (firing means the service was down for at least 1 min)
+
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+<!-- API-SPECIFICATION -->
+## API Specifications
+
+ZenAI's APIs for every single microservice (user, journal, genai and api-gateway) are documented using Swagger, and are accessible by visiting
+
+* Locally using Docker: ```http://localhost:8085/swagger-ui.html``` 
+* Deployed: ```https://zenai-team.student.k8s.aet.cit.tum.de/api/swagger-ui.html```
+
+in your browser and select the microservice for which you would like to see the API documentation in the dropdown list in the top-right corner.
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+<!-- Contributors -->
+## Contributors
+
+| Contributor      | Responsibilities                                                                           |
+| ---------------- | ------------------------------------------------------------------------------------------ |
+| Natalia Milanova | Backend CRUD operations, AI summarization functionality, Kubernetes deployment, Monitoring |
+| Evan Christopher | Client implementation and testing, CI pipelines, AWS EC2 deployment, Overall code refactoring|
+| Zexin Gong       | API gateway and authentication, Backend service tests, Overall testing & Bug fixes, Documentation                 |
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -258,4 +357,4 @@ Alert rules can be seen in Prometheus web interface under Status -> Rules or und
 [Langchain.com]: https://img.shields.io/badge/LangChain-ffffff?logo=langchain&logoColor=green
 [Langchain-url]: https://langchain.com
 [JQuery.com]: https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=jquery&logoColor=white
-[JQuery-url]: https://jquery.com 
+[JQuery-url]: https://jquery.com

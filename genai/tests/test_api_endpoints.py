@@ -1,8 +1,5 @@
-import pytest
-import asyncio
 from fastapi.testclient import TestClient
-from unittest.mock import patch, MagicMock
-from app.main import app, SummaryRequest, SummaryResponse, InsightsResponse
+from app.main import app
 
 
 class TestAPIEndpoints:

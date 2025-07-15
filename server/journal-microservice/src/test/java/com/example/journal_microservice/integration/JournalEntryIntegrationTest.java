@@ -91,21 +91,21 @@ class JournalEntryIntegrationTest {
         JournalEntry updateData = new JournalEntry();
         updateData.setTitle("Updated Title");
         updateData.setSummary("Updated summary");
-        updateData.setDailyMood(9.0);
+        updateData.setDailyMood(3.0);
 
         JournalEntry updatedEntry = journalEntryService.updateJournalEntry(savedEntry.getId(), updateData);
 
         // Then
         assertEquals("Updated Title", updatedEntry.getTitle());
         assertEquals("Updated summary", updatedEntry.getSummary());
-        assertEquals(9.0, updatedEntry.getDailyMood());
+        assertEquals(3.0, updatedEntry.getDailyMood());
         assertNotNull(updatedEntry.getUpdatedAt());
 
         // Verify the update persisted
         JournalEntry retrievedEntry = journalEntryService.getUserJournalById(userId, savedEntry.getId());
         assertEquals("Updated Title", retrievedEntry.getTitle());
         assertEquals("Updated summary", retrievedEntry.getSummary());
-        assertEquals(9.0, retrievedEntry.getDailyMood());
+        assertEquals(3.0, retrievedEntry.getDailyMood());
     }
 
     @Test
@@ -165,9 +165,9 @@ class JournalEntryIntegrationTest {
     void shouldCalculateUserStatisticsCorrectly() {
         // Given
         List<JournalEntry> entries = TestDataFactory.createMultipleJournalEntries(userId, 3);
-        entries.get(0).setDailyMood(7.0);
-        entries.get(1).setDailyMood(8.0);
-        entries.get(2).setDailyMood(9.0);
+        entries.get(0).setDailyMood( 1.0);
+        entries.get(1).setDailyMood(2.0);
+        entries.get(2).setDailyMood(3.0);
 
         for (JournalEntry entry : entries) {
             journalEntryService.createJournalEntry(entry);
@@ -178,7 +178,7 @@ class JournalEntryIntegrationTest {
 
         // Then
         assertEquals(3, statistics.get("totalJournals"));
-        assertEquals(8.0, statistics.get("avgMood"));
+        assertEquals(2.0, statistics.get("avgMood"));
         assertTrue(statistics.containsKey("weeklyJournalCount"));
         assertTrue(statistics.containsKey("currentStreak"));
     }

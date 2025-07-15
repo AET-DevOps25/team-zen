@@ -1,5 +1,5 @@
 import { useAuth, useUser } from '@clerk/clerk-react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Snippet } from '@/model/snippet';
 import { env } from '@/env.ts';
 
@@ -10,6 +10,8 @@ type SnippetData = {
 
 export const useCreateSnippet = () => {
   const { getToken } = useAuth();
+  const queryClient = useQueryClient();
+  const { user } = useUser();
 
   const createSnippet = async (snippetData: SnippetData) => {
     const token = await getToken();
@@ -32,6 +34,11 @@ export const useCreateSnippet = () => {
     mutationKey: ['createSnippet'],
     mutationFn: createSnippet,
     retry: 2,
+    onSuccess: (data) => {
+      console.log('Snippet created successfully:', data);
+      queryClient.invalidateQueries({ queryKey: ['getSnippets'] });
+      queryClient.invalidateQueries({ queryKey: ['allJournals', user?.id] });
+    },
   });
 };
 

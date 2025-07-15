@@ -23,7 +23,7 @@ const JournalView = () => {
     handleToggleEdit,
     handleTitleEditEnd,
     handleBackToDashboard,
-    handleSummarise,
+    handleSummarize,
   } = useJournalState(journalId);
 
   return (
@@ -48,7 +48,7 @@ const JournalView = () => {
             journalId={journal?.id}
             onContentChange={setJournalContent}
             onToggleEdit={handleToggleEdit}
-            onSummarise={handleSummarise}
+            onSummarize={handleSummarize}
           />
         ) : (
           <InsightsTab snippets={snippets} journal={journal} />

@@ -5,7 +5,6 @@ import {
   createRouter,
   redirect,
 } from '@tanstack/react-router';
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import { useAuth } from '@clerk/clerk-react';
 
 import Home from './app/home.tsx';
@@ -47,7 +46,6 @@ const rootRoute = createRootRoute({
   component: () => (
     <Root>
       <Outlet />
-      <TanStackRouterDevtools />
     </Root>
   ),
 });

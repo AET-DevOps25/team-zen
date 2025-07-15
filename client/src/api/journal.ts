@@ -1,24 +1,9 @@
 import { useAuth, useUser } from '@clerk/clerk-react';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import type { ApiResponse } from './base';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { JournalEntry } from '@/model/journal';
+import type { UserStatistics } from '@/model/user';
+import type { ApiResponse } from './base';
 import { env } from '@/env.ts';
-
-// Types for enhanced user statistics
-export interface UserStatistics {
-  // Overall statistics
-  totalJournals: number;
-  totalWords: number;
-  avgMood: number;
-
-  // Weekly statistics
-  weeklyJournalCount: number;
-  weeklyAvgMood: number;
-  weeklyTarget: number;
-
-  // Streak statistics
-  currentStreak: number;
-}
 
 // Get today's journal entry for the user, or a specific journal by ID
 export const useGetJournal = (journalId?: string) => {
@@ -126,6 +111,8 @@ export const useGetAllJournals = () => {
 
 export const useUpdateJournal = () => {
   const { getToken } = useAuth();
+  const { user } = useUser();
+  const queryClient = useQueryClient();
 
   const updateJournal = async (updatedJournal: JournalEntry) => {
     const token = await getToken();
@@ -152,6 +139,36 @@ export const useUpdateJournal = () => {
     mutationKey: ['updateJournal'],
     mutationFn: updateJournal,
     retry: 1,
+    onSuccess: (_data, variables) => {
+      // Invalidate and refetch journal queries
+      queryClient.invalidateQueries({
+        queryKey: ['journal', user?.id],
+      });
+
+      // Invalidate all journals list
+      queryClient.invalidateQueries({
+        queryKey: ['allJournals', user?.id],
+      });
+
+      // Invalidate user statistics as they might have changed
+      queryClient.invalidateQueries({
+        queryKey: ['userStatistics', user?.id],
+      });
+
+      // Invalidate specific journal entry cache if date is available
+      if (variables.date) {
+        queryClient.invalidateQueries({
+          queryKey: ['journal', user?.id, variables.date],
+        });
+      }
+
+      // Invalidate any summary data for this journal
+      if (variables.id) {
+        queryClient.invalidateQueries({
+          queryKey: ['summary', variables.id],
+        });
+      }
+    },
   });
 };
 

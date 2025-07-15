@@ -25,9 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class UserRepositoryIntegrationTest {
 
     @Container
-    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:7.0")
-            .withExposedPorts(27017)
-            .withReuse(true);
+    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6.0.2");
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {

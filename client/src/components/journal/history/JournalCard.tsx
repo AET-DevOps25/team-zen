@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { BookOpen, Calendar, Clock, Eye, Lightbulb, Zap } from 'lucide-react';
+import { BookOpen, Calendar, Clock, Lightbulb, Zap } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import { MOOD_CONFIG } from '../../../constants/moods';
 import { AIInsights } from './AIInsights';
@@ -34,7 +34,10 @@ export const JournalCard = ({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ delay: index * 0.05 }}
-      className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+      onClick={handleViewJournal}
+      className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all cursor-pointer"
+      whileHover={{ scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
     >
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
@@ -70,14 +73,6 @@ export const JournalCard = ({
             </div>
           </div>
         </div>
-        <motion.button
-          onClick={handleViewJournal}
-          className="p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <Eye className="w-5 h-5" />
-        </motion.button>
       </div>
 
       {/* Content */}
