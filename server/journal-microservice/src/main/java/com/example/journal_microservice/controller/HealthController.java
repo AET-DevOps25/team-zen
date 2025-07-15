@@ -21,7 +21,7 @@ import java.util.Map;
  * Provides health status including database and external service connectivity
  */
 @RestController
-@RequestMapping("/health")
+@RequestMapping("/api/health")
 public class HealthController {
 
     private static final Logger logger = LoggerFactory.getLogger(HealthController.class);

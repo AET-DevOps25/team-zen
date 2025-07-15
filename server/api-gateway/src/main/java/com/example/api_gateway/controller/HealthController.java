@@ -20,7 +20,7 @@ import java.util.Map;
  * This endpoint is publicly accessible and does not require authentication
  */
 @RestController
-@RequestMapping("/health")
+@RequestMapping("/api/health")
 public class HealthController {
 
     private static final Logger logger = LoggerFactory.getLogger(HealthController.class);
@@ -34,7 +34,6 @@ public class HealthController {
     @Value("${server.port:8085}")
     private String serverPort;
 
-    // Service URLs - using existing application.properties variables
     @Value("${user-service-url:http://localhost:8080}")
     private String userServiceBaseUrl;
 
@@ -44,7 +43,6 @@ public class HealthController {
     @Value("${genai-service-url:http://localhost:8082}")
     private String genaiServiceBaseUrl;
 
-    // Configuration flags - simplified for application.properties setup
     @Value("${server.port:8085}")
     private String configuredPort;
 
@@ -116,9 +114,9 @@ public class HealthController {
     public ResponseEntity<Map<String, Object>> detailedHealth() {
         // Check service dependencies dynamically by constructing health URLs
         Map<String, String> dependencies = new HashMap<>();
-        dependencies.put("user-service", checkServiceHealth(userServiceBaseUrl + "/health"));
-        dependencies.put("journal-service", checkServiceHealth(journalServiceBaseUrl + "/health"));
-        dependencies.put("genai-service", checkServiceHealth(genaiServiceBaseUrl + "/health"));
+        dependencies.put("user-service", checkServiceHealth(userServiceBaseUrl + "/api/health"));
+        dependencies.put("journal-service", checkServiceHealth(journalServiceBaseUrl + "/api/health"));
+        dependencies.put("genai-service", checkServiceHealth(genaiServiceBaseUrl + "/api/genai/health"));
 
         // Get overall status based on dependencies
         String overallStatus = getOverallStatus(dependencies);
