@@ -46,10 +46,6 @@ public class GatewayConfig {
                                                 .filters(f -> f.filter(clerkAuthenticationFilter))
                                                 .uri(genaiServiceUri))
 
-                                .route("gateway-api-docs", r -> r
-                                                .path("/api/v3/api-docs/**")
-                                                .filters(f -> f.redirect(302, "/v3/api-docs"))
-                                                .uri("no://op"))
 
                                 // User Service (api docs)
                                 .route("user-service-docs", r -> r
