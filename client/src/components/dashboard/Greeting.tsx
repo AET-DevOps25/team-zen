@@ -22,30 +22,35 @@ const Greeting: React.FC<GreetingProps> = ({
     return () => clearInterval(timer);
   }, []);
 
+  // Simple time-based greeting with demo support
   const getTimeBasedGreeting = () => {
     const hour = currentTime.getHours();
 
     if (hour >= 5 && hour < 12) {
       return {
         greeting: 'Good morning',
+        callToAction: 'Ready to capture your thoughts?',
         icon: hour < 8 ? Coffee : Sun,
         gradient: 'from-amber-400 via-orange-400 to-yellow-500',
       };
     } else if (hour >= 12 && hour < 17) {
       return {
         greeting: 'Good afternoon',
+        callToAction: "How's your day unfolding?",
         icon: Sun,
         gradient: 'from-blue-400 via-teal-400 to-cyan-500',
       };
     } else if (hour >= 17 && hour < 21) {
       return {
         greeting: 'Good evening',
+        callToAction: 'Time to reflect on your day?',
         icon: Sunset,
         gradient: 'from-purple-400 via-pink-400 to-rose-500',
       };
     } else {
       return {
         greeting: 'Good night',
+        callToAction: 'Wind down with a peaceful entry.',
         icon: Moon,
         gradient: 'from-indigo-500 via-purple-500 to-violet-600',
       };
@@ -71,7 +76,7 @@ const Greeting: React.FC<GreetingProps> = ({
           <div className="absolute bottom-0 left-0 w-24 h-24 rounded-full bg-white/15 translate-y-12 -translate-x-12"></div>
         </div>
 
-        {/* Sparkling effect */}
+        {/* Sparkles */}
         <div className="absolute inset-0 pointer-events-none">
           {[...Array(4)].map((_, i) => (
             <motion.div
@@ -100,7 +105,7 @@ const Greeting: React.FC<GreetingProps> = ({
         </div>
 
         <div className="relative z-10">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div className="flex items-center space-x-3">
               <motion.div
                 initial={{ scale: 0 }}
@@ -111,21 +116,31 @@ const Greeting: React.FC<GreetingProps> = ({
                 <TimeIcon className="w-5 h-5 md:w-6 md:h-6" />
               </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0, x: -15 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                <h2 className="text-lg md:text-xl font-semibold">
+              <div className="flex flex-col">
+                <motion.h2
+                  initial={{ opacity: 0, x: -15 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-lg md:text-xl font-semibold"
+                >
                   {timeGreeting.greeting}, {userName}! 👋
-                </h2>
-              </motion.div>
+                </motion.h2>
+                <motion.p
+                  initial={{ opacity: 0, x: -15 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="text-sm text-white/80 mt-0.5"
+                >
+                  {timeGreeting.callToAction}
+                </motion.p>
+              </div>
             </div>
 
+            {/* Elegant Quick Entry Button */}
             <motion.button
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4, type: 'spring', stiffness: 200 }}
+              transition={{ delay: 0.5, type: 'spring', stiffness: 200 }}
               onClick={onQuickEntry}
               className="bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 hover:border-white/50 text-white px-4 py-2 rounded-xl flex items-center space-x-2 transition-all duration-300 font-medium shadow-md hover:shadow-lg group text-sm"
               whileHover={{ scale: 1.05 }}
