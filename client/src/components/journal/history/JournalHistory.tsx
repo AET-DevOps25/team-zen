@@ -53,7 +53,6 @@ const JournalHistory = () => {
 
   return (
     <div className="space-y-8">
-      {/* Search Interface */}
       <SearchInterface
         searchQuery={searchQuery}
         isSearching={isSearching}
@@ -62,6 +61,7 @@ const JournalHistory = () => {
         selectedMonth={selectedMonth}
         sortBy={sortBy}
         filteredJournalsLength={filteredJournals.length}
+        journals={journals}
         onSearchChange={setSearchQuery}
         onToggleFilters={toggleFilters}
         onMoodChange={setSelectedMood}
@@ -69,7 +69,6 @@ const JournalHistory = () => {
         onSortChange={setSortBy}
       />
 
-      {/* Journal Results */}
       <div className="space-y-6">
         {filteredJournals.length === 0 ? (
           <EmptyState hasSearchQuery={!!searchQuery} />

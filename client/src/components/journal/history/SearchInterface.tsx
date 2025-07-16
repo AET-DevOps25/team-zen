@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Brain, Filter, Search, Sparkles } from 'lucide-react';
 import { MOOD_OPTIONS } from '../../../constants/moods';
-import { months } from '@/mock/data';
+import type { ExtendedJournalEntry } from '@/lib/utils';
 
 interface SearchInterfaceProps {
   searchQuery: string;
@@ -11,6 +11,7 @@ interface SearchInterfaceProps {
   selectedMonth: string;
   sortBy: string;
   filteredJournalsLength: number;
+  journals: Array<ExtendedJournalEntry>;
   onSearchChange: (query: string) => void;
   onToggleFilters: () => void;
   onMoodChange: (mood: string) => void;
@@ -36,12 +37,54 @@ export const SearchInterface = ({
   selectedMonth,
   sortBy,
   filteredJournalsLength,
+  journals,
   onSearchChange,
   onToggleFilters,
   onMoodChange,
   onMonthChange,
   onSortChange,
 }: SearchInterfaceProps) => {
+  // Generate available months from journals data
+  const availableMonths = () => {
+    if (journals.length === 0) {
+      return [];
+    }
+
+    const monthsSet = new Set<string>();
+
+    journals.forEach((journal) => {
+      try {
+        const date = new Date(journal.date);
+        // Check if date is valid
+        if (isNaN(date.getTime())) {
+          return; // Skip invalid dates
+        }
+
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1;
+        const monthValue = `${year}-${month.toString().padStart(2, '0')}`;
+        const monthLabel = date.toLocaleDateString('en-US', {
+          month: 'long',
+          year: 'numeric',
+        });
+
+        monthsSet.add(JSON.stringify({ value: monthValue, label: monthLabel }));
+      } catch (error) {
+        // Skip entries with invalid dates
+        console.warn('Invalid date in journal entry:', journal.date);
+      }
+    });
+
+    // Convert back to objects and sort by date (newest first)
+    const months = Array.from(monthsSet)
+      .map((str) => JSON.parse(str))
+      .sort((a, b) => b.value.localeCompare(a.value));
+
+    return months;
+  };
+
+  const months = availableMonths();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
