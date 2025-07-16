@@ -308,7 +308,7 @@ Alert rules can be seen in Prometheus web interface under Status -> Rules or und
 
 ZenAI's APIs for every single microservice (user, journal, genai and api-gateway) are documented using Swagger, and are accessible by visiting
 
-* Locally using Docker: ```http://localhost:8085/swagger-ui.html``` 
+* Locally using Docker: ```http://localhost:8085/api/swagger-ui.html``` 
 * Deployed: ```https://zenai-team.student.k8s.aet.cit.tum.de/api/swagger-ui.html```
 
 in your browser and select the microservice for which you would like to see the API documentation in the dropdown list in the top-right corner.
