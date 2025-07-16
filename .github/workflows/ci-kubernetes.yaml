@@ -22,6 +22,13 @@ jobs:
       - name: Set up Helm
         uses: azure/setup-helm@v4.3.0
 
+      - name: Configure kubeconfig
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        run: |
+          mkdir -p $HOME/.kube
+          echo "$KUBE_CONFIG" > $HOME/.kube/config
+
       - name: Lint Helm charts
         run: helm lint ./helm
 
