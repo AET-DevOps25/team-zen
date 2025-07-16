@@ -13,7 +13,7 @@
       "datasource": "Prometheus",
       "targets": [
         {
-          "expr": "sum(http_server_requests_seconds_count{job=\"api-gateway\"})",
+          "expr": "sum(http_server_requests_seconds_count{job=\"api-gateway\",uri!~\"/(actuator/prometheus|api/health(/detailed|/status)?|api/swagger-ui.html|api/webjars/.*|v3/api-docs(/swagger-config)?)\"})",
           "legendFormat": "Total Requests"
         }
       ],
@@ -37,7 +37,7 @@
       "datasource": "Prometheus",
       "targets": [
         {
-          "expr": "sum(rate(http_server_requests_seconds_sum{job=\"api-gateway\"}[1m])) / sum(rate(http_server_requests_seconds_count{job=\"api-gateway\"}[1m]))",
+          "expr": "sum(rate(http_server_requests_seconds_sum{job=\"api-gateway\",uri!~\"/(actuator/prometheus|api/health(/detailed|/status)?|api/swagger-ui.html|api/webjars/.*|v3/api-docs(/swagger-config)?)\"}[1m])) / sum(rate(http_server_requests_seconds_count{job=\"api-gateway\",uri!~\"/(actuator/prometheus|api/health(/detailed|/status)?|api/swagger-ui.html|api/webjars/.*|v3/api-docs(/swagger-config)?)\"}[1m]))",
           "legendFormat": "Average Latency"
         }
       ],
@@ -49,8 +49,8 @@
       "datasource": "Prometheus",
       "targets": [
         {
-          "expr": "max(http_server_requests_seconds_max{job=\"api-gateway\"})",
-          "legendFormat": "Max Latency"
+          "expr": "max by (uri, method) (http_server_requests_seconds_max{job=\"api-gateway\", uri!~\"/(actuator/prometheus|api/health(/detailed|/status)?|api/swagger-ui.html|api/webjars/.*|v3/api-docs(/swagger-config)?)\"})",
+          "legendFormat": "Max Latency {{uri}} {{method}}"
         }
       ],
       "gridPos": { "x": 12, "y": 6, "w": 12, "h": 6 }
@@ -61,11 +61,71 @@
       "datasource": "Prometheus",
       "targets": [
         {
-          "expr": "sum(rate(http_server_requests_seconds_count{job=\"api-gateway\", status!~\"2..\"}[1m]))",
-          "legendFormat": "Error Rate"
+          "expr": "sum by (status, method, uri) (rate(http_server_requests_seconds_count{job=\"api-gateway\", status!~\"2..\"}[1m]))",
+          "legendFormat": "{{uri}} {{method}} {{status}}"
         }
       ],
-      "gridPos": { "x": 0, "y": 12, "w": 24, "h": 6 }
+      "gridPos": { "x": 0, "y": 12, "w": 18, "h": 6 }
+    },
+    {
+      "type": "stat",
+      "title": "Ready Time (seconds)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "application_ready_time_seconds{instance=\"api-gateway:8085\", job=\"api-gateway\"}",
+          "legendFormat": "Ready Time"
+        }
+      ],
+      "gridPos": { "x": 18, "y": 12, "w": 6, "h": 6 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Disk Space Available (%)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "(disk_free_bytes{instance=\"api-gateway:8085\", job=\"api-gateway\"} / disk_total_bytes{instance=\"api-gateway:8085\", job=\"api-gateway\"}) * 100",
+          "legendFormat": "Free Disk %"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 18, "w": 12, "h": 6 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Heap Memory Used (%)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "(sum(jvm_memory_used_bytes{area=\"heap\", instance=\"api-gateway:8085\"}) / sum(jvm_memory_max_bytes{area=\"heap\", instance=\"api-gateway:8085\"})) * 100",
+          "legendFormat": "Used Heap"
+        }
+      ],
+      "gridPos": { "x": 12, "y": 18, "w": 12, "h": 6 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Process CPU Usage",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "process_cpu_usage{instance=\"api-gateway:8085\", job=\"api-gateway\"}",
+          "legendFormat": "Process CPU"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 24, "w": 12, "h": 6 }
+    },
+    {
+      "type": "timeseries",
+      "title": "System CPU Usage",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "system_cpu_usage{instance=\"api-gateway:8085\", job=\"api-gateway\"}",
+          "legendFormat": "System CPU"
+        }
+      ],
+      "gridPos": { "x": 12, "y": 24, "w": 12, "h": 6 }
     }
   ]
 }
