@@ -57,7 +57,7 @@
     },
     {
       "type": "timeseries",
-      "title": "Process CPU Usage",
+      "title": "User and System CPU Usage",
       "datasource": "Prometheus",
       "targets": [
         {

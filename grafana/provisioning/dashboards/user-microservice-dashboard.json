@@ -105,7 +105,7 @@
     },
     {
       "type": "timeseries",
-      "title": "Process CPU Usage",
+      "title": "Process CPU Usage for JVM",
       "datasource": "Prometheus",
       "targets": [
         {
