@@ -11,7 +11,7 @@ namespace:
 client:
   image:
     repository: ghcr.io/aet-devops25/team-zen/client
-    tag: main
+    tag: latest
     pullPolicy: Always
   service:
     type: ClusterIP
@@ -39,7 +39,7 @@ client:
 apiGateway:
   image:
     repository: ghcr.io/aet-devops25/team-zen/api-gateway
-    tag: main
+    tag: latest
     pullPolicy: Always
   service:
     type: ClusterIP
@@ -70,11 +70,25 @@ apiGateway:
       value: "http://genai-service:8082"
     - name: SERVER_PORT
       value: "8085"
+    - name: SPRINGDOC_API_DOCS_PATH
+      value: /api/v3/api-docs
+    - name: SPRINGDOC_SWAGGER_UI_PATH
+      value: /api/swagger-ui.html
+    - name: SPRINGDOC_SWAGGER_UI_CONFIG_URL
+      value: /api/v3/api-docs/swagger-config
+    - name: SWAGGER_USER_SERVICE_URL
+      value: /api/user-service/v3/api-docs
+    - name: SWAGGER_JOURNAL_SERVICE_URL
+      value: /api/journal-service/v3/api-docs
+    - name: SWAGGER_GENAI_SERVICE_URL
+      value: /api/genai-service/openapi.json
+    - name: SWAGGER_API_GATEWAY_URL
+      value: /api/v3/api-docs
 
 user:
   image:
     repository: ghcr.io/aet-devops25/team-zen/user-microservice
-    tag: main
+    tag: latest
     pullPolicy: Always
   service:
     type: ClusterIP
@@ -85,7 +99,7 @@ user:
 journal:
   image:
     repository: ghcr.io/aet-devops25/team-zen/journal-microservice
-    tag: main
+    tag: latest
     pullPolicy: Always
   service:
     type: ClusterIP
@@ -97,7 +111,7 @@ journal:
 genai:
   image:
     repository: ghcr.io/aet-devops25/team-zen/genai
-    tag: main
+    tag: latest
     pullPolicy: Always
   service:
     type: ClusterIP
