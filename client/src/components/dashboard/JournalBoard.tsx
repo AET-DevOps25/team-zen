@@ -6,10 +6,10 @@ import { MoodTracker } from '../today/MoodTracker';
 import { SnippetsList } from '../today/SnippetsList';
 import { WeeklyProgress } from '../today/WeeklyProgress';
 import { useJournalState } from '@/hooks';
-import { useGetUserStatistics } from '@/api/journal';
 import { useGetSnippets } from '@/api/snippet.ts';
+import { useGetUserStatistics } from '@/api/journal';
 
-const TodayJournal = () => {
+const JournalBoard = () => {
   const { snippets, isLoading } = useGetSnippets({
     date: new Date().toISOString().split('T')[0],
   });
@@ -83,4 +83,4 @@ const TodayJournal = () => {
   );
 };
 
-export default TodayJournal;
+export default JournalBoard;

@@ -3,12 +3,16 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { BarChart3, Edit3, History } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import TodayJournal from '@/components/dashboard/TodayJournal';
-import Overview from '@/components/dashboard/Overview';
+import Greeting from '@/components/dashboard/Greeting';
+import JournalBoard from '@/components/dashboard/JournalBoard';
 import JournalHistory from '@/components/dashboard/JournalHistory';
+import Overview from '@/components/dashboard/Overview';
+import { useAuth } from '@/hooks';
 
 const Dashboard: React.FC = () => {
   const { activeTab, handleTabChange } = useDashboardNavigation();
+  const { userName } = useAuth();
+  const navigate = useNavigate();
 
   const activeTabConfig = DASHBOARD_TABS[activeTab];
   const TabComponent = activeTabConfig.component;
@@ -16,6 +20,10 @@ const Dashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-blue-50">
       <div className="container mx-auto py-8">
+        <Greeting
+          userName={userName ?? ''}
+          onQuickEntry={() => navigate({ to: '/snippet' })}
+        />
         <TabNavigation activeTab={activeTab} onTabChange={handleTabChange} />
 
         <AnimatePresence mode="wait">
@@ -28,7 +36,7 @@ const Dashboard: React.FC = () => {
   );
 };
 
-export type DashboardTab = 'today' | 'overview' | 'history';
+export type DashboardTab = 'board' | 'overview' | 'history';
 
 interface TabConfig {
   id: DashboardTab;
@@ -51,12 +59,12 @@ interface AnimatedTabContentProps {
 }
 
 const DASHBOARD_TABS: Record<DashboardTab, TabConfig> = {
-  today: {
-    id: 'today',
-    label: "Today's Journal",
+  board: {
+    id: 'board',
+    label: 'Journal Board',
     icon: Edit3,
     path: '/dashboard',
-    component: TodayJournal,
+    component: JournalBoard,
   },
   history: {
     id: 'history',
@@ -89,7 +97,7 @@ const useDashboardNavigation = () => {
     const tabFromParams = params.tab as DashboardTab | undefined;
     return tabFromParams && tabFromParams in DASHBOARD_TABS
       ? tabFromParams
-      : 'today';
+      : 'board';
   }, [params.tab]);
 
   const handleTabChange = useCallback(
@@ -152,7 +160,7 @@ const AnimatedTabContent: React.FC<AnimatedTabContentProps> = ({
   tabConfig,
   children,
 }) => {
-  if (activeTab === 'today') {
+  if (activeTab === 'board') {
     return <>{children}</>;
   }
 
