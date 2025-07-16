@@ -65,7 +65,7 @@ export const AIInsights = ({
       <Button
         variant="ghost"
         onClick={onToggle}
-        className="w-full p-3 flex items-center justify-between text-sm text-teal-700 hover:bg-teal-100 rounded-lg"
+        className="w-full p-3 flex items-center justify-between text-teal-700 hover:bg-teal-100 rounded-lg"
       >
         <div className="flex items-center">
           <TrendingUp className="w-3 h-3 mr-1" />
@@ -92,7 +92,7 @@ export const AIInsights = ({
             className="overflow-hidden"
           >
             <div className="px-3 pb-3">
-              <div className="text-xs text-teal-600 space-y-3">
+              <div className="text-sm text-teal-600 space-y-3">
                 {insightItems.map((item) => (
                   <div key={item.key} className="flex items-start space-x-2">
                     <item.icon
