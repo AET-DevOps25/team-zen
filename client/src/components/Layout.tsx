@@ -17,21 +17,4 @@ const Layout = ({ children }: PropsWithChildren) => {
   );
 };
 
-const ContentLayout = ({
-  children,
-  className = '',
-}: PropsWithChildren & { className?: string }) => {
-  return (
-    <div
-      className={cn(
-        'mx-auto block max-w-[calc(80rem_+_2rem)] px-[1rem]',
-        className,
-      )}
-    >
-      {children}
-    </div>
-  );
-};
-export { ContentLayout };
-
 export default Layout;

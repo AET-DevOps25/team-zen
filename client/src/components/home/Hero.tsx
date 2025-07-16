@@ -69,19 +69,8 @@ const Hero = () => {
                 transition={{ type: 'spring', stiffness: 400, damping: 17 }}
               >
                 <a href="/dashboard">
-                  <Button className="w-full sm:w-auto">
+                  <Button className="w-full sm:w-auto" variant="teal-animated">
                     Start Your Journalling Now
-                  </Button>
-                </a>
-              </motion.div>
-              <motion.div
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-              >
-                <a href="#how-it-works">
-                  <Button variant="outline" className="w-full sm:w-auto">
-                    Learn How It Works
                   </Button>
                 </a>
               </motion.div>
