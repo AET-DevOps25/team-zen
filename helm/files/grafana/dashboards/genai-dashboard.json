@@ -13,7 +13,7 @@
       "datasource": "Prometheus",
       "targets": [
         {
-          "expr": "sum(http_requests_total)",
+          "expr": "sum(http_requests_total{job=\"genai-microservice\",handler!~\"/(metrics|api/health(/detailed|/status)?|api/swagger-ui.html|api/webjars/.*|v3/api-docs(/swagger-config)?)\"})",
           "legendFormat": "Total Requests"
         }
       ],
@@ -37,8 +37,8 @@
       "datasource": "Prometheus",
       "targets": [
         {
-          "expr": "sum(rate(http_request_duration_seconds_sum[1m])) / sum(rate(http_request_duration_seconds_count[1m]))",
-          "legendFormat": "Avg Response Time"
+          "expr": "sum by (handler) (rate(http_request_duration_seconds_sum{job=\"genai-microservice\"}[1m])) / sum by (handler) (rate(http_request_duration_seconds_count{job=\"genai-microservice\"}[1m]))",
+          "legendFormat": "Avg Response Time {{handler}}"
         }
       ],
       "gridPos": { "x": 0, "y": 6, "w": 12, "h": 6 }
@@ -49,11 +49,23 @@
       "datasource": "Prometheus",
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total{status!~\"2..\"}[1m]))",
-          "legendFormat": "Error Rate"
+          "expr": "sum by (status, method, handler) (rate(http_requests_total{job=\"genai-microservice\", status!~\"2..\"}[1m]))",
+          "legendFormat": "{{handler}} {{method}} {{status}}"
         }
       ],
       "gridPos": { "x": 12, "y": 6, "w": 12, "h": 6 }
+    },
+    {
+      "type": "timeseries",
+      "title": "User and System CPU Usage",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "process_cpu_seconds_total{instance=\"genai-microservice:8082\", job=\"genai-microservice\"}",
+          "legendFormat": "Process CPU"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 6 }
     }
   ]
 } 
