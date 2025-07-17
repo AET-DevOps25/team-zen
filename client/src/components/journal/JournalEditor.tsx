@@ -65,8 +65,8 @@ export const JournalEditor = ({
                 isLoading
                   ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                   : isEditing
-                  ? 'bg-teal-500 text-white hover:bg-teal-600'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? 'bg-teal-500 text-white hover:bg-teal-600'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
               {isEditing ? 'Save' : 'Edit'}
