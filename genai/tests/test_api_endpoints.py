@@ -72,9 +72,9 @@ class TestAPIEndpoints:
         response = self.client.get("/api/genai/health")
         assert response.status_code == 200
 
-    def test_summary_only_endpoint(self):
-        """Test the summary-only endpoint."""
-        response = self.client.post("/api/genai/summary-only", json=self.sample_request)
+    def test_summary_endpoint(self):
+        """Test the summary endpoint."""
+        response = self.client.post("/api/genai/summary", json=self.sample_request)
         
         assert response.status_code == 200
         data = response.json()
@@ -88,9 +88,9 @@ class TestAPIEndpoints:
         assert "analysis" not in data
         assert "insights" not in data
 
-    def test_insights_only_endpoint(self):
-        """Test the insights-only endpoint."""
-        response = self.client.post("/api/genai/insights-only", json=self.sample_request)
+    def test_insights_endpoint(self):
+        """Test the insights endpoint."""
+        response = self.client.post("/api/genai/insights", json=self.sample_request)
         
         assert response.status_code == 200
         data = response.json()
@@ -111,14 +111,14 @@ class TestAPIEndpoints:
         # Should not contain summary
         assert "summary" not in data
 
-    def test_summary_only_endpoint_validation(self):
-        """Test validation for summary-only endpoint."""
+    def test_summary_endpoint_validation(self):
+        """Test validation for summary endpoint."""
         empty_request = {"snippetContents": []}
-        response = self.client.post("/api/genai/summary-only", json=empty_request)
+        response = self.client.post("/api/genai/summary", json=empty_request)
         assert response.status_code == 400
 
-    def test_insights_only_endpoint_validation(self):
-        """Test validation for insights-only endpoint."""
+    def test_insights_endpoint_validation(self):
+        """Test validation for insights endpoint."""
         empty_request = {"snippetContents": []}
-        response = self.client.post("/api/genai/insights-only", json=empty_request)
+        response = self.client.post("/api/genai/insights", json=empty_request)
         assert response.status_code == 400

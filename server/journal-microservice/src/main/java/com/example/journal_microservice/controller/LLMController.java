@@ -11,6 +11,8 @@ import com.example.journal_microservice.repository.JournalEntryRepository;
 import com.example.journal_microservice.repository.SnippetRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -18,6 +20,8 @@ import java.util.stream.Collectors;
 @RequestMapping("/api")
 @RestController
 public class LLMController {
+
+    private static final Logger logger = LoggerFactory.getLogger(LLMController.class);
 
     @Autowired
     private SnippetRepository snippetRepository;
@@ -40,9 +44,9 @@ public class LLMController {
                 .map(snippet -> snippet.getContent())
                 .collect(Collectors.toList());
 
-        System.out.println("Snippets content: " + snippetsContent);
+        logger.info("Snippets content: {}", snippetsContent);
         String summary = llmRestClient.generateJournalSummary(snippetsContent);
-        System.out.println("LLM Summary Result: " + summary);
+        logger.info("LLM Summary Result: {}", summary);
         
         if (summary != null) {
             journalEntry.setSummary(summary);
@@ -70,9 +74,9 @@ public class LLMController {
                 .map(snippet -> snippet.getContent())
                 .collect(Collectors.toList());
 
-        System.out.println("Snippets content: " + snippetsContent);
+        logger.info("Snippets content: {}", snippetsContent);
         Map<String, Object> llmResult = llmRestClient.generateJournalInsights(snippetsContent);
-        System.out.println("LLM Insights Result: " + llmResult);
+        logger.info("LLM Insights Result: {}", llmResult);
         
         if (llmResult != null) {
             // Create and populate Insights object

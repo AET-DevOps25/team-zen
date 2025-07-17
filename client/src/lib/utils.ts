@@ -8,7 +8,6 @@ export function cn(...inputs: Array<ClassValue>) {
   return twMerge(clsx(inputs));
 }
 
-// Journal-related interfaces and types
 export interface ExtendedJournalEntry extends JournalEntry {
   highlightedContent?: string;
   highlightedTitle?: string;
@@ -16,7 +15,6 @@ export interface ExtendedJournalEntry extends JournalEntry {
   snippetCount?: number;
 }
 
-// Utility function to convert dailyMood to valid Mood enum value
 export const getMoodValue = (dailyMood: number | undefined): Mood => {
   if (!dailyMood || dailyMood < 1 || dailyMood > 5) {
     return 3 as Mood; // Default to neutral for out-of-range values
@@ -41,34 +39,34 @@ export const highlightText = (
   return highlightedText;
 };
 
-// Calculate relevance score for search results
+const safeStringMatch = (
+  value: string | null | undefined,
+  query: string,
+): boolean => {
+  return (
+    value != null &&
+    typeof value === 'string' &&
+    value.toLowerCase().includes(query.toLowerCase())
+  );
+};
+
 export const calculateBasicRelevanceScore = (
   journal: ExtendedJournalEntry,
   query: string,
 ): number => {
   let score = 0;
-  const lowerQuery = query.toLowerCase();
 
-  const safeStringMatch = (value: string | null | undefined): boolean => {
-    return (
-      value != null &&
-      typeof value === 'string' &&
-      value.toLowerCase().includes(lowerQuery)
-    );
-  };
+  if (safeStringMatch(journal.title, query)) score += 3;
 
-  if (safeStringMatch(journal.title)) score += 3;
+  if (safeStringMatch(journal.summary, query)) score += 2;
 
-  if (safeStringMatch(journal.summary)) score += 2;
+  if (journal.tags?.some((tag) => safeStringMatch(tag, query))) score += 2;
 
-  if (journal.tags?.some((tag) => safeStringMatch(tag))) score += 2;
-
-  // Insights match
-  if (safeStringMatch(journal.insights?.analysis)) score += 1;
-  if (safeStringMatch(journal.insights?.moodPattern)) score += 1;
-  if (safeStringMatch(journal.insights?.suggestion)) score += 1;
-  if (safeStringMatch(journal.insights?.achievement)) score += 1;
-  if (safeStringMatch(journal.insights?.wellnessTip)) score += 1;
+  if (safeStringMatch(journal.insights?.analysis, query)) score += 1;
+  if (safeStringMatch(journal.insights?.moodPattern, query)) score += 1;
+  if (safeStringMatch(journal.insights?.suggestion, query)) score += 1;
+  if (safeStringMatch(journal.insights?.achievement, query)) score += 1;
+  if (safeStringMatch(journal.insights?.wellnessTip, query)) score += 1;
 
   return score;
 };
@@ -77,24 +75,24 @@ export const journalMatchesQuery = (
   journal: JournalEntry,
   query: string,
 ): boolean => {
-  const lowerQuery = query.toLowerCase();
-
-  const safeStringMatch = (value: string | null | undefined): boolean => {
-    return (
-      value != null &&
-      typeof value === 'string' &&
-      value.toLowerCase().includes(lowerQuery)
-    );
-  };
-
-  const titleMatch = safeStringMatch(journal.title);
-  const summaryMatch = safeStringMatch(journal.summary);
-  const analysisMatch = safeStringMatch(journal.insights?.analysis);
-  const moodPatternMatch = safeStringMatch(journal.insights?.moodPattern);
-  const suggestionMatch = safeStringMatch(journal.insights?.suggestion);
-  const achievementMatch = safeStringMatch(journal.insights?.achievement);
-  const wellnessTipMatch = safeStringMatch(journal.insights?.wellnessTip);
-  const tagsMatch = journal.tags?.some((tag) => safeStringMatch(tag)) ?? false;
+  const titleMatch = safeStringMatch(journal.title, query);
+  const summaryMatch = safeStringMatch(journal.summary, query);
+  const analysisMatch = safeStringMatch(journal.insights?.analysis, query);
+  const moodPatternMatch = safeStringMatch(
+    journal.insights?.moodPattern,
+    query,
+  );
+  const suggestionMatch = safeStringMatch(journal.insights?.suggestion, query);
+  const achievementMatch = safeStringMatch(
+    journal.insights?.achievement,
+    query,
+  );
+  const wellnessTipMatch = safeStringMatch(
+    journal.insights?.wellnessTip,
+    query,
+  );
+  const tagsMatch =
+    journal.tags?.some((tag) => safeStringMatch(tag, query)) ?? false;
 
   const matches =
     titleMatch ||
