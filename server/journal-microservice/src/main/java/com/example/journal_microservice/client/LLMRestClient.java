@@ -8,9 +8,9 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.core.ParameterizedTypeReference;
 
 import com.example.journal_microservice.dto.SnippetContentsRequest;
-import com.example.journal_microservice.dto.SnippetContentsResponse;
 
 import java.util.*;
 import org.slf4j.Logger;
@@ -45,12 +45,12 @@ public class LLMRestClient {
     }
 
     /**
-     * Generate journal summary and insights using the REST LLM service
+     * Generate only journal summary using the REST LLM service
      * 
      * @param array of snippet's contents
-     * @return JSON containing the summary and insights
+     * @return JSON containing only the summary
      */
-    public SnippetContentsResponse generateJournalSummaryAndInsight(List<String> snippetContents) {
+    public String generateJournalSummary(List<String> snippetContents) {
         try {
             // Test connection first
             if (!testConnection()) {
@@ -61,9 +61,8 @@ public class LLMRestClient {
             SnippetContentsRequest request = new SnippetContentsRequest(snippetContents);
 
             // Debug logging
-            logger.info("Sending request with {} snippet contents", snippetContents.size());
+            logger.info("Sending summary request with {} snippet contents", snippetContents.size());
             logger.info("Request object: {}", request);
-            logger.info("Snippet contents: {}", snippetContents);
 
             // Create headers
             HttpHeaders headers = new HttpHeaders();
@@ -77,17 +76,65 @@ public class LLMRestClient {
             String url = baseUrl + "/api/genai/summary";
             logger.info("Sending POST request to: {}", url);
 
-            ResponseEntity<SnippetContentsResponse> responseEntity = restTemplate.exchange(
+            ResponseEntity<Map<String, Object>> responseEntity = restTemplate.exchange(
                 url,
                 HttpMethod.POST,
                 requestEntity,
-                SnippetContentsResponse.class
+                new ParameterizedTypeReference<Map<String, Object>>() {}
             );
 
-            logger.info("Received response successfully with status: {}", responseEntity.getStatusCode());
+            logger.info("Received summary response successfully with status: {}", responseEntity.getStatusCode());
+            Map<String, Object> responseBody = responseEntity.getBody();
+            return responseBody != null ? (String) responseBody.get("summary") : null;
+        } catch (Exception e) {
+            logger.error("Error calling LLM REST service for summary: {}", e.getMessage(), e);
+            return null;
+        }
+    }
+
+    /**
+     * Generate only journal insights using the REST LLM service
+     * 
+     * @param array of snippet's contents
+     * @return JSON containing analysis and insights
+     */
+    public Map<String, Object> generateJournalInsights(List<String> snippetContents) {
+        try {
+            // Test connection first
+            if (!testConnection()) {
+                logger.error("Cannot connect to LLM service");
+                return null;
+            }
+
+            SnippetContentsRequest request = new SnippetContentsRequest(snippetContents);
+
+            // Debug logging
+            logger.info("Sending insights request with {} snippet contents", snippetContents.size());
+            logger.info("Request object: {}", request);
+
+            // Create headers
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("Connection", "close");
+            headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
+
+            // Create the request entity
+            HttpEntity<SnippetContentsRequest> requestEntity = new HttpEntity<>(request, headers);
+
+            String url = baseUrl + "/api/genai/insights";
+            logger.info("Sending POST request to: {}", url);
+
+            ResponseEntity<Map<String, Object>> responseEntity = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                requestEntity,
+                new ParameterizedTypeReference<Map<String, Object>>() {}
+            );
+
+            logger.info("Received insights response successfully with status: {}", responseEntity.getStatusCode());
             return responseEntity.getBody();
         } catch (Exception e) {
-            logger.error("Error calling LLM REST service: {}", e.getMessage(), e);
+            logger.error("Error calling LLM REST service for insights: {}", e.getMessage(), e);
             return null;
         }
     }

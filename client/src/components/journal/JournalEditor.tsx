@@ -22,16 +22,16 @@ export const JournalEditor = ({
     onContentChange(e.target.value);
   };
 
+  const handleContentClick = () => {
+    if (!isLoading) {
+      onToggleEdit();
+    }
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       onToggleEdit(); // save and exit edit mode
-    }
-  };
-
-  const handleContentClick = () => {
-    if (!isEditing) {
-      onToggleEdit(); // start editing when clicking on the content
     }
   };
 
@@ -48,17 +48,25 @@ export const JournalEditor = ({
             {isEditing && (
               <button
                 onClick={onToggleEdit}
-                className="px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-gray-100 text-gray-600 hover:bg-gray-200"
+                disabled={isLoading}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isLoading
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
               >
                 Cancel
               </button>
             )}
             <button
               onClick={onToggleEdit}
+              disabled={isLoading}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                isEditing
-                  ? 'bg-teal-500 text-white hover:bg-teal-600'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                isLoading
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : isEditing
+                    ? 'bg-teal-500 text-white hover:bg-teal-600'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
               {isEditing ? 'Save' : 'Edit'}
@@ -99,7 +107,6 @@ export const JournalEditor = ({
                   >
                     <div className="flex items-center space-x-2">
                       <Brain className="w-5 h-5 text-purple-600 animate-pulse" />
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-teal-600"></div>
                     </div>
                     <p className="text-sm font-medium text-gray-700">
                       {loadingMessage}
@@ -129,13 +136,17 @@ export const JournalEditor = ({
         ) : (
           <div className="prose prose-lg max-w-none relative">
             <div
-              className="whitespace-pre-wrap text-gray-700 leading-relaxed cursor-text hover:bg-gray-50 transition-colors rounded-lg p-2 -m-2"
+              className={`whitespace-pre-wrap text-gray-700 leading-relaxed transition-colors rounded-lg p-2 -m-2 ${
+                isLoading
+                  ? 'cursor-not-allowed opacity-60'
+                  : 'cursor-text hover:bg-gray-50'
+              }`}
               style={{ minHeight: '400px' }}
               onClick={handleContentClick}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
+                if ((e.key === 'Enter' || e.key === ' ') && !isLoading) {
                   handleContentClick();
                 }
               }}
@@ -164,7 +175,6 @@ export const JournalEditor = ({
                   >
                     <div className="flex items-center space-x-2">
                       <Brain className="w-5 h-5 text-purple-600 animate-pulse" />
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-teal-600"></div>
                     </div>
                     <p className="text-sm font-medium text-gray-700">
                       {loadingMessage}
