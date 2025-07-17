@@ -36,7 +36,8 @@ public class GatewayConfig {
 
                                 // Journal Service (with auth filter)
                                 .route("journal-service", r -> r
-                                                .path("/api/journalEntry/**", "/api/snippets/**", "/api/summary/**")
+                                                .path("/api/journalEntry/**", "/api/snippets/**", "/api/summary/**",
+                                                                "/api/insights/**")
                                                 .filters(f -> f.filter(clerkAuthenticationFilter))
                                                 .uri(journalServiceUri))
 
@@ -46,10 +47,10 @@ public class GatewayConfig {
                                                 .filters(f -> f.filter(clerkAuthenticationFilter))
                                                 .uri(genaiServiceUri))
 
-                                 .route("gateway-api-docs", r -> r
-                                                 .path("/api/v3/api-docs/**")
-                                                 .filters(f -> f.redirect(302, "/v3/api-docs"))
-                                                 .uri("no://op"))
+                                .route("gateway-api-docs", r -> r
+                                                .path("/api/v3/api-docs/**")
+                                                .filters(f -> f.redirect(302, "/v3/api-docs"))
+                                                .uri("no://op"))
 
                                 // User Service (api docs)
                                 .route("user-service-docs", r -> r

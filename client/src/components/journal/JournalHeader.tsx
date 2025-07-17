@@ -37,7 +37,7 @@ export const JournalHeader = ({
 
   return (
     <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40">
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto py-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <Button

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ExtendedJournalEntry } from '@/lib/utils';
 import {
   calculateBasicRelevanceScore,
@@ -15,7 +15,7 @@ export const useJournalSearch = (journals: Array<ExtendedJournalEntry>) => {
 
   const performSearch = useCallback(
     (query: string) => {
-      if (!query.trim()) {
+      if (!query.trim() || query.trim().length < 3) {
         setSearchResults([]);
         return;
       }
@@ -53,13 +53,20 @@ export const useJournalSearch = (journals: Array<ExtendedJournalEntry>) => {
     [journals],
   );
 
+  useEffect(() => {
+    if (searchQuery.trim() && searchQuery.trim().length >= 3) {
+      performSearch(searchQuery);
+    }
+  }, [journals, searchQuery, performSearch]);
+
   const handleSearchChange = useCallback(
     (query: string) => {
       setSearchQuery(query);
-      if (query.trim()) {
+      if (query.trim() && query.trim().length >= 3) {
         performSearch(query);
       } else {
         setSearchResults([]);
+        setIsSearching(false);
       }
     },
     [performSearch],

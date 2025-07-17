@@ -30,7 +30,7 @@ export const InsightCard = ({
         <Icon className="w-6 h-6 mt-0.5" />
         <div>
           <h3 className="font-semibold mb-2">{title}</h3>
-          <p className="text-sm opacity-80 max-w-xl">{content}</p>
+          <p className="text-sm opacity-80 max-w-2xl">{content}</p>
         </div>
       </div>
     </motion.div>

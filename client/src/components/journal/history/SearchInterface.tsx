@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Brain, Filter, Search, Sparkles } from 'lucide-react';
 import { MOOD_OPTIONS } from '../../../constants/moods';
-import { months } from '@/mock/data';
+import type { ExtendedJournalEntry } from '@/lib/utils';
 
 interface SearchInterfaceProps {
   searchQuery: string;
@@ -11,6 +11,7 @@ interface SearchInterfaceProps {
   selectedMonth: string;
   sortBy: string;
   filteredJournalsLength: number;
+  journals: Array<ExtendedJournalEntry>;
   onSearchChange: (query: string) => void;
   onToggleFilters: () => void;
   onMoodChange: (mood: string) => void;
@@ -36,12 +37,54 @@ export const SearchInterface = ({
   selectedMonth,
   sortBy,
   filteredJournalsLength,
+  journals,
   onSearchChange,
   onToggleFilters,
   onMoodChange,
   onMonthChange,
   onSortChange,
 }: SearchInterfaceProps) => {
+  // Generate available months from journals data
+  const availableMonths = () => {
+    if (journals.length === 0) {
+      return [];
+    }
+
+    const monthsSet = new Set<string>();
+
+    journals.forEach((journal) => {
+      try {
+        const date = new Date(journal.date);
+        // Check if date is valid
+        if (isNaN(date.getTime())) {
+          return; // Skip invalid dates
+        }
+
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1;
+        const monthValue = `${year}-${month.toString().padStart(2, '0')}`;
+        const monthLabel = date.toLocaleDateString('en-US', {
+          month: 'long',
+          year: 'numeric',
+        });
+
+        monthsSet.add(JSON.stringify({ value: monthValue, label: monthLabel }));
+      } catch (error) {
+        // Skip entries with invalid dates
+        console.warn('Invalid date in journal entry:', journal.date);
+      }
+    });
+
+    // Convert back to objects and sort by date (newest first)
+    const months = Array.from(monthsSet)
+      .map((str) => JSON.parse(str))
+      .sort((a, b) => b.value.localeCompare(a.value));
+
+    return months;
+  };
+
+  const months = availableMonths();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -69,12 +112,12 @@ export const SearchInterface = ({
       </div>
 
       <div className="relative mb-4">
-        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />{' '}
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Search your journals by title, content, or tags..."
+          placeholder="Search your journals (min 3 characters)..."
           className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-700 placeholder-gray-400"
         />
         {isSearching && (
@@ -104,7 +147,6 @@ export const SearchInterface = ({
         </div>
       )}
 
-      {/* Search Results Info */}
       {searchQuery && (
         <div className="mb-4 p-3 bg-purple-50 rounded-lg">
           <div className="flex items-center text-purple-700">
@@ -117,7 +159,6 @@ export const SearchInterface = ({
         </div>
       )}
 
-      {/* Traditional Filters */}
       <AnimatePresence>
         {showFilters && !searchQuery && (
           <motion.div

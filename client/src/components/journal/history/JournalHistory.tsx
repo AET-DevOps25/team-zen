@@ -12,25 +12,23 @@ const JournalHistory = () => {
     Record<string, boolean>
   >({});
 
-  // Fetch all journals using the query hook
   const { journals: journalsData, isLoading } = useGetAllJournals();
 
-  // Transform journals data to include extended properties
   const journals = useMemo((): Array<ExtendedJournalEntry> => {
     if (isLoading || journalsData.length === 0) return [];
 
-    return journalsData.map((journal) => ({
+    const transformedJournals = journalsData.map((journal) => ({
       ...journal,
       snippetCount: journal.snippetIds.length || 0,
       relevanceScore: 0,
     }));
+
+    return transformedJournals;
   }, [journalsData, isLoading]);
 
-  // Search functionality
   const { searchQuery, searchResults, isSearching, setSearchQuery } =
     useJournalSearch(journals);
 
-  // Filter functionality
   const {
     selectedMood,
     setSelectedMood,
@@ -53,7 +51,6 @@ const JournalHistory = () => {
 
   return (
     <div className="space-y-8">
-      {/* Search Interface */}
       <SearchInterface
         searchQuery={searchQuery}
         isSearching={isSearching}
@@ -62,6 +59,7 @@ const JournalHistory = () => {
         selectedMonth={selectedMonth}
         sortBy={sortBy}
         filteredJournalsLength={filteredJournals.length}
+        journals={journals}
         onSearchChange={setSearchQuery}
         onToggleFilters={toggleFilters}
         onMoodChange={setSelectedMood}
@@ -69,7 +67,6 @@ const JournalHistory = () => {
         onSortChange={setSortBy}
       />
 
-      {/* Journal Results */}
       <div className="space-y-6">
         {filteredJournals.length === 0 ? (
           <EmptyState hasSearchQuery={!!searchQuery} />

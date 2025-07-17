@@ -8,7 +8,6 @@ export function cn(...inputs: Array<ClassValue>) {
   return twMerge(clsx(inputs));
 }
 
-// Journal-related interfaces and types
 export interface ExtendedJournalEntry extends JournalEntry {
   highlightedContent?: string;
   highlightedTitle?: string;
@@ -16,7 +15,6 @@ export interface ExtendedJournalEntry extends JournalEntry {
   snippetCount?: number;
 }
 
-// Utility function to convert dailyMood to valid Mood enum value
 export const getMoodValue = (dailyMood: number | undefined): Mood => {
   if (!dailyMood || dailyMood < 1 || dailyMood > 5) {
     return 3 as Mood; // Default to neutral for out-of-range values
@@ -41,64 +39,74 @@ export const highlightText = (
   return highlightedText;
 };
 
-// Calculate relevance score for search results
+const safeStringMatch = (
+  value: string | null | undefined,
+  query: string,
+): boolean => {
+  return (
+    value != null &&
+    typeof value === 'string' &&
+    value.toLowerCase().includes(query.toLowerCase())
+  );
+};
+
 export const calculateBasicRelevanceScore = (
   journal: ExtendedJournalEntry,
   query: string,
 ): number => {
   let score = 0;
-  const lowerQuery = query.toLowerCase();
 
-  // Title match gets higher score
-  if (journal.title.toLowerCase().includes(lowerQuery)) score += 3;
+  if (safeStringMatch(journal.title, query)) score += 3;
 
-  // Summary match
-  if (journal.summary?.toLowerCase().includes(lowerQuery)) score += 2;
+  if (safeStringMatch(journal.summary, query)) score += 2;
 
-  // Tags match
-  if (journal.tags?.some((tag) => tag.toLowerCase().includes(lowerQuery)))
-    score += 2;
+  if (journal.tags?.some((tag) => safeStringMatch(tag, query))) score += 2;
 
-  // Insights match
-  if (journal.insights?.analysis?.toLowerCase().includes(lowerQuery))
-    score += 1;
-  if (journal.insights?.moodPattern?.toLowerCase().includes(lowerQuery))
-    score += 1;
-  if (journal.insights?.suggestion?.toLowerCase().includes(lowerQuery))
-    score += 1;
-  if (journal.insights?.achievement?.toLowerCase().includes(lowerQuery))
-    score += 1;
-  if (journal.insights?.wellnessTip?.toLowerCase().includes(lowerQuery))
-    score += 1;
+  if (safeStringMatch(journal.insights?.analysis, query)) score += 1;
+  if (safeStringMatch(journal.insights?.moodPattern, query)) score += 1;
+  if (safeStringMatch(journal.insights?.suggestion, query)) score += 1;
+  if (safeStringMatch(journal.insights?.achievement, query)) score += 1;
+  if (safeStringMatch(journal.insights?.wellnessTip, query)) score += 1;
 
   return score;
 };
 
-// Check if journal matches search query
 export const journalMatchesQuery = (
   journal: JournalEntry,
   query: string,
 ): boolean => {
-  const lowerQuery = query.toLowerCase();
-
-  return (
-    journal.title.toLowerCase().includes(lowerQuery) ||
-    (journal.summary?.toLowerCase().includes(lowerQuery) ?? false) ||
-    (journal.insights?.analysis?.toLowerCase().includes(lowerQuery) ?? false) ||
-    (journal.insights?.moodPattern?.toLowerCase().includes(lowerQuery) ??
-      false) ||
-    (journal.insights?.suggestion?.toLowerCase().includes(lowerQuery) ??
-      false) ||
-    (journal.insights?.achievement?.toLowerCase().includes(lowerQuery) ??
-      false) ||
-    (journal.insights?.wellnessTip?.toLowerCase().includes(lowerQuery) ??
-      false) ||
-    (journal.tags?.some((tag) => tag.toLowerCase().includes(lowerQuery)) ??
-      false)
+  const titleMatch = safeStringMatch(journal.title, query);
+  const summaryMatch = safeStringMatch(journal.summary, query);
+  const analysisMatch = safeStringMatch(journal.insights?.analysis, query);
+  const moodPatternMatch = safeStringMatch(
+    journal.insights?.moodPattern,
+    query,
   );
+  const suggestionMatch = safeStringMatch(journal.insights?.suggestion, query);
+  const achievementMatch = safeStringMatch(
+    journal.insights?.achievement,
+    query,
+  );
+  const wellnessTipMatch = safeStringMatch(
+    journal.insights?.wellnessTip,
+    query,
+  );
+  const tagsMatch =
+    journal.tags?.some((tag) => safeStringMatch(tag, query)) ?? false;
+
+  const matches =
+    titleMatch ||
+    summaryMatch ||
+    analysisMatch ||
+    moodPatternMatch ||
+    suggestionMatch ||
+    achievementMatch ||
+    wellnessTipMatch ||
+    tagsMatch;
+
+  return matches;
 };
 
-// Date formatting utilities
 export const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
   return date.toLocaleDateString('en-US', {
@@ -122,7 +130,6 @@ export const getRelativeDate = (dateString: string): string => {
   return `${Math.floor(diffDays / 30)} months ago`;
 };
 
-// Sort journals by different criteria
 export const sortJournals = (
   journals: Array<ExtendedJournalEntry>,
   sortBy: string,
