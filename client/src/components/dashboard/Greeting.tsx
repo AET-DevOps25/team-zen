@@ -8,7 +8,7 @@ interface GreetingProps {
 }
 
 const Greeting: React.FC<GreetingProps> = ({
-  userName = 'Sarah',
+  userName = 'User',
   onQuickEntry,
 }) => {
   const [currentTime, setCurrentTime] = useState(new Date());

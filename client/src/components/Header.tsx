@@ -37,7 +37,7 @@ export default function Header() {
         <ApiDemo />
         <SignedOut>
           <Button variant="teal-animated" asChild>
-            <SignInButton />
+            <SignInButton forceRedirectUrl="/dashboard" />
           </Button>
         </SignedOut>
         <SignedIn>

@@ -2,16 +2,16 @@ import { useNavigate, useParams } from '@tanstack/react-router';
 import { AnimatePresence, motion } from 'framer-motion';
 import { BarChart3, Edit3, History } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
+import { useUser } from '@clerk/clerk-react';
 import type { LucideIcon } from 'lucide-react';
 import Greeting from '@/components/dashboard/Greeting';
 import JournalBoard from '@/components/dashboard/JournalBoard';
 import JournalHistory from '@/components/dashboard/JournalHistory';
 import Overview from '@/components/dashboard/Overview';
-import { useAuth } from '@/hooks';
 
 const Dashboard: React.FC = () => {
   const { activeTab, handleTabChange } = useDashboardNavigation();
-  const { userName } = useAuth();
+  const { user } = useUser();
   const navigate = useNavigate();
 
   const activeTabConfig = DASHBOARD_TABS[activeTab];
@@ -21,7 +21,7 @@ const Dashboard: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-blue-50">
       <div className="container mx-auto py-8">
         <Greeting
-          userName={userName ?? ''}
+          userName={user?.firstName ?? ''}
           onQuickEntry={() => navigate({ to: '/snippet' })}
         />
         <TabNavigation activeTab={activeTab} onTabChange={handleTabChange} />
