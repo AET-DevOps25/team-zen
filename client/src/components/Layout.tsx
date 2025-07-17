@@ -2,7 +2,6 @@ import Footer from './Footer';
 import Header from './Header';
 import { Toaster } from './ui/sonner';
 import type { PropsWithChildren } from 'react';
-import { cn } from '@/lib/utils';
 
 const Layout = ({ children }: PropsWithChildren) => {
   return (
@@ -11,27 +10,10 @@ const Layout = ({ children }: PropsWithChildren) => {
         <Header />
       </div>
       {children}
-      <Toaster richColors />
+      <Toaster richColors theme="light" />
       <Footer />
     </main>
   );
 };
-
-const ContentLayout = ({
-  children,
-  className = '',
-}: PropsWithChildren & { className?: string }) => {
-  return (
-    <div
-      className={cn(
-        'mx-auto block max-w-[calc(80rem_+_2rem)] px-[1rem]',
-        className,
-      )}
-    >
-      {children}
-    </div>
-  );
-};
-export { ContentLayout };
 
 export default Layout;

@@ -71,3 +71,54 @@ class TestAPIEndpoints:
         # Test that prefixed routes work
         response = self.client.get("/api/genai/health")
         assert response.status_code == 200
+
+    def test_summary_endpoint(self):
+        """Test the summary endpoint."""
+        response = self.client.post("/api/genai/summary", json=self.sample_request)
+        
+        assert response.status_code == 200
+        data = response.json()
+        
+        # Should only contain summary
+        assert "summary" in data
+        assert isinstance(data["summary"], str)
+        assert len(data["summary"]) > 0
+        
+        # Should not contain analysis or insights
+        assert "analysis" not in data
+        assert "insights" not in data
+
+    def test_insights_endpoint(self):
+        """Test the insights endpoint."""
+        response = self.client.post("/api/genai/insights", json=self.sample_request)
+        
+        assert response.status_code == 200
+        data = response.json()
+        
+        # Should contain analysis and insights
+        assert "analysis" in data
+        assert "insights" in data
+        assert isinstance(data["analysis"], str)
+        assert isinstance(data["insights"], dict)
+        
+        # Insights should have the expected structure
+        insights = data["insights"]
+        assert "moodPattern" in insights
+        assert "suggestion" in insights
+        assert "achievement" in insights
+        assert "wellnessTip" in insights
+        
+        # Should not contain summary
+        assert "summary" not in data
+
+    def test_summary_endpoint_validation(self):
+        """Test validation for summary endpoint."""
+        empty_request = {"snippetContents": []}
+        response = self.client.post("/api/genai/summary", json=empty_request)
+        assert response.status_code == 400
+
+    def test_insights_endpoint_validation(self):
+        """Test validation for insights endpoint."""
+        empty_request = {"snippetContents": []}
+        response = self.client.post("/api/genai/insights", json=empty_request)
+        assert response.status_code == 400

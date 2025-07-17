@@ -135,11 +135,13 @@ export const JournalCard = ({
 
       {/* AI Insights */}
       {journal.insights && (
-        <AIInsights
-          insights={journal.insights}
-          isExpanded={isInsightsExpanded}
-          onToggle={onToggleInsights}
-        />
+        <div onClick={(e) => e.stopPropagation()}>
+          <AIInsights
+            insights={journal.insights}
+            isExpanded={isInsightsExpanded}
+            onToggle={onToggleInsights}
+          />
+        </div>
       )}
     </motion.div>
   );

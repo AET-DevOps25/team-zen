@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { useGetJournal, useUpdateJournal } from '@/api/journal';
+import {
+  useGenerateInsights,
+  useGenerateSummary,
+  useGetJournal,
+  useUpdateJournal,
+} from '@/api/journal';
 import { useGetSnippets } from '@/api/snippet';
 
 export const useJournalState = (journalId?: string) => {
@@ -14,6 +19,10 @@ export const useJournalState = (journalId?: string) => {
 
   const { journal, isLoading } = useGetJournal(journalId);
   const { mutateAsync: updateJournal } = useUpdateJournal();
+  const { mutateAsync: generateInsights, isPending: isGeneratingInsights } =
+    useGenerateInsights();
+  const { mutateAsync: generateSummary, isPending: isGeneratingSummary } =
+    useGenerateSummary();
 
   // Get snippets for the journal's date, fallback to today if no journal date
   // Ensure date is in YYYY-MM-DD format
@@ -70,9 +79,20 @@ export const useJournalState = (journalId?: string) => {
     }
   }, [navigate]);
 
-  const handleSummarize = useCallback((summary: string) => {
-    setJournalContent(summary);
-  }, []);
+  const handleGenerateInsights = useCallback(async () => {
+    if (journal?.id) {
+      await generateInsights(journal.id);
+    }
+  }, [journal?.id, generateInsights]);
+
+  const handleGenerateJournalFromSnippets = useCallback(async () => {
+    if (journal?.id) {
+      const summary = await generateSummary(journal.id);
+      if (summary) {
+        setJournalContent(summary);
+      }
+    }
+  }, [journal?.id, generateSummary]);
 
   return {
     // State
@@ -81,6 +101,8 @@ export const useJournalState = (journalId?: string) => {
     journalTitle,
     isEditing,
     isEditingTitle,
+    isGeneratingInsights,
+    isGeneratingSummary,
     snippets,
     journal,
     // Actions
@@ -91,6 +113,7 @@ export const useJournalState = (journalId?: string) => {
     handleToggleEdit,
     handleTitleEditEnd,
     handleBackToDashboard: handleGoBack,
-    handleSummarize,
+    handleGenerateInsights,
+    handleGenerateJournalFromSnippets,
   };
 };

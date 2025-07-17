@@ -205,6 +205,121 @@ export const useGetSummary = (journalId: string, enabled: boolean = true) => {
   });
 };
 
+export const useGenerateSummary = () => {
+  const { getToken } = useAuth();
+  const queryClient = useQueryClient();
+
+  const generateSummary = async (journalId: string): Promise<string> => {
+    const token = await getToken();
+    const response = await fetch(
+      `${env.VITE_API_URL}/api/summary/${journalId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to generate summary: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.summary;
+  };
+
+  return useMutation({
+    mutationFn: generateSummary,
+    onSuccess: (_, journalId) => {
+      // Invalidate summary query to refetch updated data
+      queryClient.invalidateQueries({ queryKey: ['summary', journalId] });
+      // Also invalidate journal entries to get updated summary
+      queryClient.invalidateQueries({ queryKey: ['journal'] });
+      queryClient.invalidateQueries({ queryKey: ['allJournals'] });
+    },
+  });
+};
+
+export const useGenerateInsights = () => {
+  const { getToken } = useAuth();
+  const queryClient = useQueryClient();
+
+  const generateInsights = async (journalId: string): Promise<void> => {
+    const token = await getToken();
+    const response = await fetch(
+      `${env.VITE_API_URL}/api/insights/${journalId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to generate insights: ${response.status}`);
+    }
+  };
+
+  return useMutation({
+    mutationFn: generateInsights,
+    onSuccess: (_, journalId) => {
+      // Invalidate insights query to refetch updated data
+      queryClient.invalidateQueries({ queryKey: ['insights', journalId] });
+      // Also invalidate journal entries to get updated insights
+      queryClient.invalidateQueries({ queryKey: ['journal'] });
+      queryClient.invalidateQueries({ queryKey: ['allJournals'] });
+    },
+  });
+};
+
+export const useGetInsights = (journalId: string, enabled: boolean = true) => {
+  const { getToken } = useAuth();
+
+  const fetchInsights = async (): Promise<{
+    analysis: string;
+    insights: {
+      moodPattern: string;
+      suggestion: string;
+      achievement: string;
+      wellnessTip: string;
+    };
+  }> => {
+    const token = await getToken();
+    const response = await fetch(
+      `${env.VITE_API_URL}/api/insights/${journalId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch insights: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return {
+      analysis: data.analysis,
+      insights: data.insights,
+    };
+  };
+
+  return useQuery({
+    queryKey: ['insights', journalId],
+    queryFn: fetchInsights,
+    enabled: !!journalId && enabled,
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+};
+
 export const useGetUserStatistics = () => {
   const { getToken } = useAuth();
   const { user } = useUser();

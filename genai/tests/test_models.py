@@ -1,6 +1,6 @@
 import pytest
 from pydantic import ValidationError
-from app.main import SummaryRequest, InsightsResponse, SummaryResponse
+from app.models.schemas import SummaryRequest, InsightsResponse, SummaryResponse
 
 
 class TestPydanticModels:

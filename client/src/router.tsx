@@ -14,7 +14,6 @@ import Profile from './app/profile.tsx';
 import Journal from './app/journal.tsx';
 import CreateSnippet from './app/snippet.tsx';
 
-// Protected route wrapper component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isSignedIn, isLoaded } = useAuth();
 
@@ -33,7 +32,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Protected layout component
 const ProtectedLayout = () => {
   return (
     <ProtectedRoute>

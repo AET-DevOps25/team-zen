@@ -9,9 +9,6 @@ import './styles.css';
 const queryClient = new QueryClient();
 
 function Root({ children }: PropsWithChildren) {
-  // TODO: Remove console.logs
-  console.log('Clerk Publishable Key:', env.VITE_CLERK_PUBLISHABLE_KEY);
-  console.log('VITE Base URL:', env.VITE_API_URL);
   return (
     <ClerkProvider
       publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}

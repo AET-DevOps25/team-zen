@@ -1,1 +1,1 @@
-export { default } from '../journal/history';
+export { default } from '../journal/history/JournalHistory';

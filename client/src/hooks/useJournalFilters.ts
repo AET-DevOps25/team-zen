@@ -17,31 +17,26 @@ export const useJournalFilters = (
       return [];
     }
 
-    // If searching and have results, return search results
-    if (searchQuery && searchResults.length >= 0) {
+    if (searchQuery.trim() && searchResults.length >= 0) {
       return searchResults;
     }
 
     let filtered = journals;
 
-    // Apply traditional filters when not searching
-    if (!searchQuery) {
-      if (selectedMood !== 'all') {
-        filtered = filtered.filter(
-          (journal) =>
-            getMoodValue(journal.dailyMood) === Number.parseInt(selectedMood),
-        );
-      }
-
-      if (selectedMonth !== 'all') {
-        filtered = filtered.filter((journal) =>
-          journal.date.startsWith(selectedMonth),
-        );
-      }
-
-      // Apply sorting
-      filtered = sortJournals(filtered, sortBy);
+    if (selectedMood !== 'all') {
+      filtered = filtered.filter(
+        (journal) =>
+          getMoodValue(journal.dailyMood) === Number.parseInt(selectedMood),
+      );
     }
+
+    if (selectedMonth !== 'all') {
+      filtered = filtered.filter((journal) =>
+        journal.date.startsWith(selectedMonth),
+      );
+    }
+
+    filtered = sortJournals(filtered, sortBy);
 
     return filtered;
   }, [
