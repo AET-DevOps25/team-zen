@@ -49,56 +49,66 @@ export const calculateBasicRelevanceScore = (
   let score = 0;
   const lowerQuery = query.toLowerCase();
 
-  // Title match gets higher score
-  if (journal.title.toLowerCase().includes(lowerQuery)) score += 3;
+  const safeStringMatch = (value: string | null | undefined): boolean => {
+    return (
+      value != null &&
+      typeof value === 'string' &&
+      value.toLowerCase().includes(lowerQuery)
+    );
+  };
 
-  // Summary match
-  if (journal.summary?.toLowerCase().includes(lowerQuery)) score += 2;
+  if (safeStringMatch(journal.title)) score += 3;
 
-  // Tags match
-  if (journal.tags?.some((tag) => tag.toLowerCase().includes(lowerQuery)))
-    score += 2;
+  if (safeStringMatch(journal.summary)) score += 2;
+
+  if (journal.tags?.some((tag) => safeStringMatch(tag))) score += 2;
 
   // Insights match
-  if (journal.insights?.analysis?.toLowerCase().includes(lowerQuery))
-    score += 1;
-  if (journal.insights?.moodPattern?.toLowerCase().includes(lowerQuery))
-    score += 1;
-  if (journal.insights?.suggestion?.toLowerCase().includes(lowerQuery))
-    score += 1;
-  if (journal.insights?.achievement?.toLowerCase().includes(lowerQuery))
-    score += 1;
-  if (journal.insights?.wellnessTip?.toLowerCase().includes(lowerQuery))
-    score += 1;
+  if (safeStringMatch(journal.insights?.analysis)) score += 1;
+  if (safeStringMatch(journal.insights?.moodPattern)) score += 1;
+  if (safeStringMatch(journal.insights?.suggestion)) score += 1;
+  if (safeStringMatch(journal.insights?.achievement)) score += 1;
+  if (safeStringMatch(journal.insights?.wellnessTip)) score += 1;
 
   return score;
 };
 
-// Check if journal matches search query
 export const journalMatchesQuery = (
   journal: JournalEntry,
   query: string,
 ): boolean => {
   const lowerQuery = query.toLowerCase();
 
-  return (
-    journal.title.toLowerCase().includes(lowerQuery) ||
-    (journal.summary?.toLowerCase().includes(lowerQuery) ?? false) ||
-    (journal.insights?.analysis?.toLowerCase().includes(lowerQuery) ?? false) ||
-    (journal.insights?.moodPattern?.toLowerCase().includes(lowerQuery) ??
-      false) ||
-    (journal.insights?.suggestion?.toLowerCase().includes(lowerQuery) ??
-      false) ||
-    (journal.insights?.achievement?.toLowerCase().includes(lowerQuery) ??
-      false) ||
-    (journal.insights?.wellnessTip?.toLowerCase().includes(lowerQuery) ??
-      false) ||
-    (journal.tags?.some((tag) => tag.toLowerCase().includes(lowerQuery)) ??
-      false)
-  );
+  const safeStringMatch = (value: string | null | undefined): boolean => {
+    return (
+      value != null &&
+      typeof value === 'string' &&
+      value.toLowerCase().includes(lowerQuery)
+    );
+  };
+
+  const titleMatch = safeStringMatch(journal.title);
+  const summaryMatch = safeStringMatch(journal.summary);
+  const analysisMatch = safeStringMatch(journal.insights?.analysis);
+  const moodPatternMatch = safeStringMatch(journal.insights?.moodPattern);
+  const suggestionMatch = safeStringMatch(journal.insights?.suggestion);
+  const achievementMatch = safeStringMatch(journal.insights?.achievement);
+  const wellnessTipMatch = safeStringMatch(journal.insights?.wellnessTip);
+  const tagsMatch = journal.tags?.some((tag) => safeStringMatch(tag)) ?? false;
+
+  const matches =
+    titleMatch ||
+    summaryMatch ||
+    analysisMatch ||
+    moodPatternMatch ||
+    suggestionMatch ||
+    achievementMatch ||
+    wellnessTipMatch ||
+    tagsMatch;
+
+  return matches;
 };
 
-// Date formatting utilities
 export const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
   return date.toLocaleDateString('en-US', {
@@ -122,7 +132,6 @@ export const getRelativeDate = (dateString: string): string => {
   return `${Math.floor(diffDays / 30)} months ago`;
 };
 
-// Sort journals by different criteria
 export const sortJournals = (
   journals: Array<ExtendedJournalEntry>,
   sortBy: string,

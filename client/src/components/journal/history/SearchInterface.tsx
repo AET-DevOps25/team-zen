@@ -112,12 +112,12 @@ export const SearchInterface = ({
       </div>
 
       <div className="relative mb-4">
-        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />{' '}
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Search your journals by title, content, or tags..."
+          placeholder="Search your journals (min 3 characters)..."
           className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-700 placeholder-gray-400"
         />
         {isSearching && (
@@ -147,7 +147,6 @@ export const SearchInterface = ({
         </div>
       )}
 
-      {/* Search Results Info */}
       {searchQuery && (
         <div className="mb-4 p-3 bg-purple-50 rounded-lg">
           <div className="flex items-center text-purple-700">
@@ -160,7 +159,6 @@ export const SearchInterface = ({
         </div>
       )}
 
-      {/* Traditional Filters */}
       <AnimatePresence>
         {showFilters && !searchQuery && (
           <motion.div

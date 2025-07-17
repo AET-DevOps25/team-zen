@@ -12,25 +12,23 @@ const JournalHistory = () => {
     Record<string, boolean>
   >({});
 
-  // Fetch all journals using the query hook
   const { journals: journalsData, isLoading } = useGetAllJournals();
 
-  // Transform journals data to include extended properties
   const journals = useMemo((): Array<ExtendedJournalEntry> => {
     if (isLoading || journalsData.length === 0) return [];
 
-    return journalsData.map((journal) => ({
+    const transformedJournals = journalsData.map((journal) => ({
       ...journal,
       snippetCount: journal.snippetIds.length || 0,
       relevanceScore: 0,
     }));
+
+    return transformedJournals;
   }, [journalsData, isLoading]);
 
-  // Search functionality
   const { searchQuery, searchResults, isSearching, setSearchQuery } =
     useJournalSearch(journals);
 
-  // Filter functionality
   const {
     selectedMood,
     setSelectedMood,

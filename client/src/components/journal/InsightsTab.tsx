@@ -13,7 +13,7 @@ interface InsightsTabProps {
 
 export const InsightsTab = ({ snippets, journal }: InsightsTabProps) => {
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="mx-auto">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -29,7 +29,7 @@ export const InsightsTab = ({ snippets, journal }: InsightsTabProps) => {
             <BlendIcon className="size-6 mt-1" />
             <div>
               <h3 className="font-semibold mb-2">Overall Analysis</h3>
-              <p className="text-sm opacity-80 max-w-4xl">
+              <p className="text-sm opacity-80 max-w-[90rem]">
                 {journal?.insights?.analysis || 'No analysis available yet.'}
               </p>
             </div>
