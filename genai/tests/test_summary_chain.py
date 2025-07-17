@@ -1,4 +1,4 @@
-from app.main import SummaryResponse, InsightsResponse
+from app.models.schemas import SummaryResponse, InsightsResponse
 
 
 class TestSummaryChain:

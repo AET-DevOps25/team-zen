@@ -4,18 +4,15 @@ import { JournalEditor } from './JournalEditor';
 import { QuickStats } from './QuickStats';
 import { SnippetsOverview } from './SnippetsOverview';
 import type { Snippet } from '@/model/snippet';
-import { useGetSummary } from '@/api/journal';
 
 interface EditTabProps {
   journalContent: string;
   isEditing: boolean;
   snippets: Array<Snippet>;
-  journalId?: string;
   onContentChange: (content: string) => void;
   onToggleEdit: () => void;
-  onSummarize?: (summary: string) => void;
   generateJournalFromSnippets?: () => void;
-  generateAIInsights?: (content: string, snippets: Array<Snippet>) => void;
+  generateAIInsights?: () => void;
   isGenerating?: boolean;
   isGeneratingInsights?: boolean;
 }
@@ -24,48 +21,26 @@ export const EditTab = ({
   journalContent,
   isEditing,
   snippets,
-  journalId,
   onContentChange,
   onToggleEdit,
-  onSummarize,
   generateJournalFromSnippets,
   generateAIInsights,
   isGenerating = false,
   isGeneratingInsights = false,
 }: EditTabProps) => {
-  const { isLoading: isSummaryLoading, refetch: fetchSummary } = useGetSummary(
-    journalId || '',
-    false,
-  );
-
-  const handleSummarize = async () => {
-    if (journalId && onSummarize) {
-      try {
-        const result = await fetchSummary();
-        if (result.data) {
-          onSummarize(result.data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch summary:', error);
-      }
-    }
-  };
-
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 relative">
       <div className="lg:col-span-3">
         <JournalEditor
           content={journalContent}
           isEditing={isEditing}
-          isLoading={isGenerating || isGeneratingInsights || isSummaryLoading}
+          isLoading={isGenerating || isGeneratingInsights}
           loadingMessage={
             isGenerating
               ? 'ZenAI is generating your journal...'
               : isGeneratingInsights
                 ? 'ZenAI is analyzing your insights...'
-                : isSummaryLoading
-                  ? 'ZenAI is summarizing your content...'
-                  : 'ZenAI is thinking...'
+                : 'ZenAI is thinking...'
           }
           onContentChange={onContentChange}
           onToggleEdit={onToggleEdit}
@@ -85,7 +60,11 @@ export const EditTab = ({
               <motion.button
                 onClick={generateJournalFromSnippets}
                 disabled={isGenerating || snippets.length === 0}
-                className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed text-white px-4 py-3 rounded-lg flex items-center justify-center space-x-2 transition-all shadow-md hover:shadow-lg disabled:shadow-none font-medium"
+                className={`w-full px-4 py-3 rounded-lg flex items-center justify-center space-x-2 transition-all shadow-md hover:shadow-lg disabled:shadow-none font-medium ${
+                  isGenerating
+                    ? 'bg-gradient-to-r from-purple-400 to-blue-400 text-white animate-pulse'
+                    : 'bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed text-white'
+                }`}
                 whileHover={{
                   scale: isGenerating || snippets.length === 0 ? 1 : 1.02,
                 }}
@@ -94,7 +73,16 @@ export const EditTab = ({
                 }}
               >
                 {isGenerating ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: 'linear',
+                    }}
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </motion.div>
                 ) : (
                   <Sparkles className="w-4 h-4" />
                 )}
@@ -106,48 +94,38 @@ export const EditTab = ({
 
             {generateAIInsights && (
               <motion.button
-                onClick={() => generateAIInsights(journalContent, snippets)}
-                disabled={isGeneratingInsights || !journalContent.trim()}
-                className="w-full bg-gradient-to-r from-teal-500 to-green-500 hover:from-teal-600 hover:to-green-600 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed text-white px-4 py-3 rounded-lg flex items-center justify-center space-x-2 transition-all shadow-md hover:shadow-lg disabled:shadow-none font-medium"
+                onClick={() => generateAIInsights()}
+                disabled={isGeneratingInsights || snippets.length === 0}
+                className={`w-full px-4 py-3 rounded-lg flex items-center justify-center space-x-2 transition-all shadow-md hover:shadow-lg disabled:shadow-none font-medium ${
+                  isGeneratingInsights
+                    ? 'bg-gradient-to-r from-teal-400 to-green-400 text-white animate-pulse'
+                    : 'bg-gradient-to-r from-teal-500 to-green-500 hover:from-teal-600 hover:to-green-600 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed text-white'
+                }`}
                 whileHover={{
                   scale:
-                    isGeneratingInsights || !journalContent.trim() ? 1 : 1.02,
+                    isGeneratingInsights || snippets.length === 0 ? 1 : 1.02,
                 }}
                 whileTap={{
                   scale:
-                    isGeneratingInsights || !journalContent.trim() ? 1 : 0.98,
+                    isGeneratingInsights || snippets.length === 0 ? 1 : 0.98,
                 }}
               >
                 {isGeneratingInsights ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: 'linear',
+                    }}
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </motion.div>
                 ) : (
                   <Zap className="w-4 h-4" />
                 )}
                 <span>
                   {isGeneratingInsights ? 'Analyzing...' : 'Generate Insights'}
-                </span>
-              </motion.button>
-            )}
-
-            {journalId && snippets.length > 2 && (
-              <motion.button
-                onClick={handleSummarize}
-                disabled={isSummaryLoading || !journalContent.trim()}
-                className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed text-white px-4 py-3 rounded-lg flex items-center justify-center space-x-2 transition-all shadow-md hover:shadow-lg disabled:shadow-none font-medium"
-                whileHover={{
-                  scale: isSummaryLoading || !journalContent.trim() ? 1 : 1.02,
-                }}
-                whileTap={{
-                  scale: isSummaryLoading || !journalContent.trim() ? 1 : 0.98,
-                }}
-              >
-                {isSummaryLoading ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Sparkles className="w-4 h-4" />
-                )}
-                <span>
-                  {isSummaryLoading ? 'Summarizing...' : 'Summarize Journal'}
                 </span>
               </motion.button>
             )}

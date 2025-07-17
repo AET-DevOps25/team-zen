@@ -14,6 +14,8 @@ const JournalView = () => {
     journalTitle,
     isEditing,
     isEditingTitle,
+    isGeneratingInsights,
+    isGeneratingSummary,
     snippets,
     journal,
     setActiveTab,
@@ -23,7 +25,8 @@ const JournalView = () => {
     handleToggleEdit,
     handleTitleEditEnd,
     handleBackToDashboard,
-    handleSummarize,
+    handleGenerateInsights,
+    handleGenerateJournalFromSnippets,
   } = useJournalState(journalId);
 
   return (
@@ -45,10 +48,12 @@ const JournalView = () => {
             journalContent={journalContent}
             isEditing={isEditing}
             snippets={snippets}
-            journalId={journal?.id}
             onContentChange={setJournalContent}
             onToggleEdit={handleToggleEdit}
-            onSummarize={handleSummarize}
+            generateJournalFromSnippets={handleGenerateJournalFromSnippets}
+            generateAIInsights={handleGenerateInsights}
+            isGenerating={isGeneratingSummary}
+            isGeneratingInsights={isGeneratingInsights}
           />
         ) : (
           <InsightsTab snippets={snippets} journal={journal} />
