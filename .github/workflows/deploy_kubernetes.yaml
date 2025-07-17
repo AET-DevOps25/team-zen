@@ -31,7 +31,7 @@ jobs:
 
       - name: Show images and tags
         env:
-          IMAGE_TAG: main
+          IMAGE_TAG: latest
         run: |
           echo "Using image repositories and tags:"
           echo "client: ghcr.io/aet-devops25/team-zen/client:$IMAGE_TAG"
@@ -42,7 +42,7 @@ jobs:
 
       - name: Deploy Helm Chart
         env:
-          IMAGE_TAG: main
+          IMAGE_TAG: latest
         run: |
           helm upgrade --install zenai-app ./helm \
           --namespace zenai-team \
