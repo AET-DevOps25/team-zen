@@ -12,22 +12,6 @@
     clerk_webhook_secret: "{{ clerk_webhook_secret | default('') }}"
 
   tasks:
-    - name: Free up disk space before starting
-      ansible.builtin.shell: |
-        set -o pipefail
-        # Clean package cache
-        apt-get clean || true
-        apt-get autoclean || true
-        # Remove old logs
-        find /var/log -name "*.log" -type f -size +10M -delete 2>/dev/null || true
-        find /var/log -name "*.log.*" -delete 2>/dev/null || true
-        # Clean temp files
-        find /tmp -type f -atime +1 -delete 2>/dev/null || true
-        # Show available space
-        df -h /
-      changed_when: false
-      failed_when: false
-
     - name: Install Docker and dependencies
       ansible.builtin.apt:
         name:
@@ -49,6 +33,9 @@
             name: ubuntu
             groups: docker
             append: true
+
+        - name: Reset SSH connection to allow group changes to take effect
+          ansible.builtin.meta: reset_connection
 
     - name: Create app directory and files
       block:

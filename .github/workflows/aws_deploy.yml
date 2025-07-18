@@ -1,0 +1,140 @@
+name: Deploy to EC2
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+  push:
+    branches:
+      - main
+      - feat/aws-deployment
+    paths:
+      - 'client/**'
+      - 'server/**'
+      - 'genai/**'
+      - 'docker-compose.prod.yml'
+      - 'ansible/**'
+      - '.github/workflows/aws_deploy.yml'
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  deploy:
+    name: Deploy Application to EC2
+    runs-on: ubuntu-latest
+    env:
+      EC2_PUBLIC_IP: ${{ vars.EC2_PUBLIC_IP }}
+
+    steps:
+      - name: Deployment Context
+        run: |
+          echo "## 🚀 Deployment Context" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ inputs.environment || 'production' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Target Server:** ${{ vars.EC2_PUBLIC_IP }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/ec2_key.pem
+          chmod 600 ~/.ssh/ec2_key.pem
+          ssh-keyscan -H ${{ vars.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts
+
+      - name: Test SSH Connection
+        run: |
+          ssh -i ~/.ssh/ec2_key.pem -o ConnectTimeout=10 ubuntu@${{ vars.EC2_PUBLIC_IP }} "echo 'SSH connection successful'"
+
+      - name: Install Ansible
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible
+
+      - name: Create Dynamic Inventory
+        run: |
+          cat > ansible/dynamic_inventory.ini << EOF
+          [docker_server]
+          ${{ vars.EC2_PUBLIC_IP }} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/ec2_key.pem
+          EOF
+
+      - name: Test Ansible Connection
+        run: |
+          ansible -i ansible/dynamic_inventory.ini docker_server -m ping
+
+      - name: Deploy Application with Ansible
+        run: |
+          ansible-playbook -i ansible/dynamic_inventory.ini ansible/playbook.yml \
+            -e github_actor="${{ github.actor }}" \
+            -e github_token="${{ secrets.GITHUB_TOKEN }}" \
+            -e genai_api_key="${{ secrets.GENAI_API_KEY }}" \
+            -e clerk_publishable_key="${{ secrets.CLERK_PUBLISHABLE_KEY }}" \
+            -e clerk_secret_key="${{ secrets.CLERK_SECRET_KEY }}" \
+            -e clerk_webhook_secret="${{ secrets.CLERK_WEBHOOK_SECRET }}" \
+            -e grafana_password="${{ secrets.GRAFANA_PASSWORD }}" \
+            -v
+
+      - name: Verify Deployment
+        run: |
+          echo "## 🔍 Deployment Verification" >> $GITHUB_STEP_SUMMARY
+          
+          # Check if services are running
+          ssh -i ~/.ssh/ec2_key.pem ubuntu@${{ vars.EC2_PUBLIC_IP }} "cd /home/ubuntu/app && docker compose ps" || true
+          
+          # Test endpoints
+          echo "Testing application endpoints..." >> $GITHUB_STEP_SUMMARY
+          
+          # Wait a bit for services to start
+          sleep 30
+          
+          # Test if services are responding
+          if curl -f http://${{ vars.EC2_PUBLIC_IP }}:3000 >/dev/null 2>&1; then
+            echo "✅ Frontend is responding" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Frontend is not responding" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if curl -f http://${{ vars.EC2_PUBLIC_IP }}:8085/health >/dev/null 2>&1; then
+            echo "✅ API Gateway is responding" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ API Gateway is not responding" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if curl -f http://${{ vars.EC2_PUBLIC_IP }}:3001 >/dev/null 2>&1; then
+            echo "✅ Grafana is responding" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Grafana is not responding" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Deployment Summary
+        run: |
+          echo "## 🎉 Deployment Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🌐 Application URLs:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Frontend:** http://${{ vars.EC2_PUBLIC_IP }}:3000" >> $GITHUB_STEP_SUMMARY
+          echo "- **API Gateway:** http://${{ vars.EC2_PUBLIC_IP }}:8085" >> $GITHUB_STEP_SUMMARY
+          echo "- **Grafana:** http://${{ vars.EC2_PUBLIC_IP }}:3001" >> $GITHUB_STEP_SUMMARY
+          echo "- **Prometheus:** http://${{ vars.EC2_PUBLIC_IP }}:9090" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Next Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Verify all services are running correctly" >> $GITHUB_STEP_SUMMARY
+          echo "2. Check application logs if needed: \`ssh -i ~/.ssh/ec2_key.pem ubuntu@${{ vars.EC2_PUBLIC_IP }} 'cd /home/ubuntu/app && docker compose logs'\`" >> $GITHUB_STEP_SUMMARY
+          echo "3. Monitor application performance via Grafana dashboard" >> $GITHUB_STEP_SUMMARY
+
+      - name: Cleanup SSH Key
+        if: always()
+        run: |
+          rm -f ~/.ssh/ec2_key.pem
