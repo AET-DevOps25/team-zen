@@ -3,6 +3,13 @@ name: Deploy Application
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feat/aws-deployment  # Temporary for testing
+    paths:
+      - "ansible/**"
+      - "docker-compose.yml"
+      - ".github/workflows/deploy_aws.yml"
   workflow_run:
     workflows: ["Infrastructure"]
     types:
@@ -20,6 +27,7 @@ jobs:
     name: Deploy to EC2
     runs-on: ubuntu-latest
     # Skip if triggered by workflow_run and the infrastructure workflow failed
+    # Allow direct push triggers for testing
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

@@ -4,13 +4,14 @@ name: Infrastructure
 on:
   pull_request:
     paths:
+      - "**/*.tf"
       - "infra/**"
       - ".github/workflows/infrastructure.yml"
   push:
     branches:
-      - main
-      - feat/aws-deployment
+      - feat/aws-deployment  # Temporary for testing
     paths:
+      - "**/*.tf"
       - "infra/**"
       - ".github/workflows/infrastructure.yml"
   workflow_dispatch:
@@ -86,13 +87,13 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'apply' && github.event.inputs.action != 'destroy')
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'plan')
         run: terraform plan -no-color -input=false -out=plan.tfplan
         continue-on-error: true
 
-      - name: Terraform Apply (Push)
+      - name: Terraform Apply (Push - Testing)
         id: apply_push
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/aws-deployment'
         run: terraform apply -auto-approve -no-color -input=false
 
       - name: Terraform Apply (Manual)
@@ -107,7 +108,7 @@ jobs:
 
       - name: Get Terraform Outputs
         id: terraform_outputs
-        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply')
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/feat/aws-deployment') || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply')
         run: |
           # Get EC2 public IP
           EC2_PUBLIC_IP=$(terraform output -raw ec2_public_ip 2>/dev/null || echo "")
@@ -137,12 +138,12 @@ jobs:
             --instance-ids $INSTANCE_ID \
             --query 'Reservations[0].Instances[0].State.Name' \
             --output text 2>/dev/null || echo "unknown")
-          
+
           echo "instance_state=$INSTANCE_STATE" >> $GITHUB_OUTPUT
 
       - name: Capture Plan Output
         id: capture_plan
-        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'apply' && github.event.inputs.action != 'destroy')
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'plan')
         run: |
           terraform plan -no-color -input=false > plan.txt || true
           echo "stdout<<EOF" >> $GITHUB_OUTPUT
@@ -207,41 +208,10 @@ jobs:
               })
             }
 
-      - name: Summary for Push Deployment
-        if: github.event_name == 'push'
-        run: |
-          echo "## 🚀 Terraform Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "**Event:** Automatic deployment on push to ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Triggered by:** @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Results:" >> $GITHUB_STEP_SUMMARY
-          echo "- **Format Check:** ${{ steps.fmt.outcome }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Initialization:** ${{ steps.init.outcome }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Validation:** ${{ steps.validate.outcome }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Apply:** ${{ steps.apply_push.outcome }}" >> $GITHUB_STEP_SUMMARY
-          if [ -n "${{ steps.terraform_outputs.outputs.ec2_public_ip }}" ]; then
-            echo "- **EC2 Public IP:** ${{ steps.terraform_outputs.outputs.ec2_public_ip }}" >> $GITHUB_STEP_SUMMARY
-          fi
-          if [ -n "${{ steps.terraform_outputs.outputs.ec2_instance_id }}" ]; then
-            echo "- **EC2 Instance ID:** ${{ steps.terraform_outputs.outputs.ec2_instance_id }}" >> $GITHUB_STEP_SUMMARY
-          fi
-          if [ -n "${{ steps.verify_instance.outputs.instance_state }}" ]; then
-            echo "- **Instance State:** ${{ steps.verify_instance.outputs.instance_state }}" >> $GITHUB_STEP_SUMMARY
-          fi
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ steps.apply_push.outcome }}" = "success" ] && [ "${{ steps.terraform_outputs.outputs.infrastructure_deployed }}" = "true" ]; then
-            echo "✅ **Infrastructure deployment completed successfully!**" >> $GITHUB_STEP_SUMMARY
-            echo "🚀 **Ready for application deployment**" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ **Infrastructure deployment failed or incomplete. Please check the logs.**" >> $GITHUB_STEP_SUMMARY
-          fi
-
       - name: Summary for Manual Run
         if: github.event_name == 'workflow_dispatch'
         run: |
-          echo "## Terraform Manual Workflow Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚀 Terraform Manual Workflow Summary" >> $GITHUB_STEP_SUMMARY
           echo "**Action:** ${{ github.event.inputs.action }}" >> $GITHUB_STEP_SUMMARY
           echo "**Triggered by:** @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -262,6 +232,13 @@ jobs:
             if [ -n "${{ steps.verify_instance.outputs.instance_state }}" ]; then
               echo "- **Instance State:** ${{ steps.verify_instance.outputs.instance_state }}" >> $GITHUB_STEP_SUMMARY
             fi
+            echo "" >> $GITHUB_STEP_SUMMARY
+            if [ "${{ steps.apply_manual.outcome }}" = "success" ] && [ "${{ steps.terraform_outputs.outputs.infrastructure_deployed }}" = "true" ]; then
+              echo "✅ **Infrastructure deployment completed successfully!**" >> $GITHUB_STEP_SUMMARY
+              echo "🚀 **Ready for application deployment**" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ **Infrastructure deployment failed or incomplete. Please check the logs.**" >> $GITHUB_STEP_SUMMARY
+            fi
           elif [ "${{ github.event.inputs.action }}" = "destroy" ]; then
             echo "- **Destroy:** ${{ steps.destroy.outcome }}" >> $GITHUB_STEP_SUMMARY
           fi
@@ -271,7 +248,7 @@ jobs:
     name: Trigger Application Deployment
     runs-on: ubuntu-latest
     needs: terraform
-    if: needs.terraform.outputs.infrastructure_deployed == 'true' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'))
+    if: needs.terraform.outputs.infrastructure_deployed == 'true' && ((github.event_name == 'push' && github.ref == 'refs/heads/feat/aws-deployment') || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'))
 
     steps:
       - name: Trigger Deployment Workflow
@@ -283,10 +260,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               workflow_id: 'deploy_aws.yml',
-              ref: context.ref.replace('refs/heads/', ''), // Use current branch
-              inputs: {
-                force_deploy: 'true'
-              }
+              ref: context.ref.replace('refs/heads/', '') // Use current branch
             });
 
             console.log('Triggered deployment workflow');
