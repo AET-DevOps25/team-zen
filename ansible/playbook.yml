@@ -1,315 +1,103 @@
 ---
-- name: Setup and Deploy Application
+- name: Deploy Team Zen Application  
   hosts: docker_server
   become: true
   vars:
     github_actor: "{{ github_actor | default('') }}"
     github_token: "{{ github_token | default('') }}"
-    app_dir: /home/ubuntu/app
-    # These should be passed from GitHub secrets
     genai_api_key: "{{ genai_api_key | default('') }}"
-    grafana_password: "{{ grafana_password | default('') }}"
-    git_commit: "{{ git_commit | default('') }}"
-    git_branch: "{{ git_branch | default('') }}"
-    # Clerk authentication variables
+    grafana_password: "{{ grafana_password | default('admin123') }}"
     clerk_publishable_key: "{{ clerk_publishable_key | default('') }}"
     clerk_secret_key: "{{ clerk_secret_key | default('') }}"
     clerk_webhook_secret: "{{ clerk_webhook_secret | default('') }}"
+
   tasks:
-    - name: Update package cache
+    # Simple Docker installation
+    - name: Install Docker and dependencies
       ansible.builtin.apt:
+        name:
+          - docker.io
+          - docker-compose-v2
+        state: present
         update_cache: true
 
-    - name: Check if Docker is already installed
-      ansible.builtin.command: docker --version
-      register: docker_check
-      failed_when: false
-      changed_when: false
-
-    - name: Install Docker and dependencies (if Docker not present)
-      when: docker_check.rc != 0
+    - name: Start Docker and add user to docker group
       block:
-        - name: Install Docker from Ubuntu repository
-          ansible.builtin.apt:
-            name:
-              - docker.io
-              - docker-compose-v2
-              - python3-docker
-            state: present
-            update_cache: true
-      rescue:
-        - name: Try installing just essential packages
-          ansible.builtin.apt:
-            name:
-              - python3-docker
-            state: present
-
-    - name: Ensure Docker compose plugin is available
-      ansible.builtin.command: docker compose version
-      register: compose_check
-      failed_when: false
-      changed_when: false
-
-    - name: Install docker-compose-plugin if compose not working
-      ansible.builtin.apt:
-        name: docker-compose-plugin
-        state: present
-      when: compose_check.rc != 0
-      failed_when: false
-
-    - name: Start Docker service
-      ansible.builtin.systemd:
-        name: docker
-        state: started
-        enabled: true
-
-    - name: Add ubuntu user to docker group
-      ansible.builtin.user:
-        name: ubuntu
-        groups: docker
-        append: true
-
-    - name: Reset connection to apply group changes
-      ansible.builtin.meta: reset_connection
-
-    - name: Test Docker access and install if needed
-      block:
-        - name: Test Docker access as ubuntu user
-          ansible.builtin.command: docker ps
-          become: true
-          become_user: ubuntu
-          register: docker_test
-          changed_when: false
-
-      rescue:
-        - name: Debug Docker issue
-          ansible.builtin.debug:
-            msg: "Docker access failed, attempting to fix..."
-
-        - name: Ensure Docker daemon is running
+        - name: Start Docker service
           ansible.builtin.systemd:
             name: docker
-            state: restarted
+            state: started
+            enabled: true
+        
+        - name: Add ubuntu user to docker group
+          ansible.builtin.user:
+            name: ubuntu
+            groups: docker
+            append: true
 
-        - name: Wait for Docker daemon
-          ansible.builtin.pause:
-            seconds: 5
+    # Setup application
+    - name: Create app directory and files
+      block:
+        - name: Create app directory
+          ansible.builtin.file:
+            path: /home/ubuntu/app
+            state: directory
+            owner: ubuntu
+            group: ubuntu
+            mode: '0755'
 
-        - name: Retry Docker access
-          ansible.builtin.command: docker ps
-          become: true
-          become_user: ubuntu
-          changed_when: false
+        - name: Copy docker-compose file
+          ansible.builtin.copy:
+            src: ../docker-compose.prod.yml
+            dest: /home/ubuntu/app/docker-compose.yml
+            owner: ubuntu
+            group: ubuntu
+            mode: '0644'
 
-    - name: Create app directory
-      ansible.builtin.file:
-        path: /home/ubuntu/app
-        state: directory
-        owner: ubuntu
-        group: ubuntu
-        mode: '0755'
+        - name: Create environment file
+          ansible.builtin.copy:
+            content: |
+              NODE_ENV=production
+              API_URL=http://{{ ansible_host }}:8085
+              VITE_API_URL=http://{{ ansible_host }}:8085
+              VITE_CLERK_PUBLISHABLE_KEY={{ clerk_publishable_key }}
+              CLERK_SECRET_KEY={{ clerk_secret_key }}
+              CLERK_WEBHOOK_SECRET={{ clerk_webhook_secret }}
+              CLERK_AUTHORIZED_PARTY=http://{{ ansible_host }}:3000
+              MONGO_DB_URI_USER=mongodb://user-db:27017/userdb
+              MONGO_DB_URI_JOURNAL=mongodb://journal-db:27017/journaldb
+              GENAI_API_URL=https://gpu.aet.cit.tum.de/api/chat/completions
+              GENAI_API_KEY={{ genai_api_key }}
+              GF_SECURITY_ADMIN_PASSWORD={{ grafana_password }}
+            dest: /home/ubuntu/app/.env
+            owner: ubuntu
+            group: ubuntu
+            mode: '0644'
 
-    - name: Copy production docker-compose file
-      ansible.builtin.copy:
-        src: ../docker-compose.prod.yml
-        dest: /home/ubuntu/app/docker-compose.yml
-        owner: ubuntu
-        group: ubuntu
-        mode: '0644'
-
-    - name: Create production environment file
-      ansible.builtin.copy:
-        content: |
-          # Production Environment Configuration
-          NODE_ENV=production
-
-          # API Configuration
-          API_URL=http://api.{{ ansible_host }}.nip.io
-          VITE_API_URL=http://api.{{ ansible_host }}.nip.io
-          PUBLIC_API_URL=http://api.{{ ansible_host }}.nip.io
-
-          # Host Configuration
-          CLIENT_HOST=client.{{ ansible_host }}.nip.io
-          SERVER_HOST=api.{{ ansible_host }}.nip.io
-
-          # Authentication (Clerk)
-          VITE_CLERK_PUBLISHABLE_KEY={{ clerk_publishable_key | default('pk_test_demo_key') }}
-          CLERK_SECRET_KEY={{ clerk_secret_key | default('sk_test_demo_key') }}
-          CLERK_WEBHOOK_SECRET={{ clerk_webhook_secret | default('whsec_demo_secret') }}
-          CLERK_AUTHORIZED_PARTY=http://client.{{ ansible_host }}.nip.io
-
-          # Database Configuration
-          MONGO_DB_URI_USER=mongodb://user-db:27017/userdb
-          MONGO_DB_URI_JOURNAL=mongodb://journal-db:27017/journaldb
-
-          # GenAI Configuration
-          GENAI_API_URL=https://gpu.aet.cit.tum.de/api/chat/completions
-          GENAI_API_KEY={{ genai_api_key | default('demo_key') }}
-
-          # Grafana Configuration
-          GF_SECURITY_ADMIN_PASSWORD={{ grafana_password | default('admin123') }}
-
-          # Deployment Metadata
-          DEPLOYMENT_TIMESTAMP={{ ansible_date_time.epoch }}
-          GIT_COMMIT={{ git_commit | default('unknown') }}
-          GIT_BRANCH={{ git_branch | default('unknown') }}
-        dest: /home/ubuntu/app/.env
-        owner: ubuntu
-        group: ubuntu
-        mode: '0644'
-
-    - name: Create nginx configuration for nip.io routing
-      ansible.builtin.copy:
-        content: |
-          server {
-              listen 80;
-              server_name client.{{ ansible_host }}.nip.io;
-              
-              location / {
-                  proxy_pass http://localhost:3000;
-                  proxy_set_header Host $host;
-                  proxy_set_header X-Real-IP $remote_addr;
-                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                  proxy_set_header X-Forwarded-Proto $scheme;
-              }
-          }
-          
-          server {
-              listen 80;
-              server_name api.{{ ansible_host }}.nip.io;
-              
-              location / {
-                  proxy_pass http://localhost:8085;
-                  proxy_set_header Host $host;
-                  proxy_set_header X-Real-IP $remote_addr;
-                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                  proxy_set_header X-Forwarded-Proto $scheme;
-              }
-          }
-          
-          server {
-              listen 80;
-              server_name grafana.{{ ansible_host }}.nip.io;
-              
-              location / {
-                  proxy_pass http://localhost:3001;
-                  proxy_set_header Host $host;
-                  proxy_set_header X-Real-IP $remote_addr;
-                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                  proxy_set_header X-Forwarded-Proto $scheme;
-              }
-          }
-          
-          server {
-              listen 80;
-              server_name prometheus.{{ ansible_host }}.nip.io;
-              
-              location / {
-                  proxy_pass http://localhost:9090;
-                  proxy_set_header Host $host;
-                  proxy_set_header X-Real-IP $remote_addr;
-                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                  proxy_set_header X-Forwarded-Proto $scheme;
-              }
-          }
-        dest: /home/ubuntu/app/nginx.conf
-        owner: ubuntu
-        group: ubuntu
-        mode: '0644'
-
-    - name: Install nginx
-      ansible.builtin.apt:
-        name: nginx
-        state: present
-        update_cache: true
-
-    - name: Copy nginx configuration
-      ansible.builtin.copy:
-        src: /home/ubuntu/app/nginx.conf
-        dest: /etc/nginx/sites-available/team-zen
-        remote_src: true
-      notify: restart nginx
-
-    - name: Enable nginx site
-      ansible.builtin.file:
-        src: /etc/nginx/sites-available/team-zen
-        dest: /etc/nginx/sites-enabled/team-zen
-        state: link
-      notify: restart nginx
-
-    - name: Remove default nginx site
-      ansible.builtin.file:
-        path: /etc/nginx/sites-enabled/default
-        state: absent
-      notify: restart nginx
-
-    - name: Start and enable nginx
-      ansible.builtin.systemd:
-        name: nginx
-        state: started
-        enabled: true
-
+    # Login and deploy
     - name: Login to GitHub Container Registry
-      community.docker.docker_login:
-        registry: ghcr.io
-        username: "{{ github_actor }}"
-        password: "{{ github_token }}"
-      become: true
-      become_user: ubuntu
-      when: github_actor != '' and github_token != ''
-      register: docker_login_result
-      failed_when: false
-
-    - name: Fallback Docker login using command line
       ansible.builtin.shell: |
-        set -o pipefail
         echo "{{ github_token }}" | docker login ghcr.io -u "{{ github_actor }}" --password-stdin
       become: true
       become_user: ubuntu
-      when:
-        - github_actor != '' and github_token != ''
-        - docker_login_result is defined and docker_login_result.failed | default(false)
+      when: github_actor != '' and github_token != ''
       no_log: true
       changed_when: true
 
-    - name: Deploy with Docker Compose
-      block:
-        - name: Deploy application with Docker Compose
-          community.docker.docker_compose_v2:
-            project_src: /home/ubuntu/app
-            state: present
-            recreate: always
-            remove_orphans: true
-          become: true
-          become_user: ubuntu
-
-      rescue:
-        - name: Install missing Ansible Docker collection
-          ansible.builtin.command: ansible-galaxy collection install community.docker
-          delegate_to: localhost
-          changed_when: false
-
-        - name: Retry Docker Compose deployment
-          community.docker.docker_compose_v2:
-            project_src: /home/ubuntu/app
-            state: present
-            recreate: always
-            remove_orphans: true
-          become: true
-          become_user: ubuntu
+    - name: Deploy application
+      ansible.builtin.shell: |
+        cd /home/ubuntu/app
+        docker compose pull
+        docker compose up -d --remove-orphans
+      become: true
+      become_user: ubuntu
+      changed_when: true
 
     - name: Show deployment info
       ansible.builtin.debug:
         msg:
           - "🚀 Deployment complete!"
-          - "🌐 App: http://client.{{ ansible_host }}.nip.io"
-          - "⚡ API: http://api.{{ ansible_host }}.nip.io"
-          - "📊 Grafana: http://grafana.{{ ansible_host }}.nip.io"
-          - "📈 Prometheus: http://prometheus.{{ ansible_host }}.nip.io"
-          - "💡 Direct access: http://{{ ansible_host }}:3000 (client), http://{{ ansible_host }}:8085 (api)"
-
-  handlers:
-    - name: restart nginx
-      ansible.builtin.systemd:
-        name: nginx
-        state: restarted
+          - "🌐 App: http://{{ ansible_host }}:3000"
+          - "⚡ API: http://{{ ansible_host }}:8085"
+          - "📊 Grafana: http://{{ ansible_host }}:3001"
+          - "📈 Prometheus: http://{{ ansible_host }}:9090"
