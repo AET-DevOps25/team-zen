@@ -1,6 +1,6 @@
 services:
   client:
-    image: ghcr.io/aet-devops25/team-zen-client:latest
+    image: ghcr.io/aet-devops25/team-zen/client:latest
     ports:
       - "3000:80"
     environment:
@@ -14,7 +14,7 @@ services:
       - backend
 
   api-gateway:
-    image: ghcr.io/aet-devops25/team-zen-api-gateway:latest
+    image: ghcr.io/aet-devops25/team-zen/api-gateway:latest
     ports:
       - "8085:8085"
     environment:
@@ -33,7 +33,7 @@ services:
       - backend
 
   user-microservice:
-    image: ghcr.io/aet-devops25/team-zen-user-service:latest
+    image: ghcr.io/aet-devops25/team-zen/user-service:latest
     environment:
       - MONGO_DB_URI_USER=${MONGO_DB_URI_USER}
       - MONGODB_DB=userdb
@@ -45,7 +45,7 @@ services:
       - user-network
 
   journal-microservice:
-    image: ghcr.io/aet-devops25/team-zen-journal-service:latest
+    image: ghcr.io/aet-devops25/team-zen/journal-service:latest
     environment:
       - MONGODB_URI=${MONGO_DB_URI_JOURNAL}
       - MONGODB_DB=journaldb
@@ -58,7 +58,7 @@ services:
       - journal-network
 
   genai-microservice:
-    image: ghcr.io/aet-devops25/team-zen-genai:latest
+    image: ghcr.io/aet-devops25/team-zen/genai:latest
     environment:
       - GENAI_API_URL=${GENAI_API_URL}
       - GENAI_API_KEY=${GENAI_API_KEY}
