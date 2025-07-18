@@ -1,63 +1,36 @@
 ---
-- name: Install Docker and Docker Compose
+- name: Setup and Deploy Application
   hosts: docker_server
   become: true
+  vars:
+    github_actor: "{{ github_actor | default('') }}"
+    github_token: "{{ github_token | default('') }}"
   tasks:
-    - name: Update apt cache
+    - name: Update package cache
       ansible.builtin.apt:
         update_cache: true
-        cache_valid_time: 3600
 
-    - name: Install required packages
+    - name: Check if Docker is already installed
+      ansible.builtin.command: docker --version
+      register: docker_check
+      failed_when: false
+      changed_when: false
+
+    - name: Install Docker and dependencies
       ansible.builtin.apt:
         name:
-          - apt-transport-https
-          - ca-certificates
-          - curl
-          - gnupg
-          - lsb-release
-          - python3-pip
-          - rsync
-        state: present
-
-    - name: Add Docker GPG key
-      ansible.builtin.apt_key:
-        url: https://download.docker.com/linux/ubuntu/gpg
-        state: present
-
-    - name: Add Docker repository
-      ansible.builtin.apt_repository:
-        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
-        state: present
-
-    - name: Install Docker CE
-      ansible.builtin.apt:
-        name:
-          - docker-ce
-          - docker-ce-cli
-          - containerd.io
-          - docker-buildx-plugin
-          - docker-compose-plugin
+          - docker.io
+          - docker-compose-v2
+          - python3-docker
         state: present
         update_cache: true
 
-    - name: Start and enable Docker service
+    - name: Start Docker service
       ansible.builtin.systemd:
         name: docker
         state: started
         enabled: true
 
-    - name: Install Docker Python modules
-      ansible.builtin.apt:
-        name:
-          - python3-docker
-          - python3-requests
-        state: present
-
-- name: Configure Docker user permissions
-  hosts: docker_server
-  become: true
-  tasks:
     - name: Add ubuntu user to docker group
       ansible.builtin.user:
         name: ubuntu
@@ -67,120 +40,81 @@
     - name: Reset connection to apply group changes
       ansible.builtin.meta: reset_connection
 
-- name: Deploy application
-  hosts: docker_server
-  become: false
-  vars:
-    github_actor: "{{ github_actor | default('') }}"
-    github_token: "{{ github_token | default('') }}"
-  tasks:
-    - name: Copy project files to remote server
-      ansible.builtin.synchronize:
-        src: ../
-        dest: /home/ubuntu/app
-        delete: true
-        recursive: true
-        rsync_opts:
-          - "--exclude=.git"
-          - "--exclude=.github"
-          - "--exclude=node_modules"
-          - "--exclude=.venv"
-          - "--exclude=__pycache__"
-          - "--exclude=.terraform"
-          - "--exclude=*.log"
-          - "--exclude=.env*"
-        owner: false
-        group: false
+    - name: Test Docker access and install if needed
+      block:
+        - name: Test Docker access as ubuntu user
+          ansible.builtin.command: docker ps
+          become_user: ubuntu
+          register: docker_test
+          
+      rescue:
+        - name: Debug Docker issue
+          ansible.builtin.debug:
+            msg: "Docker access failed, attempting to fix..."
+            
+        - name: Ensure Docker daemon is running
+          ansible.builtin.systemd:
+            name: docker
+            state: restarted
+            
+        - name: Wait for Docker daemon
+          ansible.builtin.pause:
+            seconds: 5
+            
+        - name: Retry Docker access
+          ansible.builtin.command: docker ps
+          become_user: ubuntu
 
-    - name: Set proper ownership of app directory
-      ansible.builtin.file:
-        path: /home/ubuntu/app
+    - name: Copy project files
+      ansible.builtin.copy:
+        src: ../
+        dest: /home/ubuntu/app/
         owner: ubuntu
         group: ubuntu
-        recurse: true
-      become: true
+        mode: preserve
 
-    - name: Verify docker-compose.yml exists
+    - name: Ensure .env file exists
       ansible.builtin.stat:
-        path: /home/ubuntu/app/docker-compose.yml
-      register: compose_file_check
+        path: /home/ubuntu/app/.env
+      register: env_file
 
-    - name: Debug compose file location
-      ansible.builtin.debug:
-        msg: "Docker compose file exists: {{ compose_file_check.stat.exists }}"
+    - name: Create basic .env if missing
+      ansible.builtin.copy:
+        content: |
+          # Basic environment file created by Ansible
+          NODE_ENV=production
+        dest: /home/ubuntu/app/.env
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+      when: not env_file.stat.exists
 
-    - name: Fail if docker-compose.yml not found
-      ansible.builtin.fail:
-        msg: "docker-compose.yml not found at /home/ubuntu/app/docker-compose.yml"
-      when: not compose_file_check.stat.exists
+    - name: Deploy with Docker Compose
+      block:
+        - name: Deploy application with Docker Compose
+          community.docker.docker_compose_v2:
+            project_src: /home/ubuntu/app
+            state: present
+            recreate: always
+            remove_orphans: true
+          become_user: ubuntu
+          
+      rescue:
+        - name: Install missing Ansible Docker collection
+          ansible.builtin.command: ansible-galaxy collection install community.docker
+          delegate_to: localhost
+          
+        - name: Retry Docker Compose deployment
+          community.docker.docker_compose_v2:
+            project_src: /home/ubuntu/app
+            state: present
+            recreate: always
+            remove_orphans: true
+          become_user: ubuntu
 
-    - name: Log in to GitHub Container Registry
-      community.docker.docker_login:
-        registry_url: ghcr.io
-        username: "{{ github_actor }}"
-        password: "{{ github_token }}"
-      when: github_actor != '' and github_token != ''
-      register: docker_login_result
-      failed_when: false  # Don't fail if login fails - we can still deploy with public images
-
-    - name: Display login result
-      ansible.builtin.debug:
-        msg: >-
-          GitHub Container Registry login
-          {{ 'succeeded' if docker_login_result.failed is defined and not docker_login_result.failed else 'failed or skipped' }}
-      when: github_actor != '' and github_token != ''
-
-    - name: Stop existing containers
-      community.docker.docker_compose_v2:
-        project_src: /home/ubuntu/app
-        files:
-          - docker-compose.yml
-        state: absent
-      register: docker_stop_result
-      failed_when: false  # Don't fail if no containers exist to stop
-
-    - name: Display stop result
-      ansible.builtin.debug:
-        msg: >-
-          Container stop
-          {{ 'completed' if not docker_stop_result.failed else 'failed (containers may not have existed)' }}
-
-    - name: Pull latest images
-      community.docker.docker_compose_v2:
-        project_src: /home/ubuntu/app
-        files:
-          - docker-compose.yml
-        pull: "always"
-        state: present
-        recreate: "never"
-      register: docker_pull_result
-
-    - name: Start docker containers with compose
-      community.docker.docker_compose_v2:
-        project_src: /home/ubuntu/app
-        files:
-          - docker-compose.yml
-        state: present
-        recreate: "always"
-        remove_orphans: true
-      register: docker_compose_result
-
-    - name: Wait for containers to be ready
-      ansible.builtin.pause:
-        seconds: 10
-
-    - name: Check container status
-      community.docker.docker_compose_v2:
-        project_src: /home/ubuntu/app
-        files:
-          - docker-compose.yml
-        state: present
-      register: container_status
-
-    - name: Display deployment information
+    - name: Show deployment info
       ansible.builtin.debug:
         msg:
-          - "Deployment completed successfully!"
-          - "Application URLs:"
-          - "  - Client: http://{{ ansible_host }}:3000"
-          - "  - API: http://{{ ansible_host }}:8085"
+          - "🚀 Deployment complete!"
+          - "🌐 App: http://{{ ansible_host }}:3000"
+          - "⚡ API: http://{{ ansible_host }}:8085"
