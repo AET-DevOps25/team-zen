@@ -1,0 +1,112 @@
+services:
+  client:
+    image: ghcr.io/aet-devops25/team-zen-client:latest
+    ports:
+      - "3000:80"
+    environment:
+      - API_URL=${API_URL}
+      - VITE_API_URL=${VITE_API_URL}
+      - VITE_CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY}
+    depends_on:
+      - api-gateway
+    networks:
+      - frontend
+      - backend
+
+  api-gateway:
+    image: ghcr.io/aet-devops25/team-zen-api-gateway:latest
+    ports:
+      - "8085:8085"
+    environment:
+      - SERVER_PORT=8085
+      - USER_SERVICE_URL=http://user-microservice:8080
+      - JOURNAL_SERVICE_URL=http://journal-microservice:8081
+      - GENAI_SERVICE_URL=http://genai-microservice:8082
+      - CLERK_AUTHORIZED_PARTY=${CLERK_AUTHORIZED_PARTY}
+      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
+      - CLERK_WEBHOOK_SECRET=${CLERK_WEBHOOK_SECRET}
+    depends_on:
+      - user-microservice
+      - journal-microservice
+      - genai-microservice
+    networks:
+      - backend
+
+  user-microservice:
+    image: ghcr.io/aet-devops25/team-zen-user-service:latest
+    environment:
+      - MONGO_DB_URI_USER=${MONGO_DB_URI_USER}
+      - MONGODB_DB=userdb
+      - SERVER_PORT=8080
+    depends_on:
+      - user-db
+    networks:
+      - backend
+      - user-network
+
+  journal-microservice:
+    image: ghcr.io/aet-devops25/team-zen-journal-service:latest
+    environment:
+      - MONGODB_URI=${MONGO_DB_URI_JOURNAL}
+      - MONGODB_DB=journaldb
+      - SERVER_PORT=8081
+      - LLM_SERVICE_URL=http://genai-microservice:8082
+    depends_on:
+      - journal-db
+    networks:
+      - backend
+      - journal-network
+
+  genai-microservice:
+    image: ghcr.io/aet-devops25/team-zen-genai:latest
+    environment:
+      - GENAI_API_URL=${GENAI_API_URL}
+      - GENAI_API_KEY=${GENAI_API_KEY}
+      - SERVER_PORT=8082
+    networks:
+      - backend
+
+  user-db:
+    image: mongo:6
+    container_name: user-db
+    volumes:
+      - user-data:/data/db
+    networks:
+      - user-network
+
+  journal-db:
+    image: mongo:6
+    container_name: journal-db
+    volumes:
+      - journal-data:/data/db
+    networks:
+      - journal-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus:/etc/prometheus
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+    networks:
+      - monitoring
+
+volumes:
+  user-data:
+  journal-data:
+
+networks:
+  frontend:
+  backend:
+  user-network:
+  journal-network:
+  monitoring:

@@ -5,6 +5,16 @@
   vars:
     github_actor: "{{ github_actor | default('') }}"
     github_token: "{{ github_token | default('') }}"
+    app_dir: /home/ubuntu/app
+    # These should be passed from GitHub secrets
+    genai_api_key: "{{ genai_api_key | default('') }}"
+    grafana_password: "{{ grafana_password | default('') }}"
+    git_commit: "{{ git_commit | default('') }}"
+    git_branch: "{{ git_branch | default('') }}"
+    # Clerk authentication variables
+    clerk_publishable_key: "{{ clerk_publishable_key | default('') }}"
+    clerk_secret_key: "{{ clerk_secret_key | default('') }}"
+    clerk_webhook_secret: "{{ clerk_webhook_secret | default('') }}"
   tasks:
     - name: Update package cache
       ansible.builtin.apt:
@@ -91,29 +101,62 @@
           become_user: ubuntu
           changed_when: false
 
-    - name: Copy project files
-      ansible.builtin.copy:
-        src: ../
-        dest: /home/ubuntu/app/
+    - name: Create app directory
+      ansible.builtin.file:
+        path: /home/ubuntu/app
+        state: directory
         owner: ubuntu
         group: ubuntu
-        mode: preserve
+        mode: '0755'
 
-    - name: Ensure .env file exists
-      ansible.builtin.stat:
-        path: /home/ubuntu/app/.env
-      register: env_file
+    - name: Copy production docker-compose file
+      ansible.builtin.copy:
+        src: ../docker-compose.prod.yml
+        dest: /home/ubuntu/app/docker-compose.yml
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
 
-    - name: Create basic .env if missing
+    - name: Create production environment file
       ansible.builtin.copy:
         content: |
-          # Basic environment file created by Ansible
+          # Production Environment Configuration
           NODE_ENV=production
+          
+          # API Configuration
+          API_URL=http://{{ ansible_host }}:8085
+          VITE_API_URL=http://{{ ansible_host }}:8085
+          PUBLIC_API_URL=http://{{ ansible_host }}:8085
+          
+          # Host Configuration
+          CLIENT_HOST=client.{{ ansible_host }}.nip.io
+          SERVER_HOST=api.{{ ansible_host }}.nip.io
+          
+          # Authentication (Clerk)
+          VITE_CLERK_PUBLISHABLE_KEY={{ clerk_publishable_key | default('pk_test_demo_key') }}
+          CLERK_SECRET_KEY={{ clerk_secret_key | default('sk_test_demo_key') }}
+          CLERK_WEBHOOK_SECRET={{ clerk_webhook_secret | default('whsec_demo_secret') }}
+          CLERK_AUTHORIZED_PARTY=http://{{ ansible_host }}:3000
+          
+          # Database Configuration
+          MONGO_DB_URI_USER=mongodb://user-db:27017/userdb
+          MONGO_DB_URI_JOURNAL=mongodb://journal-db:27017/journaldb
+          
+          # GenAI Configuration
+          GENAI_API_URL=https://gpu.aet.cit.tum.de/api/chat/completions
+          GENAI_API_KEY={{ genai_api_key | default('demo_key') }}
+          
+          # Grafana Configuration
+          GF_SECURITY_ADMIN_PASSWORD={{ grafana_password | default('admin123') }}
+          
+          # Deployment Metadata
+          DEPLOYMENT_TIMESTAMP={{ ansible_date_time.epoch }}
+          GIT_COMMIT={{ git_commit | default('unknown') }}
+          GIT_BRANCH={{ git_branch | default('unknown') }}
         dest: /home/ubuntu/app/.env
         owner: ubuntu
         group: ubuntu
         mode: '0644'
-      when: not env_file.stat.exists
 
     - name: Deploy with Docker Compose
       block:

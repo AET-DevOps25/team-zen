@@ -142,77 +142,20 @@ jobs:
           echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/private_key.pem
           chmod 400 ~/.ssh/private_key.pem
 
-      - name: Create remote environment file
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ steps.ec2_info.outputs.ip }}
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          script: |
-            # Create app directory
-            mkdir -p /home/ubuntu/app
-            
-            # Create .env file with all environment variables
-            cat > /home/ubuntu/app/.env << 'EOF'
-            # API Configuration
-            API_URL=http://${{ steps.ec2_info.outputs.ip }}:8085
-            VITE_API_URL=http://${{ steps.ec2_info.outputs.ip }}:8085
-            PUBLIC_API_URL=http://${{ steps.ec2_info.outputs.ip }}:8085
-            
-            # Host Configuration
-            CLIENT_HOST=client.${{ steps.ec2_info.outputs.ip }}.nip.io
-            SERVER_HOST=api.${{ steps.ec2_info.outputs.ip }}.nip.io
-            
-            # Authentication (Clerk)
-            VITE_CLERK_PUBLISHABLE_KEY=${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
-            CLERK_SECRET_KEY=${{ secrets.CLERK_SECRET_KEY }}
-            CLERK_WEBHOOK_SECRET=${{ secrets.CLERK_WEBHOOK_SECRET }}
-            CLERK_AUTHORIZED_PARTY=http://${{ steps.ec2_info.outputs.ip }}:3000
-            
-            # Database Configuration
-            MONGO_DB_URI_USER=mongodb://user-db:27017/userdb
-            MONGO_DB_URI_JOURNAL=mongodb://journal-db:27017/journaldb
-            
-            # GenAI Configuration
-            GENAI_API_URL=https://gpu.aet.cit.tum.de/api/chat/completions
-            GENAI_API_KEY=${{ secrets.GENAI_API_KEY }}
-            
-            # Grafana Configuration
-            GF_SECURITY_ADMIN_PASSWORD=${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}
-            
-            # Deployment Metadata
-            DEPLOYMENT_TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-            GIT_COMMIT=${{ github.sha }}
-            GIT_BRANCH=${{ github.ref_name }}
-            EOF
-            
-            # Set defaults for missing secrets
-            if [ -z "${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}" ]; then
-              sed -i 's/VITE_CLERK_PUBLISHABLE_KEY=$/VITE_CLERK_PUBLISHABLE_KEY=pk_test_demo_key/' /home/ubuntu/app/.env
-            fi
-            if [ -z "${{ secrets.CLERK_SECRET_KEY }}" ]; then
-              sed -i 's/CLERK_SECRET_KEY=$/CLERK_SECRET_KEY=sk_test_demo_key/' /home/ubuntu/app/.env
-            fi
-            if [ -z "${{ secrets.CLERK_WEBHOOK_SECRET }}" ]; then
-              sed -i 's/CLERK_WEBHOOK_SECRET=$/CLERK_WEBHOOK_SECRET=whsec_demo_secret/' /home/ubuntu/app/.env
-            fi
-            if [ -z "${{ secrets.GENAI_API_KEY }}" ]; then
-              sed -i 's/GENAI_API_KEY=$/GENAI_API_KEY=demo_key/' /home/ubuntu/app/.env
-            fi
-            if [ -z "${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}" ]; then
-              sed -i 's/GF_SECURITY_ADMIN_PASSWORD=$/GF_SECURITY_ADMIN_PASSWORD=admin123/' /home/ubuntu/app/.env
-            fi
-            
-            # Set proper permissions
-            chmod 644 /home/ubuntu/app/.env
-
       - name: Run Ansible Playbook
         id: ansible_deploy
         run: |
           ansible-playbook ansible/playbook.yml \
             -i ansible/inventory.ini \
             --extra-vars "github_actor=${{ github.actor }}" \
-            --extra-vars "github_token=${{ secrets.GITHUB_TOKEN }}"
+            --extra-vars "github_token=${{ secrets.GITHUB_TOKEN }}" \
+            --extra-vars "genai_api_key=${{ secrets.GENAI_API_KEY }}" \
+            --extra-vars "grafana_password=${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}" \
+            --extra-vars "git_commit=${{ github.sha }}" \
+            --extra-vars "git_branch=${{ github.ref_name }}" \
+            --extra-vars "clerk_publishable_key=${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}" \
+            --extra-vars "clerk_secret_key=${{ secrets.CLERK_SECRET_KEY }}" \
+            --extra-vars "clerk_webhook_secret=${{ secrets.CLERK_WEBHOOK_SECRET }}"
 
       - name: Verify Deployment
         id: verify_deploy
