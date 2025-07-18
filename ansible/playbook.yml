@@ -262,13 +262,15 @@
 
     - name: Fallback Docker login using command line
       ansible.builtin.shell: |
+        set -o pipefail
         echo "{{ github_token }}" | docker login ghcr.io -u "{{ github_actor }}" --password-stdin
       become: true
       become_user: ubuntu
-      when: 
+      when:
         - github_actor != '' and github_token != ''
         - docker_login_result is defined and docker_login_result.failed | default(false)
       no_log: true
+      changed_when: true
 
     - name: Deploy with Docker Compose
       block:
