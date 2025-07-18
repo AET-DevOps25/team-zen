@@ -77,7 +77,7 @@
     - name: Copy project files to remote server
       ansible.builtin.synchronize:
         src: ../
-        dest: /home/ubuntu/app/
+        dest: /home/ubuntu/app
         delete: true
         recursive: true
         rsync_opts:
@@ -99,6 +99,20 @@
         group: ubuntu
         recurse: true
       become: true
+
+    - name: Verify docker-compose.yml exists
+      ansible.builtin.stat:
+        path: /home/ubuntu/app/docker-compose.yml
+      register: compose_file_check
+
+    - name: Debug compose file location
+      ansible.builtin.debug:
+        msg: "Docker compose file exists: {{ compose_file_check.stat.exists }}"
+
+    - name: Fail if docker-compose.yml not found
+      ansible.builtin.fail:
+        msg: "docker-compose.yml not found at /home/ubuntu/app/docker-compose.yml"
+      when: not compose_file_check.stat.exists
 
     - name: Log in to GitHub Container Registry
       community.docker.docker_login:
