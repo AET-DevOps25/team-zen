@@ -79,7 +79,77 @@ jobs:
 
       - name: Terraform Init
         id: init
-        run: terraform init -input=false
+        run: |
+          # Configuration
+          BUCKET_NAME="zenai-terraform-state-bucket"
+          REGION="us-east-1"
+          
+          echo "🔍 Checking if S3 bucket exists..."
+          
+          # Check if bucket exists
+          if aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null; then
+            echo "✅ S3 bucket '$BUCKET_NAME' already exists"
+            BUCKET_EXISTS=true
+          else
+            echo "❌ S3 bucket '$BUCKET_NAME' does not exist"
+            BUCKET_EXISTS=false
+          fi
+          
+          # Try terraform init first
+          echo "🚀 Attempting terraform initialization..."
+          if terraform init -input=false; then
+            echo "✅ Terraform initialization successful"
+          else
+            echo "❌ Terraform initialization failed"
+            
+            if [ "$BUCKET_EXISTS" = false ]; then
+              echo "📦 Creating S3 bucket for Terraform state storage..."
+              
+              # Create the bucket
+              if aws s3api create-bucket --bucket "$BUCKET_NAME" --region "$REGION"; then
+                echo "✅ S3 bucket created successfully"
+                
+                # Wait a moment for bucket to be ready
+                sleep 5
+                
+                # Enable versioning
+                echo "🔄 Enabling versioning..."
+                aws s3api put-bucket-versioning \
+                  --bucket "$BUCKET_NAME" \
+                  --versioning-configuration Status=Enabled || echo "⚠️ Failed to enable versioning"
+                
+                # Enable server-side encryption
+                echo "🔒 Enabling encryption..."
+                aws s3api put-bucket-encryption \
+                  --bucket "$BUCKET_NAME" \
+                  --server-side-encryption-configuration '{
+                    "Rules": [
+                      {
+                        "ApplyServerSideEncryptionByDefault": {
+                          "SSEAlgorithm": "AES256"
+                        }
+                      }
+                    ]
+                  }' || echo "⚠️ Failed to enable encryption"
+                
+                # Block public access
+                echo "🔐 Blocking public access..."
+                aws s3api put-public-access-block \
+                  --bucket "$BUCKET_NAME" \
+                  --public-access-block-configuration \
+                    BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true || echo "⚠️ Failed to block public access"
+                
+                echo "🔄 Retrying terraform initialization..."
+                terraform init -input=false
+              else
+                echo "❌ Failed to create S3 bucket"
+                exit 1
+              fi
+            else
+              echo "❌ Bucket exists but terraform init still failed. Please check configuration."
+              exit 1
+            fi
+          fi
 
       - name: Terraform Validate
         id: validate
