@@ -32,9 +32,9 @@ jobs:
       - name: Lint Helm charts
         run: helm lint ./helm
 
-      - name: Dry-run Helm install
+      - name: Dry-run Helm upgrade
         run: |
-            helm install zenai-app ./helm \
+            helm upgrade --install zenai-app ./helm \
               --dry-run --debug \
               --namespace zenai-team \
               --values ./helm/values.yaml
