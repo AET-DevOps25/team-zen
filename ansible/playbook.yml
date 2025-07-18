@@ -47,10 +47,10 @@
         enabled: true
 
     - name: Install Docker Python modules
-      ansible.builtin.pip:
+      ansible.builtin.apt:
         name:
-          - docker
-          - docker-compose
+          - python3-docker
+          - python3-requests
         state: present
 
 - name: Configure Docker user permissions
