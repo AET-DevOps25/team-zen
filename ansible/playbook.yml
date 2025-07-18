@@ -124,9 +124,9 @@
           NODE_ENV=production
 
           # API Configuration
-          API_URL=http://{{ ansible_host }}:8085
-          VITE_API_URL=http://{{ ansible_host }}:8085
-          PUBLIC_API_URL=http://{{ ansible_host }}:8085
+          API_URL=http://api.{{ ansible_host }}.nip.io
+          VITE_API_URL=http://api.{{ ansible_host }}.nip.io
+          PUBLIC_API_URL=http://api.{{ ansible_host }}.nip.io
 
           # Host Configuration
           CLIENT_HOST=client.{{ ansible_host }}.nip.io
@@ -136,7 +136,7 @@
           VITE_CLERK_PUBLISHABLE_KEY={{ clerk_publishable_key | default('pk_test_demo_key') }}
           CLERK_SECRET_KEY={{ clerk_secret_key | default('sk_test_demo_key') }}
           CLERK_WEBHOOK_SECRET={{ clerk_webhook_secret | default('whsec_demo_secret') }}
-          CLERK_AUTHORIZED_PARTY=http://{{ ansible_host }}:3000
+          CLERK_AUTHORIZED_PARTY=http://client.{{ ansible_host }}.nip.io
 
           # Database Configuration
           MONGO_DB_URI_USER=mongodb://user-db:27017/userdb
@@ -157,6 +157,97 @@
         owner: ubuntu
         group: ubuntu
         mode: '0644'
+
+    - name: Create nginx configuration for nip.io routing
+      ansible.builtin.copy:
+        content: |
+          server {
+              listen 80;
+              server_name client.{{ ansible_host }}.nip.io;
+              
+              location / {
+                  proxy_pass http://localhost:3000;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+              }
+          }
+          
+          server {
+              listen 80;
+              server_name api.{{ ansible_host }}.nip.io;
+              
+              location / {
+                  proxy_pass http://localhost:8085;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+              }
+          }
+          
+          server {
+              listen 80;
+              server_name grafana.{{ ansible_host }}.nip.io;
+              
+              location / {
+                  proxy_pass http://localhost:3001;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+              }
+          }
+          
+          server {
+              listen 80;
+              server_name prometheus.{{ ansible_host }}.nip.io;
+              
+              location / {
+                  proxy_pass http://localhost:9090;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+              }
+          }
+        dest: /home/ubuntu/app/nginx.conf
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+
+    - name: Install nginx
+      ansible.builtin.apt:
+        name: nginx
+        state: present
+        update_cache: true
+
+    - name: Copy nginx configuration
+      ansible.builtin.copy:
+        src: /home/ubuntu/app/nginx.conf
+        dest: /etc/nginx/sites-available/team-zen
+        remote_src: true
+      notify: restart nginx
+
+    - name: Enable nginx site
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/team-zen
+        dest: /etc/nginx/sites-enabled/team-zen
+        state: link
+      notify: restart nginx
+
+    - name: Remove default nginx site
+      ansible.builtin.file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      notify: restart nginx
+
+    - name: Start and enable nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: started
+        enabled: true
 
     - name: Login to GitHub Container Registry
       community.docker.docker_login:
@@ -209,5 +300,14 @@
       ansible.builtin.debug:
         msg:
           - "🚀 Deployment complete!"
-          - "🌐 App: http://{{ ansible_host }}:3000"
-          - "⚡ API: http://{{ ansible_host }}:8085"
+          - "🌐 App: http://client.{{ ansible_host }}.nip.io"
+          - "⚡ API: http://api.{{ ansible_host }}.nip.io"
+          - "📊 Grafana: http://grafana.{{ ansible_host }}.nip.io"
+          - "📈 Prometheus: http://prometheus.{{ ansible_host }}.nip.io"
+          - "💡 Direct access: http://{{ ansible_host }}:3000 (client), http://{{ ansible_host }}:8085 (api)"
+
+  handlers:
+    - name: restart nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: restarted
