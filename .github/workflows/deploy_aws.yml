@@ -21,7 +21,7 @@ on:
       - 'client/**'
       - 'server/**'
       - 'genai/**'
-      - 'docker-compose.yml'
+      - 'docker-compose.prod.yml'
       - 'ansible/**'
       - '.github/workflows/deploy_aws.yml'
 
