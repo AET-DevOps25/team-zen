@@ -5,14 +5,15 @@ on:
   pull_request:
     paths:
       - "**/*.tf"
-      - "terraform/**"
+      - "infra/**"
       - .github/workflows/infrastructure.yml
   push:
     branches:
       - main
+      - feat/aws-deployment
     paths:
       - "**/*.tf"
-      - "terraform/**"
+      - "infra/**"
   workflow_dispatch:
     inputs:
       action:
@@ -35,9 +36,9 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: terraform
+        working-directory: infra
     env:
-      tf_actions_working_dir: ./terraform
+      tf_actions_working_dir: ./infra
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
@@ -69,8 +70,8 @@ jobs:
       - name: Cache Terraform
         uses: actions/cache@v3
         with:
-          path: terraform/.terraform
-          key: terraform-${{ hashFiles('terraform/**/*.tf') }}
+          path: infra/.terraform
+          key: terraform-${{ hashFiles('infra/**/*.tf') }}
 
       - name: Terraform fmt
         id: fmt
@@ -330,7 +331,7 @@ jobs:
             const result = await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              workflow_id: 'deploy.yml',
+              workflow_id: 'deploy_aws.yml',
               ref: 'main',
               inputs: {
                 force_deploy: 'true'
