@@ -19,4 +19,5 @@ resource "aws_instance" "zen_app_server" {
 
 resource "aws_eip" "zen_app_eip" {
   instance = aws_instance.zen_app_server.id
+  domain = "vpc"
 }
