@@ -33,7 +33,7 @@ services:
       - backend
 
   user-microservice:
-    image: ghcr.io/aet-devops25/team-zen/user-service:latest
+    image: ghcr.io/aet-devops25/team-zen/user-microservice:latest
     environment:
       - MONGO_DB_URI_USER=${MONGO_DB_URI_USER}
       - MONGODB_DB=userdb
@@ -45,7 +45,7 @@ services:
       - user-network
 
   journal-microservice:
-    image: ghcr.io/aet-devops25/team-zen/journal-service:latest
+    image: ghcr.io/aet-devops25/team-zen/journal-microservice:latest
     environment:
       - MONGODB_URI=${MONGO_DB_URI_JOURNAL}
       - MONGODB_DB=journaldb
