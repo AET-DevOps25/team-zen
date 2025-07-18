@@ -73,7 +73,7 @@
       "datasource": "Prometheus",
       "targets": [
         {
-          "expr": "application_ready_time_seconds{instance=\"user-microservice:8080\", job=\"user-microservice\"}",
+          "expr": "application_ready_time_seconds{instance=\"user-service.zenai-team.svc.cluster.local:8080\", job=\"user-microservice\"}",
           "legendFormat": "Ready Time"
         }
       ],
@@ -85,7 +85,7 @@
       "datasource": "Prometheus",
       "targets": [
         {
-          "expr": "(disk_free_bytes{instance=\"user-microservice:8080\", job=\"user-microservice\"} / disk_total_bytes{instance=\"user-microservice:8080\", job=\"user-microservice\"}) * 100",
+          "expr": "(disk_free_bytes{instance=\"user-service.zenai-team.svc.cluster.local:8080\", job=\"user-microservice\"} / disk_total_bytes{instance=\"user-service.zenai-team.svc.cluster.local:8080\", job=\"user-microservice\"}) * 100",
           "legendFormat": "Free Disk %"
         }
       ],
@@ -97,7 +97,7 @@
       "datasource": "Prometheus",
       "targets": [
         {
-          "expr": "(sum(jvm_memory_used_bytes{area=\"heap\", instance=\"user-microservice:8080\"}) / sum(jvm_memory_max_bytes{area=\"heap\", instance=\"user-microservice:8080\"})) * 100",
+          "expr": "(sum(jvm_memory_used_bytes{area=\"heap\", instance=\"user-service.zenai-team.svc.cluster.local:8080\"}) / sum(jvm_memory_max_bytes{area=\"heap\", instance=\"user-service.zenai-team.svc.cluster.local:8080\"})) * 100",
           "legendFormat": "Used Heap"
         }
       ],
@@ -109,7 +109,7 @@
       "datasource": "Prometheus",
       "targets": [
         {
-          "expr": "process_cpu_usage{instance=\"user-microservice:8080\", job=\"user-microservice\"}",
+          "expr": "process_cpu_usage{instance=\"user-service.zenai-team.svc.cluster.local:8080\", job=\"user-microservice\"}",
           "legendFormat": "Process CPU"
         }
       ],
@@ -121,7 +121,7 @@
       "datasource": "Prometheus",
       "targets": [
         {
-          "expr": "system_cpu_usage{instance=\"user-microservice:8080\", job=\"user-microservice\"}",
+          "expr": "system_cpu_usage{instance=\"user-service.zenai-team.svc.cluster.local:8080\", job=\"user-microservice\"}",
           "legendFormat": "System CPU"
         }
       ],

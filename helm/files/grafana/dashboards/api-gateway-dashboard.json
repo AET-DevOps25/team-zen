@@ -73,7 +73,7 @@
       "datasource": "Prometheus",
       "targets": [
         {
-          "expr": "application_ready_time_seconds{instance=\"api-gateway:8085\", job=\"api-gateway\"}",
+          "expr": "application_ready_time_seconds{instance=\"gateway-service.zenai-team.svc.cluster.local:8085\", job=\"api-gateway\"}",
           "legendFormat": "Ready Time"
         }
       ],
@@ -85,7 +85,7 @@
       "datasource": "Prometheus",
       "targets": [
         {
-          "expr": "(disk_free_bytes{instance=\"api-gateway:8085\", job=\"api-gateway\"} / disk_total_bytes{instance=\"api-gateway:8085\", job=\"api-gateway\"}) * 100",
+          "expr": "(disk_free_bytes{instance=\"gateway-service.zenai-team.svc.cluster.local:8085\", job=\"api-gateway\"} / disk_total_bytes{instance=\"gateway-service.zenai-team.svc.cluster.local:8085\", job=\"api-gateway\"}) * 100",
           "legendFormat": "Free Disk %"
         }
       ],
@@ -97,7 +97,7 @@
       "datasource": "Prometheus",
       "targets": [
         {
-          "expr": "(sum(jvm_memory_used_bytes{area=\"heap\", instance=\"api-gateway:8085\"}) / sum(jvm_memory_max_bytes{area=\"heap\", instance=\"api-gateway:8085\"})) * 100",
+          "expr": "(sum(jvm_memory_used_bytes{area=\"heap\", instance=\"gateway-service.zenai-team.svc.cluster.local:8085\"}) / sum(jvm_memory_max_bytes{area=\"heap\", instance=\"gateway-service.zenai-team.svc.cluster.local:8085\"})) * 100",
           "legendFormat": "Used Heap"
         }
       ],
@@ -109,7 +109,7 @@
       "datasource": "Prometheus",
       "targets": [
         {
-          "expr": "process_cpu_usage{instance=\"api-gateway:8085\", job=\"api-gateway\"}",
+          "expr": "process_cpu_usage{instance=\"gateway-service.zenai-team.svc.cluster.local:8085\", job=\"api-gateway\"}",
           "legendFormat": "Process CPU"
         }
       ],
@@ -121,7 +121,7 @@
       "datasource": "Prometheus",
       "targets": [
         {
-          "expr": "system_cpu_usage{instance=\"api-gateway:8085\", job=\"api-gateway\"}",
+          "expr": "system_cpu_usage{instance=\"gateway-service.zenai-team.svc.cluster.local:8085\", job=\"api-gateway\"}",
           "legendFormat": "System CPU"
         }
       ],

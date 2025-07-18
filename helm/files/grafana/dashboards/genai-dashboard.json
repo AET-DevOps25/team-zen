@@ -61,7 +61,7 @@
       "datasource": "Prometheus",
       "targets": [
         {
-          "expr": "process_cpu_seconds_total{instance=\"genai-microservice:8082\", job=\"genai-microservice\"}",
+          "expr": "process_cpu_seconds_total{instance=\"genai-service.zenai-team.svc.cluster.local:8082\", job=\"genai-microservice\"}",
           "legendFormat": "Process CPU"
         }
       ],
