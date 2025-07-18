@@ -1,0 +1,204 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main, feat/aws-deployment]
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  # Check what files have changed
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      client: ${{ steps.changes.outputs.client }}
+      server: ${{ steps.changes.outputs.server }}
+      genai: ${{ steps.changes.outputs.genai }}
+      ansible: ${{ steps.changes.outputs.ansible }}
+      infrastructure: ${{ steps.changes.outputs.infrastructure }}
+      application: ${{ steps.changes.outputs.application }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            client:
+              - 'client/**'
+            server:
+              - 'server/**'
+            genai:
+              - 'genai/**'
+            ansible:
+              - 'ansible/**'
+            infrastructure:
+              - 'infra/**'
+              - '**/*.tf'
+            application:
+              - 'client/**'
+              - 'server/**'
+              - 'genai/**'
+              - 'docker-compose.yml'
+
+  client:
+    name: Client
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.client == 'true'
+    defaults:
+      run:
+        working-directory: client
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+  server:
+    name: Server
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
+    strategy:
+      matrix:
+        service: [api-gateway, journal-microservice, user-microservice]
+    defaults:
+      run:
+        working-directory: server/${{ matrix.service }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build with Gradle
+        run: ./gradlew build
+
+      - name: Run tests
+        run: ./gradlew test
+
+  genai:
+    name: Genai server
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.genai == 'true'
+    defaults:
+      run:
+        working-directory: genai
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Lint with Ruff
+        run: |
+          pip install ruff
+          ruff check
+
+      - name: Start FastAPI server in background
+        run: |
+          fastapi run --host 0.0.0.0 --port 8000 &
+          # wait a few seconds for server to be ready
+          sleep 5
+
+      - name: Health check FastAPI server
+        run: |
+          curl --fail http://localhost:8000/api/genai/health
+  ansible-lint:
+    needs: changes
+    if: needs.changes.outputs.ansible == 'true'
+    uses: ./.github/workflows/ansible_lint.yml
+
+  # CD Jobs
+  trigger-infrastructure:
+    name: Trigger Infrastructure Deployment
+    runs-on: ubuntu-latest
+    needs: [changes, client, server, genai]
+    if: |
+      github.event_name == 'push' && 
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/aws-deployment') &&
+      needs.changes.outputs.infrastructure == 'true' &&
+      (needs.client.result == 'success' || needs.client.result == 'skipped') &&
+      (needs.server.result == 'success' || needs.server.result == 'skipped') &&
+      (needs.genai.result == 'success' || needs.genai.result == 'skipped')
+    steps:
+      - name: Trigger Infrastructure Workflow
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            console.log('🏗️ Infrastructure changes detected, triggering infrastructure deployment...');
+            
+            const result = await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'infrastructure.yml',
+              ref: context.ref.replace('refs/heads/', ''),
+              inputs: {
+                action: 'apply'
+              }
+            });
+            
+            console.log('✅ Infrastructure workflow triggered');
+
+  trigger-deployment:
+    name: Trigger Application Deployment
+    runs-on: ubuntu-latest
+    needs: [changes, client, server, genai]
+    if: |
+      github.event_name == 'push' && 
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/aws-deployment') &&
+      needs.changes.outputs.application == 'true' &&
+      needs.changes.outputs.infrastructure == 'false' &&
+      (needs.client.result == 'success' || needs.client.result == 'skipped') &&
+      (needs.server.result == 'success' || needs.server.result == 'skipped') &&
+      (needs.genai.result == 'success' || needs.genai.result == 'skipped')
+    steps:
+      - name: Trigger Deployment Workflow
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            console.log('🚀 Application changes detected (no infra changes), triggering deployment...');
+            
+            const result = await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'deploy_aws.yml',
+              ref: context.ref.replace('refs/heads/', '')
+            });
+            
+            console.log('✅ Deployment workflow triggered');

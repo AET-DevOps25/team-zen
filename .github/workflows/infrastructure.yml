@@ -313,7 +313,7 @@ jobs:
             echo "- **Destroy:** ${{ steps.destroy.outcome }}" >> $GITHUB_STEP_SUMMARY
           fi
 
-  # Optional: Trigger deployment workflow after successful infrastructure deployment
+  # Trigger deployment workflow after successful infrastructure deployment
   trigger_deployment:
     name: Trigger Application Deployment
     runs-on: ubuntu-latest
