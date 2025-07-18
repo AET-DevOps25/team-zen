@@ -3,16 +3,26 @@ name: Deploy Application
 
 on:
   workflow_dispatch:
-  # Triggered by CI/CD for application changes (no infra changes)
-  workflow_call:
-  # Triggered automatically by infrastructure workflow
-  workflow_run:
-    workflows: ["Infrastructure"]
-    types:
-      - completed
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'development'
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+  push:
     branches:
       - main
       - feat/aws-deployment
+    paths:
+      - 'client/**'
+      - 'server/**'
+      - 'genai/**'
+      - 'docker-compose.yml'
+      - 'ansible/**'
 
 permissions:
   contents: read
@@ -22,9 +32,8 @@ jobs:
   deploy:
     name: Deploy to EC2
     runs-on: ubuntu-latest
-    # Skip if triggered by workflow_run and the infrastructure workflow failed
-    # Allow workflow_dispatch and workflow_call triggers
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    # TODO: Add condition to only run if infrastructure is ready
+    if: true
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

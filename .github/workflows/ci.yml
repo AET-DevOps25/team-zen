@@ -1,4 +1,4 @@
-name: CI/CD
+name: CI
 
 on:
   push:
@@ -141,64 +141,3 @@ jobs:
     needs: changes
     if: needs.changes.outputs.ansible == 'true'
     uses: ./.github/workflows/ansible_lint.yml
-
-  # CD Jobs
-  trigger-infrastructure:
-    name: Trigger Infrastructure Deployment
-    runs-on: ubuntu-latest
-    needs: [changes, client, server, genai]
-    if: |
-      github.event_name == 'push' && 
-      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/aws-deployment') &&
-      needs.changes.outputs.infrastructure == 'true' &&
-      (needs.client.result == 'success' || needs.client.result == 'skipped') &&
-      (needs.server.result == 'success' || needs.server.result == 'skipped') &&
-      (needs.genai.result == 'success' || needs.genai.result == 'skipped')
-    steps:
-      - name: Trigger Infrastructure Workflow
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            console.log('🏗️ Infrastructure changes detected, triggering infrastructure deployment...');
-            
-            const result = await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'infrastructure.yml',
-              ref: context.ref.replace('refs/heads/', ''),
-              inputs: {
-                action: 'apply'
-              }
-            });
-            
-            console.log('✅ Infrastructure workflow triggered');
-
-  trigger-deployment:
-    name: Trigger Application Deployment
-    runs-on: ubuntu-latest
-    needs: [changes, client, server, genai]
-    if: |
-      github.event_name == 'push' && 
-      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/aws-deployment') &&
-      needs.changes.outputs.application == 'true' &&
-      needs.changes.outputs.infrastructure == 'false' &&
-      (needs.client.result == 'success' || needs.client.result == 'skipped') &&
-      (needs.server.result == 'success' || needs.server.result == 'skipped') &&
-      (needs.genai.result == 'success' || needs.genai.result == 'skipped')
-    steps:
-      - name: Trigger Deployment Workflow
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            console.log('🚀 Application changes detected (no infra changes), triggering deployment...');
-            
-            const result = await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'deploy_aws.yml',
-              ref: context.ref.replace('refs/heads/', '')
-            });
-            
-            console.log('✅ Deployment workflow triggered');

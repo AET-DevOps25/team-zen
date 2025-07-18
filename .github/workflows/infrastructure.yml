@@ -313,12 +313,12 @@ jobs:
             echo "- **Destroy:** ${{ steps.destroy.outcome }}" >> $GITHUB_STEP_SUMMARY
           fi
 
-  # Trigger deployment workflow after successful infrastructure deployment
+  # Manual trigger for application deployment after infrastructure changes
   trigger_deployment:
     name: Trigger Application Deployment
     runs-on: ubuntu-latest
     needs: terraform
-    if: needs.terraform.outputs.infrastructure_deployed == 'true' && ((github.event_name == 'push' && github.ref == 'refs/heads/feat/aws-deployment') || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'))
+    if: needs.terraform.outputs.infrastructure_deployed == 'true' && github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'
 
     steps:
       - name: Trigger Deployment Workflow
