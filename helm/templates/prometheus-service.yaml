@@ -8,6 +8,5 @@ spec:
     - port: {{ .Values.prometheus.service.port }}
       targetPort: {{ .Values.prometheus.service.port }}
       protocol: TCP
-      name: http
   selector:
     app: prometheus
