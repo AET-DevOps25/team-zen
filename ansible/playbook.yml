@@ -16,14 +16,36 @@
       failed_when: false
       changed_when: false
 
-    - name: Install Docker and dependencies
+    - name: Install Docker and dependencies (if Docker not present)
+      block:
+        - name: Install Docker from Ubuntu repository
+          ansible.builtin.apt:
+            name:
+              - docker.io
+              - docker-compose-v2
+              - python3-docker
+            state: present
+            update_cache: true
+      rescue:
+        - name: Try installing just essential packages
+          ansible.builtin.apt:
+            name:
+              - python3-docker
+            state: present
+      when: docker_check.rc != 0
+
+    - name: Ensure Docker compose plugin is available
+      ansible.builtin.command: docker compose version
+      register: compose_check
+      failed_when: false
+      changed_when: false
+
+    - name: Install docker-compose-plugin if compose not working
       ansible.builtin.apt:
-        name:
-          - docker.io
-          - docker-compose-v2
-          - python3-docker
+        name: docker-compose-plugin
         state: present
-        update_cache: true
+      when: compose_check.rc != 0
+      failed_when: false
 
     - name: Start Docker service
       ansible.builtin.systemd:
@@ -44,26 +66,30 @@
       block:
         - name: Test Docker access as ubuntu user
           ansible.builtin.command: docker ps
+          become: true
           become_user: ubuntu
           register: docker_test
-          
+          changed_when: false
+
       rescue:
         - name: Debug Docker issue
           ansible.builtin.debug:
             msg: "Docker access failed, attempting to fix..."
-            
+
         - name: Ensure Docker daemon is running
           ansible.builtin.systemd:
             name: docker
             state: restarted
-            
+
         - name: Wait for Docker daemon
           ansible.builtin.pause:
             seconds: 5
-            
+
         - name: Retry Docker access
           ansible.builtin.command: docker ps
+          become: true
           become_user: ubuntu
+          changed_when: false
 
     - name: Copy project files
       ansible.builtin.copy:
@@ -97,19 +123,22 @@
             state: present
             recreate: always
             remove_orphans: true
+          become: true
           become_user: ubuntu
-          
+
       rescue:
         - name: Install missing Ansible Docker collection
           ansible.builtin.command: ansible-galaxy collection install community.docker
           delegate_to: localhost
-          
+          changed_when: false
+
         - name: Retry Docker Compose deployment
           community.docker.docker_compose_v2:
             project_src: /home/ubuntu/app
             state: present
             recreate: always
             remove_orphans: true
+          become: true
           become_user: ubuntu
 
     - name: Show deployment info
