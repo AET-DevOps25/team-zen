@@ -51,7 +51,7 @@ jobs:
           --namespace zenai-team \
           -f ./helm/values.yaml \
             --set client.image.tag=${{ steps.vars.outputs.IMAGE_TAG }} \
-            --set api-gateway.image.tag=${{ steps.vars.outputs.IMAGE_TAG }} \
+            --set apiGateway.image.tag=${{ steps.vars.outputs.IMAGE_TAG }} \
             --set journal.image.tag=${{ steps.vars.outputs.IMAGE_TAG }} \
             --set user.image.tag=${{ steps.vars.outputs.IMAGE_TAG }} \
             --set genai.image.tag=${{ steps.vars.outputs.IMAGE_TAG }}
