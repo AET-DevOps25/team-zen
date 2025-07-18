@@ -117,8 +117,6 @@
         project_src: /home/ubuntu/app
         files:
           - docker-compose.yml
-        env_files:
-          - /home/ubuntu/app/.env.prod
         pull: "always"
         state: present
         recreate: "never"
@@ -129,8 +127,6 @@
         project_src: /home/ubuntu/app
         files:
           - docker-compose.yml
-        env_files:
-          - /home/ubuntu/app/.env.prod
         state: present
         recreate: "always"
         remove_orphans: true

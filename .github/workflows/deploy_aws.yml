@@ -152,8 +152,8 @@ jobs:
             # Create app directory
             mkdir -p /home/ubuntu/app
             
-            # Create .env.prod file with all environment variables
-            cat > /home/ubuntu/app/.env.prod << 'EOF'
+            # Create .env file with all environment variables
+            cat > /home/ubuntu/app/.env << 'EOF'
             # API Configuration
             API_URL=http://${{ steps.ec2_info.outputs.ip }}:8085
             VITE_API_URL=http://${{ steps.ec2_info.outputs.ip }}:8085
@@ -188,23 +188,23 @@ jobs:
             
             # Set defaults for missing secrets
             if [ -z "${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}" ]; then
-              sed -i 's/VITE_CLERK_PUBLISHABLE_KEY=$/VITE_CLERK_PUBLISHABLE_KEY=pk_test_demo_key/' /home/ubuntu/app/.env.prod
+              sed -i 's/VITE_CLERK_PUBLISHABLE_KEY=$/VITE_CLERK_PUBLISHABLE_KEY=pk_test_demo_key/' /home/ubuntu/app/.env
             fi
             if [ -z "${{ secrets.CLERK_SECRET_KEY }}" ]; then
-              sed -i 's/CLERK_SECRET_KEY=$/CLERK_SECRET_KEY=sk_test_demo_key/' /home/ubuntu/app/.env.prod
+              sed -i 's/CLERK_SECRET_KEY=$/CLERK_SECRET_KEY=sk_test_demo_key/' /home/ubuntu/app/.env
             fi
             if [ -z "${{ secrets.CLERK_WEBHOOK_SECRET }}" ]; then
-              sed -i 's/CLERK_WEBHOOK_SECRET=$/CLERK_WEBHOOK_SECRET=whsec_demo_secret/' /home/ubuntu/app/.env.prod
+              sed -i 's/CLERK_WEBHOOK_SECRET=$/CLERK_WEBHOOK_SECRET=whsec_demo_secret/' /home/ubuntu/app/.env
             fi
             if [ -z "${{ secrets.GENAI_API_KEY }}" ]; then
-              sed -i 's/GENAI_API_KEY=$/GENAI_API_KEY=demo_key/' /home/ubuntu/app/.env.prod
+              sed -i 's/GENAI_API_KEY=$/GENAI_API_KEY=demo_key/' /home/ubuntu/app/.env
             fi
             if [ -z "${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}" ]; then
-              sed -i 's/GF_SECURITY_ADMIN_PASSWORD=$/GF_SECURITY_ADMIN_PASSWORD=admin123/' /home/ubuntu/app/.env.prod
+              sed -i 's/GF_SECURITY_ADMIN_PASSWORD=$/GF_SECURITY_ADMIN_PASSWORD=admin123/' /home/ubuntu/app/.env
             fi
             
             # Set proper permissions
-            chmod 644 /home/ubuntu/app/.env.prod
+            chmod 644 /home/ubuntu/app/.env
 
       - name: Run Ansible Playbook
         id: ansible_deploy
