@@ -27,6 +27,7 @@
       changed_when: false
 
     - name: Install Docker and dependencies (if Docker not present)
+      when: docker_check.rc != 0
       block:
         - name: Install Docker from Ubuntu repository
           ansible.builtin.apt:
@@ -42,7 +43,6 @@
             name:
               - python3-docker
             state: present
-      when: docker_check.rc != 0
 
     - name: Ensure Docker compose plugin is available
       ansible.builtin.command: docker compose version
@@ -122,33 +122,33 @@
         content: |
           # Production Environment Configuration
           NODE_ENV=production
-          
+
           # API Configuration
           API_URL=http://{{ ansible_host }}:8085
           VITE_API_URL=http://{{ ansible_host }}:8085
           PUBLIC_API_URL=http://{{ ansible_host }}:8085
-          
+
           # Host Configuration
           CLIENT_HOST=client.{{ ansible_host }}.nip.io
           SERVER_HOST=api.{{ ansible_host }}.nip.io
-          
+
           # Authentication (Clerk)
           VITE_CLERK_PUBLISHABLE_KEY={{ clerk_publishable_key | default('pk_test_demo_key') }}
           CLERK_SECRET_KEY={{ clerk_secret_key | default('sk_test_demo_key') }}
           CLERK_WEBHOOK_SECRET={{ clerk_webhook_secret | default('whsec_demo_secret') }}
           CLERK_AUTHORIZED_PARTY=http://{{ ansible_host }}:3000
-          
+
           # Database Configuration
           MONGO_DB_URI_USER=mongodb://user-db:27017/userdb
           MONGO_DB_URI_JOURNAL=mongodb://journal-db:27017/journaldb
-          
+
           # GenAI Configuration
           GENAI_API_URL=https://gpu.aet.cit.tum.de/api/chat/completions
           GENAI_API_KEY={{ genai_api_key | default('demo_key') }}
-          
+
           # Grafana Configuration
           GF_SECURITY_ADMIN_PASSWORD={{ grafana_password | default('admin123') }}
-          
+
           # Deployment Metadata
           DEPLOYMENT_TIMESTAMP={{ ansible_date_time.epoch }}
           GIT_COMMIT={{ git_commit | default('unknown') }}
@@ -157,6 +157,27 @@
         owner: ubuntu
         group: ubuntu
         mode: '0644'
+
+    - name: Login to GitHub Container Registry
+      community.docker.docker_login:
+        registry: ghcr.io
+        username: "{{ github_actor }}"
+        password: "{{ github_token }}"
+      become: true
+      become_user: ubuntu
+      when: github_actor != '' and github_token != ''
+      register: docker_login_result
+      failed_when: false
+
+    - name: Fallback Docker login using command line
+      ansible.builtin.shell: |
+        echo "{{ github_token }}" | docker login ghcr.io -u "{{ github_actor }}" --password-stdin
+      become: true
+      become_user: ubuntu
+      when: 
+        - github_actor != '' and github_token != ''
+        - docker_login_result is defined and docker_login_result.failed | default(false)
+      no_log: true
 
     - name: Deploy with Docker Compose
       block:
