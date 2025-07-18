@@ -18,8 +18,8 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/othneildrew/Best-README-Template">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
+  <a href="https://zenai-team.student.k8s.aet.cit.tum.de/">
+    <img src="./client/public/favicon.ico" alt="Logo" width="50" height="50">
   </a>
 
   <h3 align="center">ZenAI</h3>
@@ -52,7 +52,13 @@
         <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
-    <li><a href="#usage">Usage</a></li>
+    <li>
+      <a href="#usage">Usage</a>
+      <ul>
+        <li><a href="#prerequisites">Overall Usage</a></li>
+        <li><a href="#installation">GenAI Usage</a></li>
+      </ul>
+    </li>
     <li><a href="#cicd-pipeline">CI/CD Pipeline</a></li>
     <li><a href="#monitoring">Monitoring</a></li>
     <li><a href="#api-specifications">API Specifications</a></li>
@@ -81,7 +87,6 @@ Your personal AI-powered journal that helps you track, understand, and improve y
 * [![Python][Python]][Python-url]
 * [![Clerk][Clerk.com]][Clerk-url]
 * [![Langchain][Langchain.com]][Langchain-url]
-* [![JQuery][JQuery.com]][JQuery-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -90,17 +95,18 @@ Your personal AI-powered journal that helps you track, understand, and improve y
 
 * Subsystem decomposition
 
-   ![Subsystem decomposition](./docs/diagrams/Component%20diagram%20(1).png)
+   ![Subsystem decomposition](./docs/diagrams/Component%20diagram.png)
 * Analysis object diagram
 
-   ![Analysis object diagram](./docs/diagrams/Analysis%20object%20model%20(1).png)
+   ![Analysis object diagram](./docs/diagrams/Analysis%20object%20model.png)
+* Use case diagram
+
+   ![Use case diagram](./docs/diagrams/Use%20case%20diagram.png)
 
 
 
 <!-- GETTING STARTED -->
 ## Getting Started
-
-To get a local copy up and running follow these simple example steps.
 
 ### Prerequisites
 
@@ -120,6 +126,8 @@ To get a local copy up and running follow these simple example steps.
 
   We use Clerk for user authentication and session management. Create a Clerk account on the [official website](https://clerk.com/).
 
+  * *Note*: A test clerk account is set up for the course instructors. Visit Confluence or contact us for details.
+
 
 
 ### Installation
@@ -131,19 +139,19 @@ To get a local copy up and running follow these simple example steps.
    ngrok http 8085 --url=<YOUR_STATIC_DOMAIN>
    ```
    This exposes port 8085 (thus the API gateway) to the internet.
-2. Create ```.env``` files in both ```/server``` and ```/client``` by copying the ```.env.example``` files.
+2. Create a ```.env``` file in the root directory by copying the ```.env.example``` files.
 3. Setup Clerk webhook
 
    In order to sync users from Clerk to the local user DB, Clerk needs a way to communicate with the application. This is done through webhooks - every time a new user registers using Clerk, Clerk sends a request to our application containing the user's detailed information.
 
-   Sign in to your Clerk dashboard. Go to Configure -> Webhooks (under Developers). Click on "Add Endpoint". Under endpoint URL, enter ```<YOUR_STATIC_DOMAIN>/api/webhooks```. Below, subscribe to all ```user``` events: ```user.created```, ```user.deleted```, and ```user.updated```. Finally, click "Create".
+   Sign in to your Clerk dashboard. Go to Configure -> Webhooks (under Developers). Click on "Add Endpoint". Under endpoint URL, enter ```https://<YOUR_STATIC_DOMAIN>/api/webhooks```. Below, subscribe to all ```user``` events: ```user.created```, ```user.deleted```, and ```user.updated```. Finally, click "Create".
 
-   Click into the webhook endpoint you just created. On the right side of the page, there should be a field "Signing Secret" with a value that starts with ```whesc_...```. Copy that value and paste it into ```/server/.env```'s ```CLERK_WEBHOOK_SECRET``` variable.
+   Click into the webhook endpoint you just created. On the right side of the page, there should be a field "Signing Secret" with a value that starts with ```whesc_...```. Copy that value and paste it into ```.env```'s ```CLERK_WEBHOOK_SECRET``` variable.
 4. Set up Clerk key pair
    
-   Under Configure -> API keys (under Developers), select "React" in the top-right dropdown menu of "Quick Copy". Then, copy over the ```VITE_CLERK_PUBLISHABLE_KEY``` to ```client/.env```.
+   Under Configure -> API keys (under Developers), select "React" in the top-right dropdown menu of "Quick Copy". Then, copy over the ```VITE_CLERK_PUBLISHABLE_KEY``` to ```.env```.
 
-   Finally, on the same page, under "Secret keys", add a new key and copy the value of the secret key over to ```/server/.env```'s ```CLERK_SECRET_KEY```.
+   Finally, on the same page, under "Secret keys", add a new key and copy the value of the secret key over to ```.env```'s ```CLERK_SECRET_KEY```.
 5. Build and run using Docker
    In the root folder, run
    ```sh
@@ -158,18 +166,29 @@ To get a local copy up and running follow these simple example steps.
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-* Sign in. If you don't have an account yet, sign up first.
-* Click on "My Journal" on the top right.
-* Click on "Add Snippet". Select your current mood, write some short sentences about what's on your mind, and save it. 
-* After you have written at least three snippets, click on "Create Journal". In the journal editor, you can:
+### General Usage
+
+* **Sign in / register** using the button in the top-right corner.
+* Navigate to the journal page by clicking either **"My Journal"** next to your user avatar, or **"Start Your Journalling Now"** in the middle of the homepage.
+* Click on **"Add Snippet"** or **"Quick Entry"** button to start writing snippets. Select your current mood, write some short sentences about what's on your mind, and save it. You can also optionally add tags to your snippets for searching later.
+* After you have written at least three snippets, you will be prompted to **"Create Journal"**. In the journal editor, you can:
   
-  * Click on "Today's Journal" in the top bar to change the title of the journal.
-  * Click on "Edit" or directly click the journal content to write your daily journal.
-    * When in the editing view, you can click "Summarize" to let the LLM summarize your snippets. You can use the result as a starting point.
-  * Don't forget to save your changes!
-  * If you have used the summarization function, you can click "Insights" on the top right to view the analysis of your day based on your snippets.
-* You can search for and view old journals in the tab "Previous Journals".
-* In the "Overview" tab, you can see statistics of your journaling habit.
+  * Click on **"Today's Journal"** in the top bar to change the title of the journal.
+  * Click on **"Edit"** or directly **click the journal content** to write your daily journal.
+    * Need inspiration? Click **"Regenerate Journal"** to let the Gen-AI summarize your snippets. You can use the result as a starting point.
+  * Once you've written something, you can click on **"Generate Insights"** to let the Gen-AI analyze your journal entry - mood pattern, suggestions, tips and so on. View the comprehensive analysis of your day by clicking **"Insights"** on the top-right.
+  * You can search for, filter, and view old journals in the tab **"Previous Journals"**.
+* In the **"Overview"** tab, you can see statistics of your journaling habit as well as your well-being trends.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+### GenAI Usage
+
+ZenAI utilizes generative AI to provide value to the user by using carefully put-together prompts. The two concrete use cases are:
+
+* **Summarization/Generation** of journal entry content. This is intended to give users inspiration and serve as a basis/draft journal entry that the users can modify and improve upon with their own words. It also lowers the mental hurdle of starting to write a journal.
+* **Analysis** of well-being insights. This aims to provide users with materials generated based on their journal entries, shedding lights on their mood pattern, and providing helpful tips. It allows for a deeper introspective perspective on one's self.
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- CI/CD -->
@@ -308,7 +327,7 @@ Alert rules can be seen in Prometheus web interface under Status -> Rules or und
 
 ZenAI's APIs for every single microservice (user, journal, genai and api-gateway) are documented using Swagger, and are accessible by visiting
 
-* Locally using Docker: ```http://localhost:8085/api/swagger-ui.html``` 
+* Local: ```http://localhost:8085/api/swagger-ui.html``` 
 * Deployed: ```https://zenai-team.student.k8s.aet.cit.tum.de/api/swagger-ui.html```
 
 in your browser and select the microservice for which you would like to see the API documentation in the dropdown list in the top-right corner.
@@ -356,5 +375,3 @@ in your browser and select the microservice for which you would like to see the 
 [Clerk-url]: https://clerk.com
 [Langchain.com]: https://img.shields.io/badge/LangChain-ffffff?logo=langchain&logoColor=green
 [Langchain-url]: https://langchain.com
-[JQuery.com]: https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=jquery&logoColor=white
-[JQuery-url]: https://jquery.com
