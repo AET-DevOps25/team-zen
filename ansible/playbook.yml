@@ -17,6 +17,7 @@
           - gnupg
           - lsb-release
           - python3-pip
+          - rsync
         state: present
 
     - name: Add Docker GPG key
@@ -73,13 +74,31 @@
     github_actor: "{{ github_actor | default('') }}"
     github_token: "{{ github_token | default('') }}"
   tasks:
-    - name: Copy docker-compose file
-      ansible.builtin.copy:
-        src: ../docker-compose.yml
-        dest: /home/ubuntu/app/docker-compose.yml
+    - name: Copy project files to remote server
+      ansible.builtin.synchronize:
+        src: ../
+        dest: /home/ubuntu/app/
+        delete: true
+        recursive: true
+        rsync_opts:
+          - "--exclude=.git"
+          - "--exclude=.github"
+          - "--exclude=node_modules"
+          - "--exclude=.venv"
+          - "--exclude=__pycache__"
+          - "--exclude=.terraform"
+          - "--exclude=*.log"
+          - "--exclude=.env*"
+        owner: false
+        group: false
+
+    - name: Set proper ownership of app directory
+      ansible.builtin.file:
+        path: /home/ubuntu/app
         owner: ubuntu
         group: ubuntu
-        mode: "0644"
+        recurse: true
+      become: true
 
     - name: Log in to GitHub Container Registry
       community.docker.docker_login:
