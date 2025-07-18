@@ -23,6 +23,7 @@ on:
       - 'genai/**'
       - 'docker-compose.yml'
       - 'ansible/**'
+      - '.github/workflows/deploy_aws.yml'
 
 permissions:
   contents: read
