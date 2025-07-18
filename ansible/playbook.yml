@@ -70,40 +70,9 @@
   hosts: docker_server
   become: false
   vars:
-    ec2_public_ip: "{{ ansible_host }}"
     github_actor: "{{ github_actor | default('') }}"
     github_token: "{{ github_token | default('') }}"
-    deployment_timestamp: "{{ deployment_timestamp | default(ansible_date_time.iso8601) }}"
-    git_commit: "{{ git_commit | default('unknown') }}"
-    git_branch: "{{ git_branch | default('main') }}"
   tasks:
-    - name: Create application directory
-      ansible.builtin.file:
-        path: /home/ubuntu/app
-        state: directory
-        owner: ubuntu
-        group: ubuntu
-        mode: "0755"
-
-    - name: Remove existing .env.prod if exists
-      ansible.builtin.file:
-        path: /home/ubuntu/app/.env.prod
-        state: absent
-
-    - name: Create .env.prod file with environment variables
-      ansible.builtin.copy:
-        dest: /home/ubuntu/app/.env.prod
-        content: |
-          CLIENT_HOST=client.{{ ec2_public_ip }}.nip.io
-          SERVER_HOST=api.{{ ec2_public_ip }}.nip.io
-          PUBLIC_API_URL=https://api.{{ ec2_public_ip }}.nip.io
-          DEPLOYMENT_TIMESTAMP={{ deployment_timestamp }}
-          GIT_COMMIT={{ git_commit }}
-          GIT_BRANCH={{ git_branch }}
-        owner: ubuntu
-        group: ubuntu
-        mode: "0644"
-
     - name: Copy docker-compose file
       ansible.builtin.copy:
         src: ../docker-compose.yml
@@ -183,10 +152,6 @@
       ansible.builtin.debug:
         msg:
           - "Deployment completed successfully!"
-          - "Timestamp: {{ deployment_timestamp }}"
-          - "Git Commit: {{ git_commit }}"
-          - "Git Branch: {{ git_branch }}"
-          - "EC2 Public IP: {{ ec2_public_ip }}"
           - "Application URLs:"
-          - "  - Client: http://client.{{ ec2_public_ip }}.nip.io"
-          - "  - API: http://api.{{ ec2_public_ip }}.nip.io"
+          - "  - Client: http://{{ ansible_host }}:3000"
+          - "  - API: http://{{ ansible_host }}:8085"
