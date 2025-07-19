@@ -2,6 +2,10 @@ name: Deploy to EC2
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+      - feat/aws-deployment
 
 permissions:
   contents: read
@@ -21,7 +25,7 @@ jobs:
           echo "**Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
           echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Environment:** ${{ inputs.environment || 'production' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** production" >> $GITHUB_STEP_SUMMARY
           echo "**Target Server:** ${{ vars.EC2_PUBLIC_IP }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Checkout code
