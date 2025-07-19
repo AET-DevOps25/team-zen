@@ -138,6 +138,39 @@
             group: ubuntu
             mode: '0644'
 
+    - name: Check existing services
+      ansible.builtin.shell: |
+        cd /home/ubuntu/app
+        docker compose ps
+      become: true
+      become_user: ubuntu
+      register: running_services
+      ignore_errors: true
+      changed_when: false
+
+    - name: Show currently running services
+      ansible.builtin.debug:
+        msg:
+          - "Currently running services:"
+          - "{{ running_services.stdout_lines }}"
+      when: running_services.stdout != ""
+
+    - name: Stop existing services
+      ansible.builtin.shell: |
+        cd /home/ubuntu/app
+        docker compose down
+      become: true
+      become_user: ubuntu
+      register: compose_down
+      ignore_errors: true
+      changed_when: true
+      when: running_services.rc == 0
+
+    - name: Show compose down results
+      ansible.builtin.debug:
+        msg: "{{ compose_down.stdout_lines }}"
+      when: compose_down is defined and compose_down.stdout != ""
+
     - name: Deploy application
       ansible.builtin.shell: |
         cd /home/ubuntu/app
