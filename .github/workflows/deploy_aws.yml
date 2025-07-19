@@ -64,7 +64,7 @@ jobs:
             -e github_actor="${{ github.actor }}" \
             -e github_token="${{ secrets.GITHUB_TOKEN }}" \
             -e genai_api_key="${{ secrets.GENAI_API_KEY }}" \
-            -e clerk_publishable_key="${{ secrets.CLERK_PUBLISHABLE_KEY }}" \
+            -e clerk_publishable_key="${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}" \
             -e clerk_secret_key="${{ secrets.CLERK_SECRET_KEY }}" \
             -e clerk_webhook_secret="${{ secrets.CLERK_WEBHOOK_SECRET }}" \
             -e grafana_password="${{ secrets.GRAFANA_PASSWORD }}" \
