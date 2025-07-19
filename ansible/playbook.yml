@@ -121,7 +121,7 @@
         - name: Copy prometheus configuration
           ansible.builtin.copy:
             src: ../prometheus/
-            dest: /home/ubuntu/app/prometheus/
+            dest: /home/ubuntu/app/
             owner: ubuntu
             group: ubuntu
             mode: '0644'

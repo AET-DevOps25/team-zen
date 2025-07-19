@@ -102,7 +102,7 @@ services:
       - ./prometheus:/etc/prometheus:ro
       - prometheus_data:/prometheus
     command:
-      - '--config.file=/app/prometheus/prometheus.yml'
+      - '--config.file=./prometheus/prometheus.yml'
     networks:
       - backend
       - monitoring
