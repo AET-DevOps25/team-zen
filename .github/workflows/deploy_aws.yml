@@ -2,17 +2,6 @@ name: Deploy to EC2
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-      - feat/aws-deployment
-    paths:
-      - 'client/**'
-      - 'server/**'
-      - 'genai/**'
-      - 'docker-compose.prod.yml'
-      - 'ansible/**'
-      - '.github/workflows/aws_deploy.yml'
 
 permissions:
   contents: read
