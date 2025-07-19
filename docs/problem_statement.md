@@ -24,6 +24,5 @@ The app will leverage GenAI in the following ways:
 
 - **Quick Snippet Logging**: You just had a tense conversation and want to log it. You open the web app, type 2-3 sentences. It's stored and timestamped.
 - **Daily Reflection**: Throughout the day, you can add snippets and reflect on your mood and experiences. The app aggregates these into a daily summary.
-- **Mood Calendar**: You check the calendar and notice a pattern of low moods on certain days
-- **Ask the Journal**: "When did I last hangout with Alice?" The app retrieves related entries using RAG.
-- **Self-Coaching**: You type, "Why do I feel so burnt out this week?" The LLM analyzes your recent entries and suggests patterns.
+- **Mood Calendar**: You check the weekly overview and notice a pattern of low moods on certain days
+- **Self-Coaching**: You can analyze with the help of the LLM your recent entries and suggests patterns.
