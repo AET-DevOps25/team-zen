@@ -1,0 +1,137 @@
+services:
+  client:
+    image: ghcr.io/aet-devops25/team-zen/client:latest
+    ports:
+      - "3000:80"
+    environment:
+      - API_URL=${API_URL}
+      - VITE_API_URL=${VITE_API_URL}
+      - VITE_CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY}
+      - SERVER_HOST=api-gateway
+      - SERVER_PORT=8085
+    depends_on:
+      - api-gateway
+    networks:
+      - frontend
+      - backend
+
+  api-gateway:
+    image: ghcr.io/aet-devops25/team-zen/api-gateway:latest
+    ports:
+      - "8085:8085"
+    environment:
+      - SERVER_PORT=8085
+      - USER_SERVICE_URL=http://user-microservice:8080
+      - JOURNAL_SERVICE_URL=http://journal-microservice:8081
+      - GENAI_SERVICE_URL=http://genai-microservice:8082
+      - CLERK_AUTHORIZED_PARTY=${CLERK_AUTHORIZED_PARTY}
+      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
+      - CLERK_WEBHOOK_SECRET=${CLERK_WEBHOOK_SECRET}
+      - SPRINGDOC_API_DOCS_PATH=/api/v3/api-docs
+      - SPRINGDOC_SWAGGER_UI_PATH=/api/swagger-ui.html
+      - SPRINGDOC_SWAGGER_UI_CONFIG_URL=/api/v3/api-docs/swagger-config
+      - SWAGGER_USER_SERVICE_URL=/api/user-service/v3/api-docs
+      - SWAGGER_JOURNAL_SERVICE_URL=/api/journal-service/v3/api-docs
+      - SWAGGER_GENAI_SERVICE_URL=/api/genai-service/openapi.json
+      - SWAGGER_API_GATEWAY_URL=/api/v3/api-docs
+    depends_on:
+      - user-microservice
+      - journal-microservice
+      - genai-microservice
+    networks:
+      - backend
+
+  user-microservice:
+    image: ghcr.io/aet-devops25/team-zen/user-microservice:latest
+    environment:
+      - MONGO_DB_URI_USER=${MONGO_DB_URI_USER}
+      - MONGODB_DB=userdb
+      - SERVER_PORT=8080
+    depends_on:
+      - user-db
+    networks:
+      - backend
+      - user-network
+
+  journal-microservice:
+    image: ghcr.io/aet-devops25/team-zen/journal-microservice:latest
+    environment:
+      - MONGODB_URI=${MONGO_DB_URI_JOURNAL}
+      - MONGODB_DB=journaldb
+      - SERVER_PORT=8081
+      - LLM_SERVICE_URL=http://genai-microservice:8082
+      - USER_SERVICE_URL=http://user-microservice:8080
+    depends_on:
+      - journal-db
+    networks:
+      - backend
+      - journal-network
+
+  genai-microservice:
+    image: ghcr.io/aet-devops25/team-zen/genai:latest
+    environment:
+      - GENAI_API_URL=${GENAI_API_URL}
+      - GENAI_API_KEY=${GENAI_API_KEY}
+      - SERVER_PORT=8082
+    networks:
+      - backend
+      - journal-network
+
+  user-db:
+    image: mongo:6
+    container_name: user-db
+    volumes:
+      - user-data:/data/db
+    networks:
+      - user-network
+
+  journal-db:
+    image: mongo:6
+    container_name: journal-db
+    volumes:
+      - journal-data:/data/db
+    networks:
+      - journal-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus:/etc/prometheus:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    networks:
+      - backend
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring
+
+volumes:
+  user-data:
+  journal-data:
+  prometheus_data:
+  grafana-storage:
+
+networks:
+  frontend:
+  backend:
+  user-network:
+  journal-network:
+  monitoring:

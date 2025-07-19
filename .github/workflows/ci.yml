@@ -1,8 +1,6 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
 
 permissions:
@@ -10,9 +8,44 @@ permissions:
   pull-requests: write
 
 jobs:
+  # Check what files have changed
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      client: ${{ steps.changes.outputs.client }}
+      server: ${{ steps.changes.outputs.server }}
+      genai: ${{ steps.changes.outputs.genai }}
+      ansible: ${{ steps.changes.outputs.ansible }}
+      infrastructure: ${{ steps.changes.outputs.infrastructure }}
+      application: ${{ steps.changes.outputs.application }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            client:
+              - 'client/**'
+            server:
+              - 'server/**'
+            genai:
+              - 'genai/**'
+            ansible:
+              - 'ansible/**'
+            infrastructure:
+              - 'infra/**'
+              - '**/*.tf'
+            application:
+              - 'client/**'
+              - 'server/**'
+              - 'genai/**'
+              - 'docker-compose.yml'
+
   client:
     name: Client
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.client == 'true'
     defaults:
       run:
         working-directory: client
@@ -39,6 +72,8 @@ jobs:
   server:
     name: Server
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
     strategy:
       matrix:
         service: [api-gateway, journal-microservice, user-microservice]
@@ -67,6 +102,8 @@ jobs:
   genai:
     name: Genai server
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.genai == 'true'
     defaults:
       run:
         working-directory: genai
@@ -98,5 +135,3 @@ jobs:
       - name: Health check FastAPI server
         run: |
           curl --fail http://localhost:8000/api/genai/health
-  ansible-lint:
-    uses: ./.github/workflows/ansible_lint.yml
