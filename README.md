@@ -230,7 +230,7 @@ The main CI workflow validates code quality (linting) and runs tests across all 
 ### Continuous Deployment (CD)
 
 #### Docker Image Building (`build_docker.yml`)
-- Triggered after successful CI completion
+- Triggers directly on main branch pushes (no need to wait for CI since tests already passed on the PR)
 - Multi-architecture builds (linux/amd64, linux/arm64)
 - Pushes images to GitHub Container Registry (ghcr.io)
 - Services built: client, api-gateway, journal-microservice, user-microservice, genai
@@ -336,12 +336,20 @@ Alert rules can be seen in Prometheus web interface under Status -> Rules or und
 <!-- AWS DEPLOYMENT -->
 ## AWS Deployment
 
-ZenAI supports AWS EC2 deployment using GitHub Actions and Ansible for automated deployment. You can provision the infrastructure using either Terraform (automated) or manual setup.
+AWS EC2 deployment using GitHub Actions and Ansible for automated deployment is also supported. You can provision the infrastructure using either Terraform (automated) or manual setup.
 
 ### Prerequisites
 
 1. **AWS Account** with appropriate permissions
 2. **GitHub repository** with admin access to configure secrets
+3. **Terraform** installed locally (for infrastructure provisioning)
+4. **AWS CLI** configured with your credentials
+   - Run `aws configure` to set up your AWS Access Key ID, Secret Access Key, and default region
+   - For temporary credentials (like from AWS Academy or SSO), you may also need to set session tokens:
+     ```bash
+     aws configure set aws_session_token YOUR_SESSION_TOKEN
+     ```
+   - Verify your configuration with: `aws sts get-caller-identity`
 
 ### Automated Infrastructure with Terraform
 
@@ -373,8 +381,18 @@ Add these secrets to your GitHub repository (Settings → Secrets and variables 
 | `EC2_SSH_PRIVATE_KEY` | Contents of your EC2 private key (.pem file) |
 
 #### Deploy Infrastructure
-1. **Manual Trigger**: Go to Actions → **Infrastructure Deployment** workflow → Run workflow
-2. **Automatic**: Push changes to `infra/` folder or `main` branch
+
+**Prerequisites**: Ensure AWS CLI is configured (see Prerequisites section above).
+
+Run Terraform locally:
+```bash
+cd infra/
+terraform init
+terraform plan
+terraform apply
+```
+
+**Note**: Terraform will use your AWS CLI credentials. If you're using temporary credentials (session tokens), make sure they're still valid before running Terraform commands.
 
 The Terraform configuration will create:
 - VPC with public subnet
@@ -451,14 +469,14 @@ Copy the output (including `-----BEGIN RSA PRIVATE KEY-----` and `-----END RSA P
 
 ### Infrastructure Management
 
-#### Using Terraform (Recommended)
-- **Plan**: Manual workflow execution or push to infrastructure changes
-- **Apply**: Automatically applies changes on infrastructure modifications  
-- **Outputs**: After deployment, the workflow provides the EC2 instance public IP
+#### Using Terraform 
+- **Local Commands**: Run `terraform init`, `terraform plan`, and `terraform apply` locally
 - **State Management**: State is stored in S3 bucket for persistence
+- **Outputs**: After `terraform apply`, you'll get the EC2 instance public IP - add this to your GitHub variables
 
-#### Manual Setup
-- You need to manually note down the public IP and add it to GitHub variables
+#### Manual EC2 Setup
+- Launch an EC2 instance manually through AWS Console
+- Note down the public IP and add it to GitHub variables as `EC2_PUBLIC_IP`
 
 ### Deployment Methods
 
@@ -468,11 +486,9 @@ Copy the output (including `-----BEGIN RSA PRIVATE KEY-----` and `-----END RSA P
 3. Click **Run workflow**
 
 #### Option B: Automatic Trigger
-The workflow automatically triggers on:
-- Successful completion of the "Build & Push Docker Images" workflow (after CI passes)
-- Manual workflow dispatch
-
-**Note**: This ensures deployment only happens after all tests pass and Docker images are built successfully. The workflow includes comprehensive validation to prevent deployment with missing configuration.
+The deployment happens automatically when:
+- You push to the main branch (Docker images get built first, then deployment follows)
+- Or you can trigger it manually if needed
 
 ### Monitoring Deployment
 
