@@ -61,6 +61,7 @@
     </li>
     <li><a href="#cicd-pipeline">CI/CD Pipeline</a></li>
     <li><a href="#monitoring">Monitoring</a></li>
+    <li><a href="#aws-deployment">AWS Deployment</a></li>
     <li><a href="#api-specifications">API Specifications</a></li>
     <li><a href="#contributors">Contributors</a></li>
   </ol>
@@ -198,32 +199,33 @@ ZenAI uses GitHub Actions for continuous integration and deployment for automate
 
 ### Continuous Integration (CI)
 
-The main CI workflow validates code quality (linting) and runs tests across all services:
+The main CI workflow validates code quality (linting) and runs tests across all services with path-based triggering:
 
 1. **Client Testing** (`ci.yml`)
-   - Node.js setup and dependency installation
+   - Triggered only when client code changes
+   - Node.js 22 setup and dependency installation  
    - ESLint code linting
-   - Build verification
+   - Build verification with Vite
 
 2. **Server Testing** (`ci.yml`)
-   - Java 21 setup with Gradle
-   - Unit tests for all microservices (API Gateway, Journal, User)
+   - Triggered only when server code changes
+   - Java 21 setup with Gradle build system
+   - Matrix strategy testing all microservices (API Gateway, Journal, User)
+   - Unit tests execution via `./gradlew test`
    - Build verification
 
 3. **GenAI Service Testing** (`ci.yml`)
-   - Python 3.11 setup
-   - Ruff linting
-   - FastAPI health checks
-   - Comprehensive test suite with coverage reporting
+   - Triggered only when GenAI service code changes
+   - Python 3.11 environment setup
+   - Dependency installation and Ruff linting
+   - FastAPI server health checks
+   - Background service testing
 
-4. **Ansible Validation** (`ansible_lint.yml`)
-   - Ansible syntax validation
-   - Best practices enforcement
-
-5. **Terraform Validation** (`ci-terraform.yml`)
-   - Infrastructure code formatting and validation
-   - Terraform plan generation for pull requests
-   - Automated deployment on main branch
+4. **Helm Chart Validation** (`ci-kubernetes.yaml`)
+   - Triggered on changes to Helm charts
+   - Kubernetes and Helm setup
+   - Chart linting and template rendering tests
+   - Validates Kubernetes deployment configurations
 
 ### Continuous Deployment (CD)
 
@@ -239,17 +241,27 @@ The main CI workflow validates code quality (linting) and runs tests across all 
 - Updates all services with latest images
 - Namespace: `zenai-team`
 
-#### Infrastructure Provisioning (`infra.yml`)
-- Terraform-based EC2 instance provisioning on AWS
+#### AWS EC2 Deployment (`deploy_aws.yml`)
+- Manual EC2 deployment using GitHub Actions and Ansible
+- Triggered manually via workflow_dispatch or on push to main/feat/aws-deployment branches
+- SSH-based deployment to pre-provisioned EC2 instances
+- Docker Compose orchestration with monitoring stack
+
+#### Infrastructure Provisioning
+- Terraform-based EC2 instance provisioning on AWS  
 - Ansible configuration management
 - Triggered on infrastructure code changes
 
 ### Workflow Triggers
 
-- **Pull Requests**: Run CI tests and Terraform validation
+- **Pull Requests**: Run CI tests for changed components only
 - **Main Branch Push**: Full CI/CD pipeline with automatic deployment
-- **Manual Dispatch**: Terraform operations (plan/apply/destroy)
-- **Path-based Triggers**: Only affected services are rebuilt and tested
+- **Manual Dispatch**: AWS EC2 deployment and Terraform operations
+- **Path-based Triggers**: Intelligent triggering - only affected services are tested and rebuilt
+  - Client changes → Client CI only
+  - Server changes → Server CI only  
+  - GenAI changes → GenAI CI only
+  - Helm changes → Kubernetes validation only
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -321,8 +333,214 @@ Alert rules can be seen in Prometheus web interface under Status -> Rules or und
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+<!-- AWS DEPLOYMENT -->
+## AWS Deployment
 
-<!-- API-SPECIFICATION -->
+ZenAI supports AWS EC2 deployment using GitHub Actions and Ansible for automated deployment. You can provision the infrastructure using either Terraform (automated) or manual setup.
+
+### Prerequisites
+
+1. **AWS Account** with appropriate permissions
+2. **GitHub repository** with admin access to configure secrets
+
+### Automated Infrastructure with Terraform
+
+#### Setup Terraform Backend (First-time setup only)
+
+**Note**: This step is only needed if the S3 bucket for Terraform state doesn't exist yet.
+
+1. **Check if bucket exists**:
+   ```bash
+   aws s3 ls s3://zenai-terraform-state-bucket
+   ```
+
+2. **If bucket doesn't exist**, run the setup script:
+   ```bash
+   cd infra/
+   ./setup-terraform-backend.sh
+   ```
+
+3. **If bucket already exists**, skip this step and proceed to GitHub secrets configuration.
+
+#### Configure GitHub Secrets for Terraform
+Add these secrets to your GitHub repository (Settings → Secrets and variables → Actions):
+
+| Secret Name | Description |
+|-------------|-------------|
+| `AWS_ACCESS_KEY_ID` | AWS Access Key for Terraform |
+| `AWS_SECRET_ACCESS_KEY` | AWS Secret Key for Terraform |
+| `AWS_SSH_KEY_NAME` | Name of your AWS Key Pair |
+| `EC2_SSH_PRIVATE_KEY` | Contents of your EC2 private key (.pem file) |
+
+#### Deploy Infrastructure
+1. **Manual Trigger**: Go to Actions → **Infrastructure Deployment** workflow → Run workflow
+2. **Automatic**: Push changes to `infra/` folder or `main` branch
+
+The Terraform configuration will create:
+- VPC with public subnet
+- Security groups (SSH, HTTP, application ports)
+- EC2 instance (t3.medium with 30GB encrypted storage)
+- Elastic IP address
+
+#### Terraform Variables
+You can customize the infrastructure by modifying `infra/terraform.tfvars`:
+```hcl
+region        = "us-east-1"
+ami_id        = "ami-0c02fb55956c7d316"  # Ubuntu 20.04 LTS
+instance_type = "t3.medium"
+key_name      = "your-key-pair-name"
+```
+
+### Option 2: Manual EC2 Instance Setup
+
+If you prefer manual setup, launch an EC2 instance with the following configuration:
+- **AMI**: Ubuntu Server 20.04 LTS or later
+- **Instance Type**: t3.medium or larger (recommended for Docker workloads)
+- **Security Group**: Allow inbound traffic on:
+  - Port 22 (SSH)
+  - Port 3000 (Frontend)
+  - Port 8085 (API Gateway) 
+  - Port 3001 (Grafana)
+  - Port 9090 (Prometheus)
+- **Key Pair**: Create or use existing key pair for SSH access
+
+### Application Deployment Configuration
+
+Regardless of which infrastructure option you choose, configure these GitHub secrets for application deployment:
+
+#### Required Secrets (Repository Settings → Secrets and variables → Actions → Secrets)
+
+| Secret Name | Description | Example |
+|-------------|-------------|---------|
+| `EC2_SSH_PRIVATE_KEY` | Contents of your EC2 private key (.pem file) | `-----BEGIN RSA PRIVATE KEY-----\n...` |
+| `GENAI_API_KEY` | API key for GenAI service | `your-genai-api-key` |
+| `GENAI_API_URL` | URL for GenAI service endpoint | `https://gpu.aet.cit.tum.de/api/chat/completions` |
+| `VITE_CLERK_PUBLISHABLE_KEY` | Clerk publishable key for frontend | `pk_test_...` |
+| `CLERK_SECRET_KEY` | Clerk secret key for backend authentication | `sk_test_...` |
+| `CLERK_WEBHOOK_SECRET` | Clerk webhook secret for user sync | `whsec_...` |
+| `CLERK_AUTHORIZED_PARTY` | Clerk authorized party URL | `http://YOUR_EC2_IP:3000` |
+| `MONGO_DB_URI_USER` | MongoDB connection URI for user database | `mongodb://user-db:27017/userdb` |
+| `MONGO_DB_URI_JOURNAL` | MongoDB connection URI for journal database | `mongodb://journal-db:27017/journaldb` |
+| `GRAFANA_PASSWORD` | Password for Grafana admin user | `secure-password` |
+
+#### Required Variables (Repository Settings → Secrets and variables → Actions → Variables)
+
+| Variable Name | Description | Example |
+|---------------|-------------|---------|
+| `EC2_PUBLIC_IP` | Public IP address of your EC2 instance | `54.123.45.67` |
+
+#### How to Add Secrets:
+
+1. Go to your GitHub repository
+2. Click **Settings** → **Secrets and variables** → **Actions**
+3. Click **New repository secret**
+4. Add each secret with the exact name and value
+
+**For EC2_SSH_PRIVATE_KEY:**
+```bash
+# Copy the entire contents of your .pem file
+cat ~/.ssh/your-ec2-key.pem
+```
+Copy the output (including `-----BEGIN RSA PRIVATE KEY-----` and `-----END RSA PRIVATE KEY-----`) and paste as the secret value.
+
+#### How to Add Variables:
+
+1. In the same Actions secrets page, click the **Variables** tab
+2. Click **New repository variable**
+3. Add `EC2_PUBLIC_IP` with your instance's public IP (for manual setup) or use the Terraform output
+
+### Infrastructure Management
+
+#### Using Terraform (Recommended)
+- **Plan**: Manual workflow execution or push to infrastructure changes
+- **Apply**: Automatically applies changes on infrastructure modifications  
+- **Outputs**: After deployment, the workflow provides the EC2 instance public IP
+- **State Management**: State is stored in S3 bucket for persistence
+
+#### Manual Setup
+- You need to manually note down the public IP and add it to GitHub variables
+
+### Deployment Methods
+
+#### Option A: Manual Trigger
+1. Go to **Actions** tab in your GitHub repository
+2. Click **Deploy to EC2** workflow
+3. Click **Run workflow**
+
+#### Option B: Automatic Trigger
+The workflow automatically triggers on:
+- Successful completion of the "Build & Push Docker Images" workflow (after CI passes)
+- Manual workflow dispatch
+
+**Note**: This ensures deployment only happens after all tests pass and Docker images are built successfully. The workflow includes comprehensive validation to prevent deployment with missing configuration.
+
+### Monitoring Deployment
+
+1. Watch the GitHub Actions workflow execution
+2. Check the workflow summary for deployment status and URLs
+3. Access your application at the provided URLs
+
+### Deployment Process
+
+The `deploy_aws.yml` workflow performs these steps:
+
+1. **Validation**: Verify all required secrets and variables are configured
+   - Checks for missing EC2_SSH_PRIVATE_KEY, GENAI_API_KEY, CLERK keys, and GRAFANA_PASSWORD
+   - Validates EC2_PUBLIC_IP variable is set
+   - Fails early with clear error messages if any configuration is missing
+2. **Setup**: Checkout code and configure SSH keys
+3. **Test Connection**: Verify SSH access to EC2 instance
+4. **Install Ansible**: Set up Ansible on the GitHub runner
+5. **Deploy**: Run Ansible playbook to deploy the application
+6. **Verify**: Test if services are responding
+7. **Summary**: Provide deployment status and access URLs
+
+### Security Notes
+
+- Never commit private keys or secrets to the repository
+- Regularly rotate your GitHub tokens and API keys
+- Use least-privilege security groups for your EC2 instance
+- Consider using AWS Systems Manager Session Manager instead of SSH for enhanced security
+
+### AWS Application URLs
+
+After successful deployment, your application will be available at:
+
+- **Frontend**: `http://YOUR_EC2_IP:3000`
+- **API Gateway**: `http://YOUR_EC2_IP:8085`
+- **Grafana**: `http://YOUR_EC2_IP:3001` (admin/YOUR_GRAFANA_PASSWORD)
+- **Prometheus**: `http://YOUR_EC2_IP:9090`
+
+### Troubleshooting AWS Deployment
+
+#### Configuration Validation Failures
+If the deployment fails during the validation step:
+- **Check GitHub Secrets**: Go to Repository Settings → Secrets and variables → Actions → Secrets
+- **Verify Required Secrets**: Ensure all required secrets are configured with exact names:
+  - `EC2_SSH_PRIVATE_KEY`, `GENAI_API_KEY`, `VITE_CLERK_PUBLISHABLE_KEY`
+  - `CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SECRET`, `GRAFANA_PASSWORD`
+- **Check Variables**: Go to Variables tab and verify `EC2_PUBLIC_IP` is set
+- **Review Error Messages**: The workflow provides specific guidance on missing configuration items
+
+#### SSH Connection Issues
+- Verify EC2 security group allows SSH (port 22) from GitHub Actions IPs
+- Check that the private key is correctly formatted in the secret
+- Ensure the EC2 instance is running and accessible
+
+#### Application Not Starting
+- SSH into the instance and check Docker logs:
+  ```bash
+  ssh -i ~/.ssh/your-key.pem ubuntu@YOUR_EC2_IP
+  cd /home/ubuntu/app
+  docker compose logs
+  ```
+
+#### Missing Environment Variables
+- Verify all required secrets are configured in GitHub
+- Check that variable names match exactly (case-sensitive)
+- The deployment workflow now validates configuration before attempting deployment
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 ## API Specifications
 
 ZenAI's APIs for every single microservice (user, journal, genai and api-gateway) are documented using Swagger, and are accessible by visiting
@@ -340,7 +558,7 @@ in your browser and select the microservice for which you would like to see the 
 | Contributor      | Responsibilities                                                                           |
 | ---------------- | ------------------------------------------------------------------------------------------ |
 | Natalia Milanova | Backend CRUD operations, AI summarization functionality, Kubernetes deployment, Monitoring |
-| Evan Christopher | Client implementation and testing, CI pipelines, AWS EC2 deployment, Overall code refactoring|
+| Evan Christopher | Client implementation and testing, CI pipelines, AWS EC2 deployment, Overall code refactoring across features|
 | Zexin Gong       | API gateway and authentication, Backend service tests, Overall testing & Bug fixes, Documentation                 |
 
 

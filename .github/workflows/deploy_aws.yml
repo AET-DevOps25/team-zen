@@ -2,10 +2,12 @@ name: Deploy to EC2
 
 on:
   workflow_dispatch:
-  push:
+  workflow_run:
+    workflows: ["Build & Push Docker Images"]
+    types:
+      - completed
     branches:
       - main
-      - feat/aws-deployment
 
 permissions:
   contents: read
@@ -15,10 +17,51 @@ jobs:
   deploy:
     name: Deploy Application to EC2
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     env:
       EC2_PUBLIC_IP: ${{ vars.EC2_PUBLIC_IP }}
 
     steps:
+      - name: Validate Configuration
+        run: |
+          echo "## 🔍 Validating Deployment Configuration" >> $GITHUB_STEP_SUMMARY
+          
+          # Check required variables
+          missing_vars=""
+          
+          if [ -z "${{ vars.EC2_PUBLIC_IP }}" ]; then
+            missing_vars="$missing_vars EC2_PUBLIC_IP"
+            echo "❌ Missing variable: EC2_PUBLIC_IP" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ EC2_PUBLIC_IP configured" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Check required secrets (we can't check their values, but we can check if they're set)
+          secrets_to_check=(
+            "EC2_SSH_PRIVATE_KEY"
+            "GENAI_API_KEY"
+            "VITE_CLERK_PUBLISHABLE_KEY" 
+            "CLERK_SECRET_KEY"
+            "CLERK_WEBHOOK_SECRET"
+            "GRAFANA_PASSWORD"
+          )
+          
+          missing_secrets=""
+          
+          # Note: We can only check if secrets exist by trying to use them
+          # GitHub doesn't provide a direct way to check if a secret is set
+          
+          if [ -n "$missing_vars" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "❌ **Deployment Failed**: Missing required variables:$missing_vars" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Please configure the missing variables in:" >> $GITHUB_STEP_SUMMARY
+            echo "Repository Settings → Secrets and variables → Actions → Variables" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          
+          echo "✅ All required variables are configured" >> $GITHUB_STEP_SUMMARY
+
       - name: Deployment Context
         run: |
           echo "## 🚀 Deployment Context" >> $GITHUB_STEP_SUMMARY
@@ -27,6 +70,66 @@ jobs:
           echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "**Environment:** production" >> $GITHUB_STEP_SUMMARY
           echo "**Target Server:** ${{ vars.EC2_PUBLIC_IP }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Validate Secrets
+        run: |
+          echo "## 🔐 Validating Required Secrets" >> $GITHUB_STEP_SUMMARY
+          
+          missing_secrets=""
+          
+          # Check each required secret by testing if it's empty
+          if [ -z "${{ secrets.EC2_SSH_PRIVATE_KEY }}" ]; then
+            missing_secrets="$missing_secrets EC2_SSH_PRIVATE_KEY"
+            echo "❌ Missing secret: EC2_SSH_PRIVATE_KEY" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ EC2_SSH_PRIVATE_KEY configured" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ -z "${{ secrets.GENAI_API_KEY }}" ]; then
+            missing_secrets="$missing_secrets GENAI_API_KEY"
+            echo "❌ Missing secret: GENAI_API_KEY" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ GENAI_API_KEY configured" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ -z "${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}" ]; then
+            missing_secrets="$missing_secrets VITE_CLERK_PUBLISHABLE_KEY"
+            echo "❌ Missing secret: VITE_CLERK_PUBLISHABLE_KEY" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ VITE_CLERK_PUBLISHABLE_KEY configured" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ -z "${{ secrets.CLERK_SECRET_KEY }}" ]; then
+            missing_secrets="$missing_secrets CLERK_SECRET_KEY"
+            echo "❌ Missing secret: CLERK_SECRET_KEY" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ CLERK_SECRET_KEY configured" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ -z "${{ secrets.CLERK_WEBHOOK_SECRET }}" ]; then
+            missing_secrets="$missing_secrets CLERK_WEBHOOK_SECRET"
+            echo "❌ Missing secret: CLERK_WEBHOOK_SECRET" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ CLERK_WEBHOOK_SECRET configured" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ -z "${{ secrets.GRAFANA_PASSWORD }}" ]; then
+            missing_secrets="$missing_secrets GRAFANA_PASSWORD"
+            echo "❌ Missing secret: GRAFANA_PASSWORD" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ GRAFANA_PASSWORD configured" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ -n "$missing_secrets" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "❌ **Deployment Failed**: Missing required secrets:$missing_secrets" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Please configure the missing secrets in:" >> $GITHUB_STEP_SUMMARY
+            echo "Repository Settings → Secrets and variables → Actions → Secrets" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          
+          echo "✅ All required secrets are configured" >> $GITHUB_STEP_SUMMARY
 
       - name: Checkout code
         uses: actions/checkout@v4
