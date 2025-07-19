@@ -29,26 +29,36 @@ jobs:
           mkdir -p $HOME/.kube
           echo "$KUBE_CONFIG" > $HOME/.kube/config
 
+      - name: Set image tag
+        id: vars
+        run: |
+          IMAGE_TAG="${GITHUB_SHA:0:7}"
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "LATEST_TAG"=latest >> $GITHUB_OUTPUT
+
       - name: Show images and tags
-        env:
-          IMAGE_TAG: latest
         run: |
           echo "Using image repositories and tags:"
-          echo "client: ghcr.io/aet-devops25/team-zen/client:$IMAGE_TAG"
-          echo "api-gateway: ghcr.io/aet-devops25/team-zen/api-gateway:$IMAGE_TAG"
-          echo "journal-microservice: ghcr.io/aet-devops25/team-zen/journal-microservice:$IMAGE_TAG"
-          echo "user-microservice: ghcr.io/aet-devops25/team-zen/user-microservice:$IMAGE_TAG"
-          echo "genai: ghcr.io/aet-devops25/team-zen/genai:$IMAGE_TAG"
+          echo "client: ghcr.io/aet-devops25/team-zen/client:${{ steps.vars.outputs.IMAGE_TAG }}"
+          echo "api-gateway: ghcr.io/aet-devops25/team-zen/api-gateway:${{ steps.vars.outputs.IMAGE_TAG }}"
+          echo "journal-microservice: ghcr.io/aet-devops25/team-zen/journal-microservice:${{ steps.vars.outputs.IMAGE_TAG }}"
+          echo "user-microservice: ghcr.io/aet-devops25/team-zen/user-microservice:${{ steps.vars.outputs.IMAGE_TAG }}"
+          echo "genai: ghcr.io/aet-devops25/team-zen/genai:${{ steps.vars.outputs.IMAGE_TAG }}"
 
       - name: Deploy Helm Chart
-        env:
-          IMAGE_TAG: latest
         run: |
           helm upgrade --install zenai-app ./helm \
           --namespace zenai-team \
           -f ./helm/values.yaml \
-            --set client.image.tag=$IMAGE_TAG \
-            --set api-gateway.image.tag=$IMAGE_TAG \
-            --set journal.image.tag=$IMAGE_TAG \
-            --set user.image.tag=$IMAGE_TAG \
-            --set genai.image.tag=$IMAGE_TAG
+            --set client.image.tag=${{ steps.vars.outputs.IMAGE_TAG }} \
+            --set apiGateway.image.tag=${{ steps.vars.outputs.IMAGE_TAG }} \
+            --set journal.image.tag=${{ steps.vars.outputs.IMAGE_TAG }} \
+            --set user.image.tag=${{ steps.vars.outputs.IMAGE_TAG }} \
+            --set genai.image.tag=${{ steps.vars.outputs.IMAGE_TAG }}
+
+      - name: Add deployment annotation
+        run: |
+          kubectl annotate deployment zenai-client deployment.kubernetes.io/revision="${{ steps.vars.outputs.IMAGE_TAG }}" -n zenai-team --overwrite
+          kubectl annotate deployment zenai-api-gateway deployment.kubernetes.io/revision="${{ steps.vars.outputs.IMAGE_TAG }}" -n zenai-team --overwrite
+          kubectl annotate deployment zenai-journal deployment.kubernetes.io/revision="${{ steps.vars.outputs.IMAGE_TAG }}" -n zenai-team --overwrite
+          kubectl annotate deployment zenai-genai deployment.kubernetes.io/revision="${{ steps.vars.outputs.IMAGE_TAG }}" -n zenai-team --overwrite

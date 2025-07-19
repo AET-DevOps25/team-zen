@@ -8,6 +8,5 @@ spec:
     - port: {{ .Values.grafana.service.port }}
       targetPort: {{ .Values.grafana.service.port }}
       protocol: TCP
-      name: http
   selector:
     app: grafana

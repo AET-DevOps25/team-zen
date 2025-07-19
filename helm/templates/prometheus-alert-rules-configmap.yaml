@@ -11,37 +11,37 @@ data:
       - name: microservice.rules
         rules:
           - alert: ApiGatewayDown
-            expr: up{job="gateway-service"} == 0
+            expr: up{job="api-gateway"} == 0
             for: 1m
             labels:
               severity: critical
             annotations:
               summary: "API Gateway is down"
-              description: "No targets for job 'gateway-service' have been up for more than 1 minute."
+              description: "No targets for job 'api-gateway' have been up for more than 1 minute."
 
           - alert: UserMicroserviceDown
-            expr: up{job="user-service"} == 0
+            expr: up{job="user-microservice"} == 0
             for: 1m
             labels:
               severity: critical
             annotations:
               summary: "User Microservice is down"
-              description: "No targets for job 'user-service' have been up for more than 1 minute."
+              description: "No targets for job 'user-microservice' have been up for more than 1 minute."
 
           - alert: JournalMicroserviceDown
-            expr: up{job="journal-service"} == 0
+            expr: up{job="journal-microservice"} == 0
             for: 1m
             labels:
               severity: critical
             annotations:
               summary: "Journal Microservice is down"
-              description: "No targets for job 'journal-service' have been up for more than 1 minute."
+              description: "No targets for job 'journal-microservice' have been up for more than 1 minute."
 
           - alert: GenaiMicroserviceDown
-            expr: up{job="genai-service"} == 0
+            expr: up{job="genai-microservice"} == 0
             for: 1m
             labels:
               severity: critical
             annotations:
               summary: "GenAI Microservice is down"
-              description: "No targets for job 'genai-service' have been up for more than 1 minute."
+              description: "No targets for job 'genai-microservice' have been up for more than 1 minute."
