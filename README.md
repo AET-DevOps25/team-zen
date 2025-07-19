@@ -401,12 +401,22 @@ The Terraform configuration will create:
 - Elastic IP address
 
 #### Terraform Variables
-You can customize the infrastructure by modifying `infra/terraform.tfvars`:
+You can customize the infrastructure by creating your own `terraform.tfvars` file or modifying the defaults in `infra/variables.tf`:
+
+**Default values (defined in variables.tf):**
 ```hcl
 region        = "us-east-1"
-ami_id        = "ami-0c02fb55956c7d316"  # Ubuntu 20.04 LTS
-instance_type = "t3.medium"
-key_name      = "your-key-pair-name"
+ami_id        = "ami-084568db4383264d4"  # Ubuntu 20.04 LTS in us-east-1
+instance_type = "t3.large"
+key_name      = "vockey"  # Default AWS Academy key pair name
+```
+
+**To customize, create infra/terraform.tfvars:**
+```hcl
+region        = "us-west-2"           # Change region if needed
+ami_id        = "ami-your-custom-ami"  # Use different AMI if needed
+instance_type = "t3.medium"           # Smaller instance type
+key_name      = "your-key-pair-name"  # Your actual key pair name
 ```
 
 ### Option 2: Manual EC2 Instance Setup
