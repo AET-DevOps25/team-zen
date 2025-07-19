@@ -75,6 +75,7 @@ services:
       - SERVER_PORT=8082
     networks:
       - backend
+      - journal-network
 
   user-db:
     image: mongo:6
@@ -101,7 +102,7 @@ services:
       - ./prometheus:/etc/prometheus:ro
       - prometheus_data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--config.file=/app/prometheus/prometheus.yml'
     networks:
       - backend
       - monitoring
