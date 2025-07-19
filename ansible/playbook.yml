@@ -118,6 +118,24 @@
             group: ubuntu
             mode: '0644'
 
+        - name: Copy prometheus configuration
+          ansible.builtin.copy:
+            src: ../prometheus/
+            dest: /home/ubuntu/app/prometheus/
+            owner: ubuntu
+            group: ubuntu
+            mode: '0644'
+            directory_mode: '0755'
+
+        - name: Copy grafana provisioning configuration
+          ansible.builtin.copy:
+            src: ../grafana/
+            dest: /home/ubuntu/app/grafana/
+            owner: ubuntu
+            group: ubuntu
+            mode: '0644'
+            directory_mode: '0755'
+
         - name: Create environment file
           ansible.builtin.copy:
             content: |
@@ -132,6 +150,7 @@
               MONGO_DB_URI_JOURNAL=mongodb://journal-db:27017/journaldb
               GENAI_API_URL=https://gpu.aet.cit.tum.de/api/chat/completions
               GENAI_API_KEY={{ genai_api_key }}
+              GF_SECURITY_ADMIN_USER=admin
               GF_SECURITY_ADMIN_PASSWORD={{ grafana_password }}
             dest: /home/ubuntu/app/.env
             owner: ubuntu
