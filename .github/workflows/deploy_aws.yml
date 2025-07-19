@@ -43,7 +43,7 @@ jobs:
             "VITE_CLERK_PUBLISHABLE_KEY" 
             "CLERK_SECRET_KEY"
             "CLERK_WEBHOOK_SECRET"
-            "GRAFANA_PASSWORD"
+            "GF_SECURITY_ADMIN_PASSWORD"
           )
           
           missing_secrets=""
@@ -113,11 +113,11 @@ jobs:
             echo "✅ CLERK_WEBHOOK_SECRET configured" >> $GITHUB_STEP_SUMMARY
           fi
           
-          if [ -z "${{ secrets.GRAFANA_PASSWORD }}" ]; then
-            missing_secrets="$missing_secrets GRAFANA_PASSWORD"
-            echo "❌ Missing secret: GRAFANA_PASSWORD" >> $GITHUB_STEP_SUMMARY
+          if [ -z "${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}" ]; then
+            missing_secrets="$missing_secrets GF_SECURITY_ADMIN_PASSWORD"
+            echo "❌ Missing secret: GF_SECURITY_ADMIN_PASSWORD" >> $GITHUB_STEP_SUMMARY
           else
-            echo "✅ GRAFANA_PASSWORD configured" >> $GITHUB_STEP_SUMMARY
+            echo "✅ GF_SECURITY_ADMIN_PASSWORD configured" >> $GITHUB_STEP_SUMMARY
           fi
           
           if [ -n "$missing_secrets" ]; then
@@ -170,7 +170,7 @@ jobs:
             -e clerk_publishable_key="${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}" \
             -e clerk_secret_key="${{ secrets.CLERK_SECRET_KEY }}" \
             -e clerk_webhook_secret="${{ secrets.CLERK_WEBHOOK_SECRET }}" \
-            -e grafana_password="${{ secrets.GRAFANA_PASSWORD }}" \
+            -e grafana_password="${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}" \
             -v
 
       - name: Verify Deployment

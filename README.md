@@ -449,7 +449,7 @@ Regardless of which infrastructure option you choose, configure these GitHub sec
 | `CLERK_AUTHORIZED_PARTY` | Clerk authorized party URL | `http://YOUR_EC2_IP:3000` |
 | `MONGO_DB_URI_USER` | MongoDB connection URI for user database | `mongodb://user-db:27017/userdb` |
 | `MONGO_DB_URI_JOURNAL` | MongoDB connection URI for journal database | `mongodb://journal-db:27017/journaldb` |
-| `GRAFANA_PASSWORD` | Password for Grafana admin user | `secure-password` |
+| `GF_SECURITY_ADMIN_PASSWORD` | Password for Grafana admin user | `secure-password` |
 
 #### Required Variables (Repository Settings → Secrets and variables → Actions → Variables)
 
@@ -511,7 +511,7 @@ The deployment happens automatically when:
 The `deploy_aws.yml` workflow performs these steps:
 
 1. **Validation**: Verify all required secrets and variables are configured
-   - Checks for missing EC2_SSH_PRIVATE_KEY, GENAI_API_KEY, CLERK keys, and GRAFANA_PASSWORD
+   - Checks for missing EC2_SSH_PRIVATE_KEY, GENAI_API_KEY, CLERK keys, and GF_SECURITY_ADMIN_PASSWORD
    - Validates EC2_PUBLIC_IP variable is set
    - Fails early with clear error messages if any configuration is missing
 2. **Setup**: Checkout code and configure SSH keys
@@ -555,7 +555,7 @@ After successful deployment, your application will be available at:
 
 - **Frontend**: `http://YOUR_EC2_IP:3000`
 - **API Gateway**: `http://YOUR_EC2_IP:8085`
-- **Grafana**: `http://YOUR_EC2_IP:3001` (admin/YOUR_GRAFANA_PASSWORD)
+- **Grafana**: `http://YOUR_EC2_IP:3001` (admin/YOUR_GF_SECURITY_ADMIN_PASSWORD)
 - **Prometheus**: `http://YOUR_EC2_IP:9090`
 
 ### Troubleshooting AWS Deployment
@@ -565,7 +565,7 @@ If the deployment fails during the validation step:
 - **Check GitHub Secrets**: Go to Repository Settings → Secrets and variables → Actions → Secrets
 - **Verify Required Secrets**: Ensure all required secrets are configured with exact names:
   - `EC2_SSH_PRIVATE_KEY`, `GENAI_API_KEY`, `VITE_CLERK_PUBLISHABLE_KEY`
-  - `CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SECRET`, `GRAFANA_PASSWORD`
+  - `CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SECRET`, `GF_SECURITY_ADMIN_PASSWORD`
 - **Check Variables**: Go to Variables tab and verify `EC2_PUBLIC_IP` is set
 - **Review Error Messages**: The workflow provides specific guidance on missing configuration items
 
