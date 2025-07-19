@@ -104,7 +104,6 @@ services:
       - '--config.file=/etc/prometheus/prometheus.yml'
     networks:
       - backend
-      - monitoring
 
   grafana:
     image: grafana/grafana:latest
@@ -120,7 +119,7 @@ services:
     depends_on:
       - prometheus
     networks:
-      - monitoring
+      - backend
 
 volumes:
   user-data:
@@ -133,4 +132,3 @@ networks:
   backend:
   user-network:
   journal-network:
-  monitoring:
