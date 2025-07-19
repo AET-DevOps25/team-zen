@@ -118,19 +118,36 @@
             group: ubuntu
             mode: '0644'
 
-        - name: Copy prometheus configuration
+        - name: Create prometheus directory
+          ansible.builtin.file:
+            path: /home/ubuntu/app/prometheus
+            state: directory
+            owner: ubuntu
+            group: ubuntu
+            mode: '0755'
+
+        - name: Copy prometheus configuration files
           ansible.builtin.copy:
-            src: ../prometheus/
+            src: "{{ item }}"
             dest: /home/ubuntu/app/prometheus/
             owner: ubuntu
             group: ubuntu
             mode: '0644'
-            directory_mode: '0755'
+          with_fileglob:
+            - "../prometheus/*"
+
+        - name: Create grafana provisioning directory
+          ansible.builtin.file:
+            path: /home/ubuntu/app/grafana
+            state: directory
+            owner: ubuntu
+            group: ubuntu
+            mode: '0755'
 
         - name: Copy grafana provisioning configuration
           ansible.builtin.copy:
-            src: ../grafana/
-            dest: /home/ubuntu/app/grafana/
+            src: ../grafana/provisioning/
+            dest: /home/ubuntu/app/grafana/provisioning/
             owner: ubuntu
             group: ubuntu
             mode: '0644'
@@ -156,6 +173,26 @@
             owner: ubuntu
             group: ubuntu
             mode: '0644'
+
+        - name: Verify prometheus and grafana structure
+          ansible.builtin.shell: |
+            echo "=== App directory ==="
+            ls -la /home/ubuntu/app/
+            echo "=== Prometheus directory ==="
+            ls -la /home/ubuntu/app/prometheus/
+            echo "=== Grafana directory ==="
+            ls -la /home/ubuntu/app/grafana/
+            if [ -d /home/ubuntu/app/grafana/provisioning ]; then
+              echo "=== Grafana provisioning ==="
+              ls -la /home/ubuntu/app/grafana/provisioning/
+            fi
+          become: true
+          become_user: ubuntu
+          register: structure_check
+
+        - name: Show structure
+          ansible.builtin.debug:
+            msg: "{{ structure_check.stdout_lines }}"
 
     - name: Check existing services
       ansible.builtin.shell: |
