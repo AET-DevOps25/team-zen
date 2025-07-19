@@ -118,14 +118,24 @@
             group: ubuntu
             mode: '0644'
 
-        - name: Copy prometheus configuration
+        - name: Create prometheus directory
+          ansible.builtin.file:
+            path: /home/ubuntu/app/prometheus
+            state: directory
+            owner: ubuntu
+            group: ubuntu
+            mode: '0755'
+
+        - name: Copy prometheus configuration files
           ansible.builtin.copy:
-            src: ../prometheus/
-            dest: /home/ubuntu/app/
+            src: "{{ item }}"
+            dest: /home/ubuntu/app/prometheus/
             owner: ubuntu
             group: ubuntu
             mode: '0644'
-            directory_mode: '0755'
+          with_fileglob:
+            - "../prometheus/*"
+
 
         - name: Copy grafana provisioning configuration
           ansible.builtin.copy:
