@@ -528,6 +528,27 @@ The `deploy_aws.yml` workflow performs these steps:
 - Use least-privilege security groups for your EC2 instance
 - Consider using AWS Systems Manager Session Manager instead of SSH for enhanced security
 
+### Limitations and Important Notes
+
+#### AWS Learner Lab Constraints
+- **Session Dependency**: Since we're using AWS Learner Lab, the lab session must remain active for the deployed application to work
+- **Service Downtime**: When the AWS Learner Lab session expires (every 4 hours) or is closed, the deployed application will become inaccessible
+- **Manual Recovery**: If the services go down after lab session restart, you'll need to manually restart them:
+  ```bash
+  ssh -i ~/.ssh/your-key.pem ubuntu@YOUR_EC2_IP
+  cd /home/ubuntu/app
+  docker compose up -d
+  ```
+
+#### Infrastructure Changes
+- **Terraform Updates**: If you make changes to the Terraform infrastructure code, you'll need to manually run the deployment workflow again since there's no automated infrastructure CI/CD pipeline
+- **Manual Coordination**: Infrastructure changes and application deployment need to be coordinated manually
+
+#### Notes
+- **Keep Lab Active**: Make sure to keep your AWS Learner Lab session active while demonstrating or using the deployed application
+- **Monitor Services**: Check service status regularly if you notice the application is unresponsive
+- **Document IP Changes**: If you recreate/change the infrastructure, you might need to update the `EC2_PUBLIC_IP` variable in GitHub.
+
 ### AWS Application URLs
 
 After successful deployment, your application will be available at:
@@ -584,7 +605,7 @@ in your browser and select the microservice for which you would like to see the 
 | Contributor      | Responsibilities                                                                           |
 | ---------------- | ------------------------------------------------------------------------------------------ |
 | Natalia Milanova | Backend CRUD operations, AI summarization functionality, Kubernetes deployment, Monitoring |
-| Evan Christopher | Client implementation and testing, CI pipelines, AWS EC2 deployment, Overall code refactoring across features|
+| Evan Christopher | Client implementation + testing, CI pipelines, Infra provisioning with Terraform, AWS deployment, Overall code refactoring across features|
 | Zexin Gong       | API gateway and authentication, Backend service tests, Overall testing & Bug fixes, Documentation                 |
 
 
