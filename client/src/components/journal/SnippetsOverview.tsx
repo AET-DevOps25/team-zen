@@ -22,7 +22,7 @@ export const SnippetsOverview = ({ snippets }: SnippetsOverviewProps) => {
       transition={{ delay: 0.1 }}
       className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
     >
-      <h3 className="font-semibold text-gray-800 mb-4">Today's Snippets</h3>
+      <h3 className="font-semibold text-gray-800 mb-4">Snippets</h3>
       <div className="space-y-3">
         {snippets.length > 0 ? (
           snippets.map((snippet) => (
