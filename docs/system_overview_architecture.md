@@ -25,12 +25,12 @@ Sends authenticated HTTP requests through the API Gateway to access microservice
 
       - Handles authentication via the Auth Service.
 
-2. Authentication Server
-    - **Technology**: Spring Boot REST API, Kinde
+2. Authentication Service
+    - **Technology**: Clerk
 
     - **Responsibilities**:
 
-      - Handles user login/registration.
+      - Handles user registration and authentication.
 
       - Issues tokens (e.g., JWT) for secure communication.
 
@@ -50,9 +50,9 @@ Sends authenticated HTTP requests through the API Gateway to access microservice
 
     - **Responsibilities**:
 
-      - Handles CRUD-operations of snippets and composition into JournalEntry.
+      - Handles CRUD-operations of snippets and composition into journal entries.
 
-      - Supports filtering and viewing entries by date.
+      - Supports filtering and viewing entries.
 
     - **Database**: MongoDB
 
@@ -67,26 +67,15 @@ Sends authenticated HTTP requests through the API Gateway to access microservice
 
     - **Interaction**: Communicates with external LLMs (e.g., OpenAI API)
 
-## AI Agent Abstraction
-Context-Based AI-provider Selection:
-
-- The AIContext selects the appropriate AI agent (online/offline) via Policy.
-
-- Both OnlineAIAgent and OfflineAIAgent implement a shared interface for mood analysis and summarization.
-
-LangChain Usage:
-
-- Enables natural language understanding and summarization pipelines.
-
 ## Diagrams
 ### Use Case Diagram
 The following diagram illustrates the primary use cases of the ZenAI application, detailing the interactions between the user and the ZenAI application.
-![Use Case Diagram](diagrams/useCaseDiagram.png "Use Case Diagram")
+![Use Case Diagram](./diagrams/Use%20case%20diagram.png)
 
 ### Component Diagram
 The following component diagram shows the high-level architecture of the ZenAI application, including the main components and their interactions. 
-![Top-Level Design](diagrams/componentDiagram.png "Top-Level Design")
+![Top-Level Design](./diagrams/Component%20diagram.png)
 
 ### Class Diagram
 Here we have the preliminary class diagram for the ZenAI application. With adaptability in mind, specifically for the AI agent abstraction, we use the strategy pattern to allow for easy switching between online and offline AI agents based on the requirements stated in the project requirements.
-![Class Diagram](diagrams/classDiagram.png "Class Diagram")
+![Class Diagram](./diagrams/Analysis%20object%20model.png)
