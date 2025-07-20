@@ -364,21 +364,26 @@ AWS EC2 deployment using GitHub Actions and Ansible for automated deployment is 
 
 2. **If bucket doesn't exist**, run the setup script:
    ```bash
-   cd infra/
+   cd infra/scripts
    ./setup-terraform-backend.sh
    ```
 
 3. **If bucket already exists**, skip this step and proceed to GitHub secrets configuration.
 
-#### Configure GitHub Secrets for Terraform
-Add these secrets to your GitHub repository (Settings → Secrets and variables → Actions):
+#### Configure GitHub Secrets
 
-| Secret Name | Description |
-|-------------|-------------|
-| `AWS_ACCESS_KEY_ID` | AWS Access Key for Terraform |
-| `AWS_SECRET_ACCESS_KEY` | AWS Secret Key for Terraform |
-| `AWS_SSH_KEY_NAME` | Name of your AWS Key Pair |
-| `EC2_SSH_PRIVATE_KEY` | Contents of your EC2 private key (.pem file) |
+Add the SSH private key to your GitHub repository for deployment access:
+
+1. Go to your GitHub repository → **Settings** → **Secrets and variables** → **Actions**
+2. Click **New repository secret**
+3. Add the following secret:
+   - **Name**: `EC2_SSH_PRIVATE_KEY`
+   - **Value**: Complete contents of your EC2 private key (.pem file)
+
+To get your private key contents:
+```bash
+cat ~/.ssh/your-ec2-key.pem
+```
 
 #### Deploy Infrastructure
 
@@ -426,7 +431,7 @@ If you prefer manual setup, launch an EC2 instance with the following configurat
 - **Instance Type**: t3.medium or larger (recommended for Docker workloads)
 - **Security Group**: Allow inbound traffic on:
   - Port 22 (SSH)
-  - Port 3000 (Frontend)
+  - Port 3000 (Client)
   - Port 8085 (API Gateway) 
   - Port 3001 (Grafana)
   - Port 9090 (Prometheus)
@@ -443,7 +448,7 @@ Regardless of which infrastructure option you choose, configure these GitHub sec
 | `EC2_SSH_PRIVATE_KEY` | Contents of your EC2 private key (.pem file) | `-----BEGIN RSA PRIVATE KEY-----\n...` |
 | `GENAI_API_KEY` | API key for GenAI service | `your-genai-api-key` |
 | `GENAI_API_URL` | URL for GenAI service endpoint | `https://gpu.aet.cit.tum.de/api/chat/completions` |
-| `VITE_CLERK_PUBLISHABLE_KEY` | Clerk publishable key for frontend | `pk_test_...` |
+| `VITE_CLERK_PUBLISHABLE_KEY` | Clerk publishable key for client | `pk_test_...` |
 | `CLERK_SECRET_KEY` | Clerk secret key for backend authentication | `sk_test_...` |
 | `CLERK_WEBHOOK_SECRET` | Clerk webhook secret for user sync | `whsec_...` |
 | `CLERK_AUTHORIZED_PARTY` | Clerk authorized party URL | `http://YOUR_EC2_IP:3000` |
@@ -500,12 +505,6 @@ The deployment happens automatically when:
 - You push to the main branch (Docker images get built first, then deployment follows)
 - Or you can trigger it manually if needed
 
-### Monitoring Deployment
-
-1. Watch the GitHub Actions workflow execution
-2. Check the workflow summary for deployment status and URLs
-3. Access your application at the provided URLs
-
 ### Deployment Process
 
 The `deploy_aws.yml` workflow performs these steps:
@@ -520,13 +519,6 @@ The `deploy_aws.yml` workflow performs these steps:
 5. **Deploy**: Run Ansible playbook to deploy the application
 6. **Verify**: Test if services are responding
 7. **Summary**: Provide deployment status and access URLs
-
-### Security Notes
-
-- Never commit private keys or secrets to the repository
-- Regularly rotate your GitHub tokens and API keys
-- Use least-privilege security groups for your EC2 instance
-- Consider using AWS Systems Manager Session Manager instead of SSH for enhanced security
 
 ### Limitations and Important Notes
 
@@ -553,10 +545,12 @@ The `deploy_aws.yml` workflow performs these steps:
 
 After successful deployment, your application will be available at:
 
-- **Frontend**: `http://YOUR_EC2_IP:3000`
+- **Client**: `http://YOUR_EC2_IP:3000`
 - **API Gateway**: `http://YOUR_EC2_IP:8085`
 - **Grafana**: `http://YOUR_EC2_IP:3001` (admin/YOUR_GF_SECURITY_ADMIN_PASSWORD)
 - **Prometheus**: `http://YOUR_EC2_IP:9090`
+
+**Note**: ZenAI is currently also deployed on AWS and accessible at: http://54.158.147.171 (most likely not active if AWS Learner Lab session is not running)
 
 ### Troubleshooting AWS Deployment
 
@@ -588,6 +582,7 @@ If the deployment fails during the validation step:
 - The deployment workflow now validates configuration before attempting deployment
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 ## API Specifications
 
 ZenAI's APIs for every single microservice (user, journal, genai and api-gateway) are documented using Swagger, and are accessible by visiting
