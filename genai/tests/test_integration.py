@@ -4,7 +4,8 @@ import sys
 # Add the app directory to the path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'app'))
 
-from app.main import OpenWebUILLM, app
+from app.services.llm_service import OpenWebUILLM
+from app.main import app
 from fastapi.testclient import TestClient
 
 

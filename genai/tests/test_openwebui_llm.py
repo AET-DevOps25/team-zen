@@ -1,7 +1,7 @@
 import pytest
 import os
 from unittest.mock import patch, MagicMock
-from app.main import OpenWebUILLM
+from app.services.llm_service import OpenWebUILLM
 import requests
 
 
@@ -26,7 +26,7 @@ class TestOpenWebUILLM:
             'GENAI_API_URL': 'http://env-url.com'
         }, clear=False):
             # Need to re-import to get fresh instance with new env vars
-            from app.main import OpenWebUILLM as FreshLLM
+            from app.services.llm_service import OpenWebUILLM as FreshLLM
             llm = FreshLLM()
             # Since we patch the environment but the original module already imported defaults,
             # we test the functionality with explicit parameters instead
