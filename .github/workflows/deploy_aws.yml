@@ -193,7 +193,7 @@ jobs:
             echo "❌ Frontend is not responding" >> $GITHUB_STEP_SUMMARY
           fi
           
-          if curl -f http://${{ vars.EC2_PUBLIC_IP }}:8085/health >/dev/null 2>&1; then
+          if curl -f http://${{ vars.EC2_PUBLIC_IP }}:8085/api/health >/dev/null 2>&1; then
             echo "✅ API Gateway is responding" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ API Gateway is not responding" >> $GITHUB_STEP_SUMMARY
