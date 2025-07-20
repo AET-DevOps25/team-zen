@@ -211,7 +211,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🌐 Application URLs:" >> $GITHUB_STEP_SUMMARY
           echo "- **Frontend:** http://${{ vars.EC2_PUBLIC_IP }}:3000" >> $GITHUB_STEP_SUMMARY
-          echo "- **API Gateway:** http://${{ vars.EC2_PUBLIC_IP }}:8085/api" >> $GITHUB_STEP_SUMMARY
+          echo "- **API Gateway:** http://${{ vars.EC2_PUBLIC_IP }}:8085/api/" >> $GITHUB_STEP_SUMMARY
           echo "- **Grafana:** http://${{ vars.EC2_PUBLIC_IP }}:3001" >> $GITHUB_STEP_SUMMARY
           echo "- **Prometheus:** http://${{ vars.EC2_PUBLIC_IP }}:9090" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
